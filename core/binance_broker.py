@@ -19,20 +19,49 @@ class BinanceBroker:
         self.base_url = BINANCE_TESTNET if testnet else BINANCE_API
         self.connected = False
         self._use_live = bool(api_key and api_secret)
+        self._time_offset = 0
+        self._last_test = 0.0
         self.orders_dir = DATA_DIR / "orders"
         self.orders_dir.mkdir(parents=True, exist_ok=True)
         self._test()
 
     def _test(self):
         if not self._use_live:
-            return
+            return False
+        self._last_test = time.time()
+        last_err = "unreachable"
+        for attempt in range(3):
+            try:
+                r = requests.get(f"{self.base_url}/api/v3/ping", timeout=10)
+                if r.status_code == 200:
+                    self.connected = True
+                    self._sync_time()
+                    self._log("Binance testnet connected")
+                    return True
+                last_err = f"HTTP {r.status_code}"
+            except Exception as e:
+                last_err = str(e)
+            time.sleep(2 * (attempt + 1))
+        self._log(f"Binance connection failed: {last_err}")
+        return False
+
+    def ensure_connected(self):
+        # Reconnect lazily instead of paper-trading forever after one bad ping
+        if self.connected or not self._use_live:
+            return self.connected
+        if time.time() - self._last_test > 60:
+            self._test()
+        return self.connected
+
+    def _sync_time(self):
+        # Sign with Binance's clock, not ours — avoids recvWindow rejections
         try:
-            r = requests.get(f"{self.base_url}/api/v3/ping", timeout=5)
-            if r.status_code == 200:
-                self.connected = True
-                self._log("Binance testnet connected")
-        except Exception as e:
-            self._log(f"Binance connection failed: {e}")
+            r = requests.get(f"{self.base_url}/api/v3/time", timeout=10)
+            self._time_offset = int(r.json()["serverTime"]) - int(time.time() * 1000)
+            if abs(self._time_offset) > 1000:
+                self._log(f"Clock drift {self._time_offset}ms — compensating with server time")
+        except Exception:
+            self._time_offset = 0
 
     def _log(self, msg):
         from core.memory import SharedMemory
@@ -42,7 +71,8 @@ class BinanceBroker:
             pass
 
     def _sign(self, params):
-        params["timestamp"] = int(time.time() * 1000)
+        params["timestamp"] = int(time.time() * 1000) + self._time_offset
+        params["recvWindow"] = 10000
         query = urlencode(params)
         signature = hmac.new(self.api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
         params["signature"] = signature
@@ -92,16 +122,35 @@ class BinanceBroker:
         if tp:
             order["take_profit"] = tp
 
+        self.ensure_connected()
         if self._use_live and self.connected:
-            rounded = self._round_lot(bsym, quantity)
-            params = {
-                "symbol": bsym,
-                "side": side.upper(),
-                "type": "MARKET",
-                "quoteOrderQty": round(quantity * price, 2),
-                "newOrderRespType": "FULL",
-            }
-            result = self._request("POST", "/api/v3/order", signed=True, params=params)
+            params = None
+            reject_reason = None
+            if side.upper() == "SELL":
+                # Only sell what the account actually holds
+                base_asset = bsym[:-4] if bsym.endswith("USDT") else bsym
+                free = self._free_asset(base_asset)
+                sell_qty = self._round_lot(bsym, min(quantity, free))
+                if sell_qty <= 0:
+                    reject_reason = f"no {base_asset} balance on Binance"
+                else:
+                    qty_str = f"{sell_qty:.8f}".rstrip("0").rstrip(".")
+                    params = {
+                        "symbol": bsym,
+                        "side": "SELL",
+                        "type": "MARKET",
+                        "quantity": qty_str,
+                        "newOrderRespType": "FULL",
+                    }
+            else:
+                params = {
+                    "symbol": bsym,
+                    "side": side.upper(),
+                    "type": "MARKET",
+                    "quoteOrderQty": round(quantity * price, 2),
+                    "newOrderRespType": "FULL",
+                }
+            result = {} if params is None else self._request("POST", "/api/v3/order", signed=True, params=params)
             if result.get("orderId"):
                 order["status"] = "filled"
                 order["binance_order"] = result["orderId"]
@@ -114,7 +163,9 @@ class BinanceBroker:
                 self._log(f"Binance filled: {side} {bsym} qty={order['quantity']}")
             else:
                 order["status"] = "rejected"
-                order["reason"] = str(result.get("msg", result.get("error", "unknown")))
+                order["reason"] = reject_reason or str(result.get("msg", result.get("error", "unknown")))
+                if "recvwindow" in order["reason"].lower() or "timestamp" in order["reason"].lower():
+                    self._sync_time()
                 self._log(f"Binance rejected ({order['reason']}) — fallback to paper: {side} {quantity} {symbol}")
                 from core.broker import PaperBroker
                 pb = PaperBroker()
@@ -150,9 +201,17 @@ class BinanceBroker:
         f = self.orders_dir / f"{order['id']}.json"
         f.write_text(json.dumps(order, indent=2))
 
+    def _free_asset(self, asset):
+        result = self._request("GET", "/api/v3/account", signed=True)
+        for b in result.get("balances", []):
+            if b["asset"] == asset:
+                return float(b.get("free", 0))
+        return 0.0
+
     def get_account_info(self):
         if not self._use_live:
             return {"balance": 0, "equity": 0, "name": "binance_paper"}
+        self.ensure_connected()
         result = self._request("GET", "/api/v3/account", signed=True)
         if "balances" in result:
             usdt = next((b for b in result["balances"] if b["asset"] == "USDT"), {})
