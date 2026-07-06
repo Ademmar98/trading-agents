@@ -18,6 +18,15 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+## Tests
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest
+```
+
+The smoke test runs the full agent pipeline offline against canned market data
+in a sandboxed data directory — it never touches the live ledger or exchange.
+
 ## Notes
 
 Generated databases, logs, orders, reports, decisions, analyses, caches, and virtual environments should stay out of version control.
