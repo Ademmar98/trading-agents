@@ -98,6 +98,10 @@ def init_db():
                 profit_factor REAL,
                 sharpe_ratio REAL DEFAULT 0,
                 max_drawdown REAL DEFAULT 0,
+                final_equity REAL DEFAULT 0,
+                avg_win REAL DEFAULT 0,
+                avg_loss REAL DEFAULT 0,
+                tested_at TEXT,
                 computed_at TEXT DEFAULT (datetime('now'))
             );
 
@@ -105,8 +109,51 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 symbol TEXT NOT NULL,
                 params TEXT,
+                sl_mult REAL,
+                tp_mult REAL,
+                position_size_pct REAL,
+                confidence_threshold REAL,
+                total_return REAL DEFAULT 0,
+                total_trades INTEGER DEFAULT 0,
+                win_rate REAL DEFAULT 0,
+                profit_factor REAL,
+                max_drawdown REAL DEFAULT 0,
+                sharpe_ratio REAL DEFAULT 0,
                 score REAL DEFAULT 0,
+                optimized_at TEXT,
                 computed_at TEXT DEFAULT (datetime('now'))
             );
             """
         )
+        _migrate(conn)
+
+
+def _ensure_columns(conn, table, columns):
+    existing = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+    for name, decl in columns.items():
+        if name not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
+
+
+def _migrate(conn):
+    # Databases created by older schemas (e.g. the Railway volume) get the
+    # columns newer inserts expect; CREATE IF NOT EXISTS never alters them.
+    _ensure_columns(conn, "backtest_results", {
+        "final_equity": "REAL DEFAULT 0",
+        "avg_win": "REAL DEFAULT 0",
+        "avg_loss": "REAL DEFAULT 0",
+        "tested_at": "TEXT",
+    })
+    _ensure_columns(conn, "optimization_results", {
+        "sl_mult": "REAL",
+        "tp_mult": "REAL",
+        "position_size_pct": "REAL",
+        "confidence_threshold": "REAL",
+        "total_return": "REAL DEFAULT 0",
+        "total_trades": "INTEGER DEFAULT 0",
+        "win_rate": "REAL DEFAULT 0",
+        "profit_factor": "REAL",
+        "max_drawdown": "REAL DEFAULT 0",
+        "sharpe_ratio": "REAL DEFAULT 0",
+        "optimized_at": "TEXT",
+    })

@@ -390,14 +390,19 @@ def main():
         notifier.send("[Trading Agent Firm started]")
 
     console.print("[dim]Running backtests on key symbols...[/dim]")
-    bt_symbols = [s for s in WATCHED_SYMBOLS if "/" in s][:5]
-    bt_results = run_all_backtests(bt_symbols)
-    console.print(f"[dim]Backtested {len(bt_results)} symbols[/dim]")
-    for r in bt_results[:3]:
-        c = "green" if r["total_return"] >= 0 else "red"
-        console.print(f"  {r['symbol']:8s}  [{c}]{r['total_return']:+.1f}%[/{c}]  "
-                      f"{r['total_trades']}t  WR:{r['win_rate']:.0f}%  "
-                      f"S:{r['sharpe_ratio']}  DD:{r['max_drawdown']:.1f}%")
+    try:
+        bt_symbols = [s for s in WATCHED_SYMBOLS if "/" in s][:5]
+        bt_results = run_all_backtests(bt_symbols)
+        console.print(f"[dim]Backtested {len(bt_results)} symbols[/dim]")
+        for r in bt_results[:3]:
+            c = "green" if r["total_return"] >= 0 else "red"
+            console.print(f"  {r['symbol']:8s}  [{c}]{r['total_return']:+.1f}%[/{c}]  "
+                          f"{r['total_trades']}t  WR:{r['win_rate']:.0f}%  "
+                          f"S:{r['sharpe_ratio']}  DD:{r['max_drawdown']:.1f}%")
+    except Exception as e:
+        # Backtests are informational — never let them kill the bot
+        memory.log("system", f"Startup backtests failed: {e}")
+        memory.log_error("backtester", str(e), traceback.format_exc())
 
     def cycle_loop():
         while True:
