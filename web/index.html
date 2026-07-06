@@ -215,7 +215,18 @@
   </section>
 
   <section>
-    <h2>Open Positions <span class="idx">02</span></h2>
+    <h2>Opportunities <span class="idx">02</span></h2>
+    <div class="table-scroll">
+      <table aria-label="Trading signals">
+        <thead><tr><th>Symbol</th><th>Signal</th><th class="r">Price</th><th class="r">Confidence</th><th>Strategies</th><th>Reasons</th></tr></thead>
+        <tbody id="opportunities-body"></tbody>
+      </table>
+      <div class="empty" id="opportunities-empty" hidden>NO OPPORTUNITIES FOUND</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Open Positions <span class="idx">03</span></h2>
     <div class="table-scroll">
       <table aria-label="Open positions">
         <thead><tr><th>Opened</th><th>Symbol</th><th>Side</th><th class="r">Qty</th><th class="r">Entry</th><th class="r">Price</th><th class="r">SL</th><th class="r">TP</th><th class="r">P&amp;L</th></tr></thead>
@@ -225,9 +236,23 @@
     </div>
   </section>
 
+  <section>
+    <h2>Risk Assessment <span class="idx">04</span></h2>
+    <div id="risk-panel">
+      <div class="empty" id="risk-empty" hidden>NO RISK DATA YET</div>
+      <div class="strip" id="risk-strip" style="border-bottom:none;grid-template-columns:repeat(4,1fr);" hidden>
+        <div class="cell"><div class="label">Verdict</div><div class="v" id="risk-verdict">—</div></div>
+        <div class="cell"><div class="label">Exposure</div><div class="v" id="risk-exposure">—</div></div>
+        <div class="cell"><div class="label">Max Trade</div><div class="v" id="risk-max-trade">—</div></div>
+        <div class="cell"><div class="label">Day P&amp;L</div><div class="v" id="risk-day-pnl">—</div></div>
+      </div>
+      <ul class="log" id="risk-details"></ul>
+    </div>
+  </section>
+
   <div class="cols">
     <section>
-      <h2>Trade History <span class="idx">03</span></h2>
+      <h2>Trade History <span class="idx">05</span></h2>
       <div class="table-scroll">
         <table aria-label="Trade history">
           <thead><tr><th>Closed</th><th>Symbol</th><th>Side</th><th class="r">P&amp;L</th><th class="r">%</th><th>Reason</th></tr></thead>
@@ -238,14 +263,14 @@
     </section>
 
     <section>
-      <h2>Agent Activity <span class="idx">04</span></h2>
+      <h2>Agent Activity <span class="idx">06</span></h2>
       <ul class="log" id="activity-log"></ul>
       <div class="empty" id="activity-empty" hidden>NO ACTIVITY YET</div>
     </section>
   </div>
 
   <section>
-    <h2><span class="err-title">Errors &amp; Bugs</span> <span class="idx">05</span></h2>
+    <h2><span class="err-title">Errors &amp; Bugs</span> <span class="idx">07</span></h2>
     <ul class="log" id="error-log"></ul>
     <div class="empty" id="errors-empty" hidden>NO ERRORS — ALL SYSTEMS NOMINAL</div>
   </section>
@@ -389,15 +414,55 @@ function renderErrors(rows) {
   }).join("");
 }
 
+function renderOpportunities(rows) {
+  document.getElementById("opportunities-empty").hidden = rows.length > 0;
+  document.getElementById("opportunities-body").innerHTML = rows.map((o) => {
+    const signalClass = String(o.action).toLowerCase().includes("buy") ? "side-b" : "side-s";
+    const strats = (o.strategies || []).slice(0, 3).join(", ");
+    const reasons = (o.reasons || []).slice(0, 2).join("; ");
+    return `<tr>
+      <td>${esc(o.symbol)}</td>
+      <td><span class="${signalClass}">${esc(o.action)}</span></td>
+      <td class="r num">${fmtPrice(o.price)}</td>
+      <td class="r num">${(o.confidence * 100).toFixed(0)}%</td>
+      <td class="mono" style="font-size:11px;color:var(--muted)">${esc(strats)}</td>
+      <td style="font-size:12px">${esc(reasons)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function renderRisk(risk) {
+  if (!risk || !risk.verdict) {
+    document.getElementById("risk-empty").hidden = false;
+    document.getElementById("risk-strip").hidden = true;
+    document.getElementById("risk-details").innerHTML = "";
+    return;
+  }
+  document.getElementById("risk-empty").hidden = true;
+  document.getElementById("risk-strip").hidden = false;
+  const vc = {low:"green",moderate_risk:"yellow",high_risk:"red",critical:"#FF433D"};
+  document.getElementById("risk-verdict").style.color = vc[risk.verdict] || "white";
+  document.getElementById("risk-verdict").textContent = risk.verdict.replace("_", " ").toUpperCase();
+  document.getElementById("risk-exposure").textContent = (risk.exposure_pct || 0).toFixed(1) + "%";
+  document.getElementById("risk-max-trade").textContent = fmtUsd(risk.max_trade_size);
+  document.getElementById("risk-day-pnl").textContent = (risk.day_pnl_pct != null ? fmtPct(risk.day_pnl_pct) : "—");
+  const risks = risk.risks || [];
+  document.getElementById("risk-details").innerHTML = risks.map((r) =>
+    `<li><span class="agent" style="color:var(--red)">RISK</span><span class="msg">${esc(r)}</span></li>`
+  ).join("");
+}
+
 async function refresh() {
   try {
-    const [summary, positions, trades, equity, activity, errors] = await Promise.all([
+    const [summary, positions, trades, equity, activity, errors, opportunities, risk] = await Promise.all([
       fetch("/api/summary").then((r) => r.json()),
       fetch("/api/positions").then((r) => r.json()),
       fetch("/api/trades").then((r) => r.json()),
       fetch("/api/equity").then((r) => r.json()),
       fetch("/api/activity").then((r) => r.json()),
       fetch("/api/errors").then((r) => r.json()),
+      fetch("/api/opportunities").then((r) => r.json()),
+      fetch("/api/risk").then((r) => r.json()),
     ]);
     renderSummary(summary);
     renderPositions(positions);
@@ -405,6 +470,8 @@ async function refresh() {
     renderChart(equity);
     renderActivity(activity);
     renderErrors(errors);
+    renderOpportunities(opportunities);
+    renderRisk(risk);
     document.getElementById("conn").textContent = "LIVE";
     document.getElementById("dot").className = "status-dot";
     document.getElementById("updated").textContent = "UPDATED " + hms(new Date());

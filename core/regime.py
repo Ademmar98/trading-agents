@@ -54,13 +54,30 @@ def detect_regime(ohlc):
     else:
         regime = "ranging"
 
+    # Additional regime characteristics
+    bb_position = (current - sma_20) / (sma_20 * 0.05 + 0.01) if sma_20 else 0
+    volume_ratio = _volume_ratio(ohlc[-20:])
+
     return {
         "regime": regime,
         "adx": round(adx, 1) if adx else 0,
         "atr_pct": round(atr_pct, 2),
         "volatility": round(atr_pct * 2, 2),
         "trend_strength": round(adx, 1) if adx else 0,
+        "bb_position": round(bb_position, 2),
+        "volume_ratio": round(volume_ratio, 2),
+        "sma_20_50_cross": "bullish" if sma_20 > sma_50 else "bearish",
+        "price_vs_sma": round((current / sma_20 - 1) * 100, 2) if sma_20 else 0,
     }
+
+
+def _volume_ratio(ohlc_segment):
+    if len(ohlc_segment) < 10:
+        return 1.0
+    recent = [c["volume"] for c in ohlc_segment[-5:]]
+    older = [c["volume"] for c in ohlc_segment[:-5]]
+    avg_older = sum(older) / len(older) if older else 1
+    return (sum(recent) / len(recent)) / avg_older if avg_older > 0 else 1.0
 
 
 def _adx(highs, lows, closes, period=14):

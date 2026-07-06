@@ -17,12 +17,11 @@ class PositionManager:
         return r is not None
 
     def open_position(self, symbol, side, qty, price, sl=0, tp=0):
-        execute("""
+        cur = execute("""
             INSERT INTO positions (symbol, side, quantity, entry_price, current_price, stop_loss, take_profit, peak_price)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, [symbol, side.upper(), qty, price, price, sl, tp, price])
-        pos_id = fetchone("SELECT last_insert_rowid()")[0]
-        return pos_id
+        return cur.lastrowid
 
     def close_position(self, position_id, exit_price, reason="manual"):
         row = fetchone("SELECT * FROM positions WHERE id=?", [position_id])

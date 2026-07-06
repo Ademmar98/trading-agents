@@ -6,8 +6,14 @@ chain against the paper broker and asserts trades actually happen and the
 ledger debits cash. This is the test that would have caught both the unwired
 pipeline and the read_latest() wrong-file bug.
 """
+import os
+import tempfile
+from pathlib import Path
 import time
 
+import pytest
+
+import config as app_config
 from core.database import init_db
 from core.memory import SharedMemory
 from core.portfolio import Portfolio, save_portfolio, load_portfolio
@@ -17,6 +23,16 @@ from agents.portfolio_manager import PortfolioManagerAgent
 from agents.compliance_agent import ComplianceAgent
 from agents.execution_agent import ExecutionAgent
 from agents.trader import Trader
+
+
+@pytest.fixture(autouse=True)
+def sandbox_data_dir(monkeypatch):
+    tmp = Path(tempfile.mkdtemp(prefix="trading-test-"))
+    monkeypatch.setattr(app_config, "DATA_DIR", tmp)
+    monkeypatch.setenv("TRADING_DATA_DIR", str(tmp))
+    yield
+    import shutil
+    shutil.rmtree(str(tmp), ignore_errors=True)
 
 
 def seed_market_scan(memory):

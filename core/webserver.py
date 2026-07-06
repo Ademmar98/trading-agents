@@ -130,6 +130,40 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def _json(self, data):
         self._send(200, "application/json", json.dumps(data, default=str).encode())
 
+    def get_opportunities(self):
+        analysis = memory.read("analyses", "market_scan")
+        if not analysis:
+            return []
+        return analysis.get("opportunities", [])
+
+    def get_regime(self):
+        regime = memory.read("analyses", "regime_scan")
+        if not regime:
+            return {}
+        return regime
+
+    def get_backtests(self):
+        from core.backtester import get_backtest_results
+        return get_backtest_results()
+
+    def get_optimizations(self):
+        from core.optimizer import get_optimization_results
+        return get_optimization_results()
+
+    def get_risk(self):
+        risk = memory.read("decisions", "risk_assessment")
+        return risk or {}
+
+    def get_config(self):
+        from config import BROKER_TYPE, TRADING_INTERVAL_MINUTES, WATCHED_SYMBOLS, INITIAL_BALANCE, BINANCE_USE_TESTNET
+        return {
+            "broker": BROKER_TYPE,
+            "interval_minutes": TRADING_INTERVAL_MINUTES,
+            "watched_symbols": len(WATCHED_SYMBOLS),
+            "initial_capital": INITIAL_BALANCE,
+            "testnet": BINANCE_USE_TESTNET,
+        }
+
     def do_GET(self):
         if not self._authorized():
             self.send_response(401)
@@ -152,6 +186,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(get_activity())
             elif self.path == "/api/errors":
                 self._json(get_errors())
+            elif self.path == "/api/opportunities":
+                self._json(self.get_opportunities())
+            elif self.path == "/api/regime":
+                self._json(self.get_regime())
+            elif self.path == "/api/backtests":
+                self._json(self.get_backtests())
+            elif self.path == "/api/optimizations":
+                self._json(self.get_optimizations())
+            elif self.path == "/api/risk":
+                self._json(self.get_risk())
+            elif self.path == "/api/config":
+                self._json(self.get_config())
             else:
                 self._send(404, "text/plain", b"not found")
         except Exception as e:

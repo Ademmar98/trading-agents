@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  trading-bot:
+    build: .
+    container_name: trading-agents
+    restart: unless-stopped
+    environment:
+      - HEADLESS=true
+      - BROKER_TYPE=${BROKER_TYPE:-paper}
+      - TRADING_CAPITAL=${TRADING_CAPITAL:-10000}
+      - TRADING_INTERVAL_MINUTES=${TRADING_INTERVAL_MINUTES:-60}
+      - WATCHED_SYMBOLS=${WATCHED_SYMBOLS:-BTC/USD,ETH/USD,SOL/USD}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - PORT=${PORT:-8000}
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - trading_data:/app/data
+
+volumes:
+  trading_data:

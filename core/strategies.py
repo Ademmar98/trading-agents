@@ -364,6 +364,150 @@ def detect_double_top_bottom(ohlc, window=10):
     return None
 
 
+# ---- ADDITIONAL STRATEGIES ----
+
+def _vwap(ohlc):
+    if len(ohlc) < 20:
+        return None
+    vol_sum = sum(c["volume"] for c in ohlc[-20:])
+    if vol_sum == 0:
+        return None
+    pv_sum = sum(c["close"] * c["volume"] for c in ohlc[-20:])
+    vwap = pv_sum / vol_sum
+    current = ohlc[-1]["close"]
+    bands = (max(c["high"] for c in ohlc[-20:]) - min(c["low"] for c in ohlc[-20:])) / vwap
+    if current < vwap * (1 - bands * 0.5):
+        return {"action": "BUY", "confidence": 0.55, "reasons": ["Price below VWAP support"]}
+    if current > vwap * (1 + bands * 0.5):
+        return {"action": "SELL", "confidence": 0.55, "reasons": ["Price above VWAP resistance"]}
+    return None
+
+
+def detect_ema_cross(ohlc):
+    if len(ohlc) < 50:
+        return None
+    closes = [c["close"] for c in ohlc]
+    ema_9 = _ema(closes, 9)
+    ema_21 = _ema(closes, 21)
+    if not ema_9 or not ema_21 or len(ema_9) < 5 or len(ema_21) < 5:
+        return None
+    if ema_9[-4] <= ema_21[-4] and ema_9[-1] > ema_21[-1]:
+        return {"action": "BUY", "confidence": 0.6, "reasons": ["EMA 9/21 golden cross"]}
+    if ema_9[-4] >= ema_21[-4] and ema_9[-1] < ema_21[-1]:
+        return {"action": "SELL", "confidence": 0.6, "reasons": ["EMA 9/21 death cross"]}
+    return None
+
+
+def _stochastic(closes, k_period=14, d_period=3):
+    if len(closes) < k_period + d_period:
+        return None, None
+    k_vals = []
+    for i in range(k_period - 1, len(closes)):
+        high = max(closes[i - k_period + 1:i + 1])
+        low = min(closes[i - k_period + 1:i + 1])
+        if high == low:
+            k_vals.append(50)
+        else:
+            k_vals.append((closes[i] - low) / (high - low) * 100)
+    d_vals = []
+    for i in range(d_period - 1, len(k_vals)):
+        d_vals.append(sum(k_vals[i - d_period + 1:i + 1]) / d_period)
+    return k_vals, d_vals
+
+
+def detect_stochastic_rsi(ohlc):
+    if len(ohlc) < 30:
+        return None
+    closes = [c["close"] for c in ohlc]
+    k, d = _stochastic(closes)
+    if not k or not d:
+        return None
+    if k[-1] < 20 and d[-1] < 20 and k[-1] > d[-1]:
+        return {"action": "BUY", "confidence": 0.65, "reasons": ["Stochastic oversold crossover"]}
+    if k[-1] > 80 and d[-1] > 80 and k[-1] < d[-1]:
+        return {"action": "SELL", "confidence": 0.65, "reasons": ["Stochastic overbought crossover"]}
+    return None
+
+
+def _ichimoku(ohlc):
+    if len(ohlc) < 52:
+        return None, None, None, None, None
+    highs = [c["high"] for c in ohlc]
+    lows = [c["low"] for c in ohlc]
+    closes = [c["close"] for c in ohlc]
+    tenkan = (max(highs[-9:]) + min(lows[-9:])) / 2
+    kijun = (max(highs[-26:]) + min(lows[-26:])) / 2
+    senkou_a = (tenkan + kijun) / 2
+    senkou_b = (max(highs[-52:]) + min(lows[-52:])) / 2
+    chikou = closes[-26] if len(closes) > 26 else closes[-1]
+    return tenkan, kijun, senkou_a, senkou_b, chikou
+
+
+def detect_ichimoku(ohlc):
+    tenkan, kijun, senkou_a, senkou_b, chikou = _ichimoku(ohlc)
+    if tenkan is None:
+        return None
+    current = ohlc[-1]["close"]
+    if tenkan > kijun and current > senkou_a and current > senkou_b:
+        return {"action": "BUY", "confidence": 0.6, "reasons": ["Ichimoku bullish (TK cross + cloud above)"]}
+    if tenkan < kijun and current < senkou_a and current < senkou_b:
+        return {"action": "SELL", "confidence": 0.6, "reasons": ["Ichimoku bearish (TK cross + cloud below)"]}
+    return None
+
+
+def detect_keltner(ohlc, period=20):
+    if len(ohlc) < period + 5:
+        return None
+    closes = [c["close"] for c in ohlc[-period - 5:]]
+    highs = [c["high"] for c in ohlc[-period - 5:]]
+    lows = [c["low"] for c in ohlc[-period - 5:]]
+    ema_val = _ema(closes, period)
+    if not ema_val:
+        return None
+    ema_val = ema_val[-1]
+    trs = [max(highs[i] - lows[i], abs(highs[i] - closes[i - 1]), abs(lows[i] - closes[i - 1])) for i in range(1, len(closes))]
+    atr_val = sum(trs[-period:]) / period
+    upper = ema_val + 2 * atr_val
+    lower = ema_val - 2 * atr_val
+    current = closes[-1]
+    if current < lower:
+        return {"action": "BUY", "confidence": 0.55, "reasons": ["Price below lower Keltner channel"]}
+    if current > upper:
+        return {"action": "SELL", "confidence": 0.55, "reasons": ["Price above upper Keltner channel"]}
+    return None
+
+
+def detect_volume_breakout(ohlc):
+    if len(ohlc) < 30:
+        return None
+    recent = ohlc[-5:]
+    older = ohlc[-30:-5]
+    avg_vol_older = sum(c["volume"] for c in older) / len(older) if older else 0
+    if avg_vol_older == 0:
+        return None
+    for c in recent:
+        if c["volume"] > avg_vol_older * 2:
+            direction = "BUY" if c["close"] > c["open"] else "SELL"
+            return {"action": direction, "confidence": 0.6, "reasons": [f"Volume breakout {direction}"]}
+    return None
+
+
+def detect_support_resistance(ohlc):
+    if len(ohlc) < 30:
+        return None
+    closes = [c["close"] for c in ohlc]
+    highs = [c["high"] for c in ohlc]
+    lows = [c["low"] for c in ohlc[-20:]]
+    resistance = sum(highs[-5:]) / 5
+    support = min(lows[-5:])
+    current = closes[-1]
+    if current <= support * 1.005:
+        return {"action": "BUY", "confidence": 0.5, "reasons": ["Price near support level"]}
+    if current >= resistance * 0.995:
+        return {"action": "SELL", "confidence": 0.5, "reasons": ["Price near resistance level"]}
+    return None
+
+
 ALL_STRATEGIES = [
     ("ICT - FVG", detect_fvg),
     ("ICT - Order Block", detect_order_block),
@@ -372,14 +516,21 @@ ALL_STRATEGIES = [
     ("ICT - OTE", detect_ote),
     ("ICT - Market Structure", detect_market_structure),
     ("Classic - SMA Crossover", detect_sma_crossover),
+    ("Classic - EMA Cross 9/21", detect_ema_cross),
     ("Classic - RSI Divergence", detect_rsi_divergence),
     ("Classic - MACD", detect_macd),
     ("Classic - Bollinger", detect_bollinger),
+    ("Classic - Keltner Channel", detect_keltner),
     ("Classic - ATR Breakout", detect_atr_breakout),
+    ("Classic - VWAP", _vwap),
+    ("Classic - Ichimoku", detect_ichimoku),
+    ("Classic - Stochastic RSI", detect_stochastic_rsi),
     ("PA - Engulfing", detect_engulfing),
     ("PA - Pin Bar", detect_pin_bar),
     ("PA - Inside Bar", detect_inside_bar),
     ("PA - Double Top/Bot", detect_double_top_bottom),
+    ("PA - Volume Breakout", detect_volume_breakout),
+    ("PA - S/R Levels", detect_support_resistance),
 ]
 
 
