@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import socket
 import sys
 import time
 import threading
@@ -18,7 +19,7 @@ from rich.table import Table
 from rich.text import Text
 from rich import box
 
-from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS
+from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
 from core.mt5_broker import MetaQuotesBroker
@@ -31,9 +32,16 @@ from core.notifier import Notifier
 from core.analytics import get_analytics, get_strategy_stats
 from core.webserver import start_webserver
 from core.backtester import run_all_backtests, get_backtest_results, backtest_symbol
+from core.equity import snapshot_equity, build_daily_summary, pop_completed_day
+from core.reconcile import reconcile_with_exchange
 from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
+from agents.sentiment_agent import SentimentAgent
+from agents.regime_agent import RegimeAgent
 from agents.risk_manager import RiskManager
+from agents.portfolio_manager import PortfolioManagerAgent
+from agents.compliance_agent import ComplianceAgent
+from agents.execution_agent import ExecutionAgent
 from agents.trader import Trader
 from agents.auditor import Auditor
 
@@ -55,25 +63,69 @@ pos_mgr = PositionManager()
 notifier = Notifier(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
 
 
+_lock_socket = None
+
+
+def acquire_instance_lock():
+    """Bind a localhost port as a process-wide mutex. A second bot instance
+    fails the bind and must exit — two copies would place duplicate trades.
+    The OS releases the port automatically even on a hard crash."""
+    global _lock_socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(("127.0.0.1", LOCK_PORT))
+        s.listen(1)
+    except OSError:
+        return False
+    _lock_socket = s
+    return True
+
+
+def make_broker():
+    if BROKER_TYPE == "mt5":
+        return MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
+    if BROKER_TYPE == "binance":
+        return BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
+    return PaperBroker()
+
+
+# The Trader consumes orders/execution_plan, which only exists if the whole
+# chain runs: analysis -> sentiment/regime -> risk -> portfolio -> compliance -> execution
+CYCLE_AGENTS = (
+    Orchestrator,
+    ResearchAnalyst,
+    SentimentAgent,
+    RegimeAgent,
+    RiskManager,
+    PortfolioManagerAgent,
+    ComplianceAgent,
+    ExecutionAgent,
+    Trader,
+    Auditor,
+)
+
+
 def run_cycle():
     try:
-        o = Orchestrator()
-        a = ResearchAnalyst()
-        r = RiskManager()
-        t = Trader()
-        au = Auditor()
-        o.run()
-        a.run()
-        r.run()
-        t.run()
-        au.run()
+        for agent_cls in CYCLE_AGENTS:
+            agent_cls().run()
 
         prices = websocket_prices.get_all_prices()
         if prices:
             triggered = pos_mgr.update_prices(prices)
+            broker = make_broker() if triggered else None
             for tr in triggered:
-                memory.log("system", f"{tr['reason']}: {tr['symbol']} ${tr['pnl']:+.2f}")
+                # Execute the exit on the broker so cash/holdings stay in sync
+                # with the position tracker instead of drifting apart
+                close_side = "SELL" if tr["side"] == "BUY" else "BUY"
+                order = broker.place_order(tr["symbol"], close_side, tr["qty"], tr["exit_price"])
+                memory.log("system", f"{tr['reason']}: {tr['symbol']} ${tr['pnl']:+.2f} (exit {order.get('status', '?')})")
                 notifier.on_sl_tp(tr)
+
+        snapshot_equity()
+        completed_day = pop_completed_day()
+        if completed_day:
+            notifier.daily_summary(build_daily_summary(completed_day))
     except Exception as e:
         memory.log("system", f"Cycle error: {e}")
         memory.log_error("cycle", str(e), traceback.format_exc())
@@ -244,7 +296,7 @@ def make_activity_panel() -> Panel:
 
 
 def make_opportunities_panel() -> Panel:
-    analysis = memory.read_latest("analyses")
+    analysis = memory.read("analyses", "market_scan")
     if not analysis:
         return Panel("[dim]No data yet[/dim]", title="[bold cyan]Opportunities[/bold cyan]")
     opps = analysis.get("opportunities", [])
@@ -273,7 +325,7 @@ def make_opportunities_panel() -> Panel:
 
 
 def make_risk_panel() -> Panel:
-    risk = memory.read_latest("decisions")
+    risk = memory.read("decisions", "risk_assessment")
     if not risk:
         return Panel("[dim]No risk data[/dim]", title="[bold cyan]Risk[/bold cyan]")
     verdict = risk.get("verdict", "unknown")
@@ -335,6 +387,12 @@ def main():
     console.clear()
     console.print("[bold cyan]Trading Agent Firm[/bold cyan]")
 
+    if not acquire_instance_lock():
+        console.print(f"[bold red]Another instance already holds lock port {LOCK_PORT} — "
+                      "exiting to prevent duplicate trading.[/bold red]")
+        memory.log("system", "Startup aborted: another instance is already running")
+        sys.exit(1)
+
     init_db()
     console.print("[dim]Database initialized[/dim]")
 
@@ -351,34 +409,36 @@ def main():
             info = mt5_broker.get_account_info()
             memory.log("system", f"MT5 connected: {info['name']}, ${info['balance']} {info['currency']}")
             portfolio = load_portfolio()
-            portfolio.initial_balance = info['balance']
-            portfolio.cash = info['balance']
-            init_cap = info['balance']
-            save_portfolio(portfolio)
+            if portfolio.initial_balance == 0:
+                # Fresh ledger: seed it from the live account. Never reseed an
+                # existing ledger — resetting cash while positions are open
+                # mints money out of thin air on every restart.
+                portfolio.initial_balance = info['balance']
+                portfolio.cash = info['balance']
+                save_portfolio(portfolio)
         else:
             memory.log("system", "MT5 not connected — using paper fallback")
-            init_cap = INITIAL_BALANCE
     elif BROKER_TYPE == "binance":
         mt5_broker = BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
         if mt5_broker.connected:
             memory.log("system", "Binance testnet connected")
-            portfolio = load_portfolio()
-            portfolio.initial_balance = INITIAL_BALANCE
-            portfolio.cash = INITIAL_BALANCE
-            init_cap = INITIAL_BALANCE
-            save_portfolio(portfolio)
         else:
             memory.log("system", "Binance not connected — using paper fallback")
-            init_cap = INITIAL_BALANCE
-    else:
-        init_cap = INITIAL_BALANCE
     portfolio = load_portfolio()
     if portfolio.initial_balance == 0:
         portfolio.initial_balance = INITIAL_BALANCE
         portfolio.cash = INITIAL_BALANCE
-        init_cap = INITIAL_BALANCE
         save_portfolio(portfolio)
+    init_cap = portfolio.initial_balance
     console.print(f"[dim]Initial capital: ${init_cap:,.2f}[/dim]\n")
+
+    if mt5_broker and mt5_broker.connected and hasattr(mt5_broker, "get_balances"):
+        recon = reconcile_with_exchange(mt5_broker)
+        if recon:
+            console.print(f"[dim]Reconciliation: {recon['drifted_positions']} of "
+                          f"{len(recon['positions'])} tracked positions drift from exchange[/dim]")
+
+    snapshot_equity()
 
     for pos in pos_mgr.get_open_positions():
         memory.log("system", f"Restored position: {pos['side']} {pos['quantity']} {pos['symbol']} @ ${pos['entry_price']:.5f}")
@@ -429,7 +489,7 @@ def main():
                 broker = PaperBroker()
                 prices = websocket_prices.get_all_prices()
                 if not prices:
-                    analysis = memory.read_latest("analyses")
+                    analysis = memory.read("analyses", "market_scan")
                     if analysis:
                         prices = {s: {"price": d.get("price", 0)}
                                  for s, d in (analysis.get("all_analyses", {}) or {}).items()}

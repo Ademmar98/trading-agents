@@ -1,8 +1,9 @@
 ﻿import time
 
-from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT
+from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT
 from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
+from core.equity import daily_loss_pct
 
 MIN_CONFIDENCE = 0.55
 MAX_TRADES_PER_CYCLE = 3
@@ -30,6 +31,10 @@ class ComplianceAgent(BaseAgent):
         if portfolio.total_pnl_pct < -MAX_PORTFOLIO_RISK_PCT:
             halted = True
             blockers.append(f"Portfolio drawdown {portfolio.total_pnl_pct:.2f}% exceeds risk limit")
+        day_pnl = daily_loss_pct()
+        if day_pnl < -DAILY_LOSS_LIMIT_PCT:
+            halted = True
+            blockers.append(f"Daily loss {day_pnl:.2f}% breached the {DAILY_LOSS_LIMIT_PCT}% circuit breaker — no new trades today")
         if BROKER_TYPE not in {"paper", "binance", "mt5", "alpaca"}:
             halted = True
             blockers.append(f"Unknown broker type: {BROKER_TYPE}")
@@ -42,6 +47,10 @@ class ComplianceAgent(BaseAgent):
                 reasons.append("Global safety halt")
             if not opp.get("risk_ok", False):
                 reasons.append("Risk flag is false")
+            if opp.get("action", "BUY") == "SELL":
+                held = portfolio.positions.get(opp.get("symbol"))
+                if not held or held.quantity <= 0:
+                    reasons.append("Spot-only: SELL without holdings would open a short")
             if opp.get("confidence", 0) < MIN_CONFIDENCE:
                 reasons.append("Confidence below compliance threshold")
             if opp.get("price", 0) <= 0 or opp.get("max_qty", 0) <= 0:

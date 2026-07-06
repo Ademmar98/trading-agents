@@ -150,7 +150,16 @@ class BinanceBroker:
                     "quoteOrderQty": round(quantity * price, 2),
                     "newOrderRespType": "FULL",
                 }
-            result = {} if params is None else self._request("POST", "/api/v3/order", signed=True, params=params)
+            result = {}
+            if params is not None:
+                # _sign mutates its dict, so each attempt needs a fresh copy
+                result = self._request("POST", "/api/v3/order", signed=True, params=dict(params))
+                err = str(result.get("msg", result.get("error", ""))).lower()
+                if not result.get("orderId") and ("recvwindow" in err or "timestamp" in err):
+                    # Clock drift: resync and retry once before falling back to paper
+                    self._sync_time()
+                    self._log("Clock drift rejection — resynced, retrying order once")
+                    result = self._request("POST", "/api/v3/order", signed=True, params=dict(params))
             if result.get("orderId"):
                 order["status"] = "filled"
                 order["binance_order"] = result["orderId"]
@@ -161,6 +170,12 @@ class BinanceBroker:
                     order["price"] = round(avg_price, 6)
                     order["quantity"] = sum(float(f["qty"]) for f in fills)
                 self._log(f"Binance filled: {side} {bsym} qty={order['quantity']}")
+                # Mirror the live fill into the local ledger so cash/equity stay real
+                from core.portfolio import load_portfolio, save_portfolio, apply_fill
+                p = load_portfolio()
+                apply_fill(p, symbol, side, order["quantity"], order["price"])
+                p.trades.append(order)
+                save_portfolio(p)
             else:
                 order["status"] = "rejected"
                 order["reason"] = reject_reason or str(result.get("msg", result.get("error", "unknown")))
@@ -207,6 +222,19 @@ class BinanceBroker:
             if b["asset"] == asset:
                 return float(b.get("free", 0))
         return 0.0
+
+    def get_balances(self):
+        """All non-zero asset balances (free + locked) on the account."""
+        if not self._use_live:
+            return {}
+        self.ensure_connected()
+        result = self._request("GET", "/api/v3/account", signed=True)
+        balances = {}
+        for b in result.get("balances", []):
+            total = float(b.get("free", 0)) + float(b.get("locked", 0))
+            if total > 0:
+                balances[b["asset"]] = total
+        return balances
 
     def get_account_info(self):
         if not self._use_live:

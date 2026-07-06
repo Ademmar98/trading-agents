@@ -64,6 +64,47 @@ class Portfolio:
         return (self.positions_value / self.equity) * 100
 
 
+def apply_fill(p: Portfolio, symbol: str, side: str, quantity: float, price: float):
+    """Apply an externally executed (live broker) fill to the local ledger.
+
+    Spot semantics only: BUY debits cash and adds to the position, SELL
+    credits cash for at most the locally held quantity. Without this mirror
+    the ledger's cash never moves when the live broker fills an order.
+    """
+    side = side.upper()
+    if side == "BUY":
+        pos = p.positions.get(symbol)
+        if pos and pos.quantity < 0:
+            # Covering a legacy short: never flip it into a long
+            cover_qty = min(quantity, -pos.quantity)
+            p.cash -= cover_qty * price
+            pos.quantity += cover_qty
+            if pos.quantity >= -1e-12:
+                del p.positions[symbol]
+            return
+        cost = quantity * price
+        p.cash -= cost
+        if pos and pos.quantity > 0:
+            total_cost = pos.entry_price * pos.quantity + cost
+            pos.quantity += quantity
+            pos.entry_price = total_cost / pos.quantity
+            pos.current_price = price
+        else:
+            p.positions[symbol] = Position(
+                symbol=symbol, entry_price=price, quantity=quantity,
+                current_price=price
+            )
+    elif side == "SELL":
+        pos = p.positions.get(symbol)
+        if not pos or pos.quantity <= 0:
+            return
+        sell_qty = min(quantity, pos.quantity)
+        p.cash += sell_qty * price
+        pos.quantity -= sell_qty
+        if pos.quantity <= 1e-12:
+            del p.positions[symbol]
+
+
 def save_portfolio(p: Portfolio):
     data = {
         "cash": p.cash,

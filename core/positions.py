@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+
+from config import TRAILING_STOP_PCT, TRAILING_ACTIVATION_PCT
 from core.database import execute, fetchone, fetchall, init_db
 
 
@@ -16,9 +18,9 @@ class PositionManager:
 
     def open_position(self, symbol, side, qty, price, sl=0, tp=0):
         execute("""
-            INSERT INTO positions (symbol, side, quantity, entry_price, current_price, stop_loss, take_profit)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, [symbol, side.upper(), qty, price, price, sl, tp])
+            INSERT INTO positions (symbol, side, quantity, entry_price, current_price, stop_loss, take_profit, peak_price)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, [symbol, side.upper(), qty, price, price, sl, tp, price])
         pos_id = fetchone("SELECT last_insert_rowid()")[0]
         return pos_id
 
@@ -43,7 +45,9 @@ class PositionManager:
         """, [position_id, pos["symbol"], pos["side"], pos["quantity"],
               pos["entry_price"], exit_price, round(pnl, 2), round(pnl_pct, 2),
               reason, pos["opened_at"]])
-        return {"symbol": pos["symbol"], "side": pos["side"], "pnl": round(pnl, 2), "pnl_pct": round(pnl_pct, 2), "reason": reason}
+        return {"symbol": pos["symbol"], "side": pos["side"], "qty": pos["quantity"],
+                "entry_price": pos["entry_price"], "exit_price": exit_price,
+                "pnl": round(pnl, 2), "pnl_pct": round(pnl_pct, 2), "reason": reason}
 
     def update_prices(self, prices):
         positions = self.get_open_positions()
@@ -59,10 +63,16 @@ class PositionManager:
             else:
                 pnl = (pos["entry_price"] - price) * pos["quantity"]
                 pnl_pct = (pos["entry_price"] - price) / pos["entry_price"] * 100
+
+            # Peak = most favorable price seen (highest for longs, lowest for shorts).
+            # Rows from before the peak_price column default to 0 -> seed with price.
+            peak = pos.get("peak_price") or price
+            peak = max(peak, price) if pos["side"] == "BUY" else min(peak, price)
             execute("""
-                UPDATE positions SET current_price=?, pnl=?, pnl_pct=?, updated_at=datetime('now')
+                UPDATE positions SET current_price=?, pnl=?, pnl_pct=?, peak_price=?, updated_at=datetime('now')
                 WHERE id=? AND status='open'
-            """, [price, round(pnl, 2), round(pnl_pct, 2), pos["id"]])
+            """, [price, round(pnl, 2), round(pnl_pct, 2), peak, pos["id"]])
+
             if pos["stop_loss"] and (
                 (pos["side"] == "BUY" and price <= pos["stop_loss"]) or
                 (pos["side"] == "SELL" and price >= pos["stop_loss"])
@@ -77,7 +87,28 @@ class PositionManager:
                 result = self.close_position(pos["id"], price, reason="take_profit")
                 if result:
                     triggered.append(result)
+            elif self._trailing_stop_hit(pos["side"], pos["entry_price"], peak, price):
+                result = self.close_position(pos["id"], price, reason="trailing_stop")
+                if result:
+                    triggered.append(result)
         return triggered
+
+    @staticmethod
+    def _trailing_stop_hit(side, entry, peak, price):
+        """Once profit exceeds the activation threshold, exit when price gives
+        back TRAILING_STOP_PCT from the peak — locks in gains instead of
+        riding a winner back down to the static stop."""
+        if TRAILING_STOP_PCT <= 0 or not entry or not peak:
+            return False
+        if side == "BUY":
+            run_up_pct = (peak - entry) / entry * 100
+            if run_up_pct < TRAILING_ACTIVATION_PCT:
+                return False
+            return price <= peak * (1 - TRAILING_STOP_PCT / 100)
+        run_down_pct = (entry - peak) / entry * 100
+        if run_down_pct < TRAILING_ACTIVATION_PCT:
+            return False
+        return price >= peak * (1 + TRAILING_STOP_PCT / 100)
 
     def get_positions_summary(self):
         positions = self.get_open_positions()

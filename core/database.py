@@ -105,6 +105,20 @@ def init_db():
                 computed_at TEXT DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS equity_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                equity REAL NOT NULL,
+                cash REAL DEFAULT 0,
+                positions_value REAL DEFAULT 0,
+                exposure_pct REAL DEFAULT 0,
+                snapped_at TEXT DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS meta (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            );
+
             CREATE TABLE IF NOT EXISTS optimization_results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 symbol TEXT NOT NULL,
@@ -144,6 +158,9 @@ def _migrate(conn):
         "avg_loss": "REAL DEFAULT 0",
         "tested_at": "TEXT",
     })
+    _ensure_columns(conn, "positions", {
+        "peak_price": "REAL DEFAULT 0",
+    })
     _ensure_columns(conn, "optimization_results", {
         "sl_mult": "REAL",
         "tp_mult": "REAL",
@@ -157,3 +174,13 @@ def _migrate(conn):
         "sharpe_ratio": "REAL DEFAULT 0",
         "optimized_at": "TEXT",
     })
+
+
+def get_meta(key, default=None):
+    row = fetchone("SELECT value FROM meta WHERE key=?", [key])
+    return row["value"] if row else default
+
+
+def set_meta(key, value):
+    execute("INSERT INTO meta (key, value) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value", [key, str(value)])

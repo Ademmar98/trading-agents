@@ -14,9 +14,9 @@ class Orchestrator(BaseAgent):
     def run(self):
         self.log("Starting orchestration cycle")
         portfolio = load_portfolio()
-        prices = self.memory.read_latest("analyses")
-        risk_report = self.memory.read_latest("decisions")
-        audit = self.memory.read_latest("reports")
+        prices = self.memory.read("analyses", "market_scan")
+        risk_report = self.memory.read("decisions", "risk_assessment")
+        audit = self.memory.read("reports", "audit")
 
         state = {
             "cycle_time": datetime.now(timezone.utc).isoformat(),

@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
-DATA_DIR = BASE_DIR / "data"
+# Overridable so tests can run against a throwaway data dir
+DATA_DIR = Path(os.getenv("TRADING_DATA_DIR", BASE_DIR / "data"))
 
 # Load variables from a local .env file if present (real env vars take priority)
 _env_file = BASE_DIR / ".env"
@@ -39,6 +40,10 @@ LEVERAGE_ENABLED = False  # spot-only, no margin
 MAX_POSITION_SIZE_PCT = float(os.getenv("MAX_POSITION_SIZE_PCT", "25"))
 MAX_PORTFOLIO_RISK_PCT = float(os.getenv("MAX_PORTFOLIO_RISK_PCT", "2"))
 STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "5"))
+DAILY_LOSS_LIMIT_PCT = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "3"))
+TRAILING_STOP_PCT = float(os.getenv("TRAILING_STOP_PCT", "2"))
+TRAILING_ACTIVATION_PCT = float(os.getenv("TRAILING_ACTIVATION_PCT", "1"))
+LOCK_PORT = int(os.getenv("TRADING_LOCK_PORT", "48620"))
 
 TRADING_INTERVAL_MINUTES = int(os.getenv("TRADING_INTERVAL_MINUTES", "60"))
 

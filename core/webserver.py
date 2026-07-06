@@ -56,6 +56,16 @@ def get_trades(limit=100):
 
 def get_equity_curve():
     p = load_portfolio()
+    # Prefer real per-cycle snapshots (they include open-position value);
+    # fall back to reconstructing from closed trades for older databases
+    snaps = fetchall(
+        "SELECT equity, snapped_at FROM equity_history ORDER BY id ASC LIMIT 1000"
+    )
+    if snaps:
+        points = [{"t": "start", "equity": p.initial_balance}]
+        points += [{"t": r["snapped_at"], "equity": r["equity"]} for r in snaps]
+        points.append({"t": "now", "equity": round(p.equity, 2)})
+        return points
     rows = fetchall("SELECT closed_at, pnl FROM trades ORDER BY closed_at ASC")
     points = [{"t": "start", "equity": p.initial_balance}]
     cumulative = p.initial_balance

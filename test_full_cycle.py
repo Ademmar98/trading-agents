@@ -17,11 +17,16 @@ print(f"Portfolio: ${p.cash} cash, ${p.initial_balance} init")
 # Run all agents
 from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
+from agents.sentiment_agent import SentimentAgent
+from agents.regime_agent import RegimeAgent
 from agents.risk_manager import RiskManager
+from agents.portfolio_manager import PortfolioManagerAgent
+from agents.compliance_agent import ComplianceAgent
+from agents.execution_agent import ExecutionAgent
 from agents.trader import Trader
 from agents.auditor import Auditor
 
-for name, agent_cls in [("Orch",Orchestrator),("Analyst",ResearchAnalyst),("Risk",RiskManager),("Trade",Trader),("Audit",Auditor)]:
+for name, agent_cls in [("Orch",Orchestrator),("Analyst",ResearchAnalyst),("Sentiment",SentimentAgent),("Regime",RegimeAgent),("Risk",RiskManager),("PortfolioMgr",PortfolioManagerAgent),("Compliance",ComplianceAgent),("Execution",ExecutionAgent),("Trade",Trader),("Audit",Auditor)]:
     try:
         agent = agent_cls()
         agent.run()

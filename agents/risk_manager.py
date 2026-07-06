@@ -12,7 +12,7 @@ class RiskManager(BaseAgent):
     def run(self):
         self.log("Evaluating portfolio risk (spot-only, no leverage)")
         portfolio = load_portfolio()
-        analysis = self.memory.read_latest("analyses")
+        analysis = self.memory.read("analyses", "market_scan")
         opportunities = (analysis or {}).get("opportunities", [])
 
         risks = []

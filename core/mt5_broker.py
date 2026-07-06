@@ -103,6 +103,12 @@ class MetaQuotesBroker:
                 order["mt5_order"] = result.order
                 order["broker"] = "mt5_live"
                 self._log(f"MT5 order filled: {side} {lot_qty}L {symbol} @ {price}")
+                # Mirror the live fill into the local ledger so cash/equity stay real
+                from core.portfolio import load_portfolio, save_portfolio, apply_fill
+                p = load_portfolio()
+                apply_fill(p, symbol, side, quantity, price)
+                p.trades.append(order)
+                save_portfolio(p)
             else:
                 code = result.retcode if result else "no_result"
                 order["status"] = "rejected"

@@ -46,6 +46,17 @@ class Notifier:
     def on_error(self, message):
         self.send(f"<b>ERROR:</b> {message}")
 
+    def daily_summary(self, s):
+        sign = "+" if s["day_pnl_pct"] >= 0 else ""
+        self.send(
+            f"<b>Daily Summary — {s['date']}</b>\n"
+            f"Equity: ${s['equity']:,.2f} ({sign}{s['day_pnl_pct']:.2f}% today, "
+            f"{s['total_pnl_pct']:+.2f}% all-time)\n"
+            f"Closed trades: {s['trades_closed']}  Win rate: {s['win_rate']:.0f}%\n"
+            f"Realized P&L: ${s['pnl_closed']:+,.2f}\n"
+            f"Open positions: {s['open_positions']}  Cash: ${s['cash']:,.2f}"
+        )
+
     def on_sl_tp(self, result):
         self.send(
             f"<b>{result['reason'].upper()}</b> {result['side']} {result['symbol']}\n"
