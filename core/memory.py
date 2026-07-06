@@ -45,6 +45,25 @@ class SharedMemory:
         with open(log_file, "a") as f:
             f.write(json.dumps(entry) + "\n")
 
+    def log_error(self, source: str, message: str, trace: str = ""):
+        entry = {"source": source, "message": message, "trace": trace, "time": time.time()}
+        error_file = self.dirs["logs"] / "errors.jsonl"
+        with open(error_file, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+
+    def get_recent_errors(self, n=50):
+        error_file = self.dirs["logs"] / "errors.jsonl"
+        if not error_file.exists():
+            return []
+        lines = [l for l in error_file.read_text().strip().splitlines() if l.strip()]
+        result = []
+        for l in lines[-n:]:
+            try:
+                result.append(json.loads(l))
+            except Exception:
+                pass
+        return result
+
     def get_recent_logs(self, n=20):
         log_file = self.dirs["logs"] / "journal.jsonl"
         if not log_file.exists():

@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import threading
+import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from config import BASE_DIR, BROKER_TYPE, BINANCE_USE_TESTNET
@@ -69,6 +70,32 @@ def get_activity(n=30):
     return memory.get_recent_logs(n)
 
 
+ERROR_KEYWORDS = ("error", "fail", "exception", "not connected", "timeout",
+                  "invalid", "denied", "rejected", "insufficient")
+
+
+def get_errors(n=50):
+    entries = [dict(e) for e in memory.get_recent_errors(n)]
+    for log in memory.get_recent_logs(200):
+        msg = str(log.get("message", "")).lower()
+        if any(k in msg for k in ERROR_KEYWORDS):
+            entries.append({
+                "source": log.get("agent", "system"),
+                "message": log.get("message", ""),
+                "trace": "",
+                "time": log.get("time", 0),
+            })
+    entries.sort(key=lambda e: e.get("time", 0), reverse=True)
+    seen = set()
+    unique = []
+    for e in entries:
+        key = (int(e.get("time", 0)), e.get("message", ""))
+        if key not in seen:
+            seen.add(key)
+            unique.append(e)
+    return unique[:n]
+
+
 class DashboardHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
@@ -113,9 +140,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(get_equity_curve())
             elif self.path == "/api/activity":
                 self._json(get_activity())
+            elif self.path == "/api/errors":
+                self._json(get_errors())
             else:
                 self._send(404, "text/plain", b"not found")
         except Exception as e:
+            try:
+                memory.log_error("webserver", f"{self.path}: {e}", traceback.format_exc())
+            except Exception:
+                pass
             self._send(500, "application/json", json.dumps({"error": str(e)}).encode())
 
 

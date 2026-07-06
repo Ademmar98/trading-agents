@@ -145,6 +145,23 @@
   }
   .log .msg { flex: 1; word-break: break-word; }
 
+  /* ---- errors ---- */
+  .err-badge { color: var(--red); border: 1px solid var(--red); padding: 1px 8px; }
+  .err-title { color: var(--red); }
+  .log .when.err { color: var(--red); }
+  .log details { margin-top: 4px; }
+  .log summary {
+    cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--red);
+    user-select: none;
+  }
+  .log summary:hover { text-decoration: underline; }
+  .log pre {
+    font-family: "JetBrains Mono", monospace; font-size: 11px; line-height: 1.5;
+    color: var(--muted); background: #0A0A0A; border-left: 2px solid var(--red);
+    padding: 10px 12px; margin-top: 6px; overflow-x: auto; white-space: pre-wrap;
+  }
+
   footer {
     padding: 16px 0; font-family: "JetBrains Mono", monospace; font-size: 11px;
     color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
@@ -165,6 +182,7 @@
       <span><span class="status-dot" id="dot" aria-hidden="true"></span> <span id="conn">LIVE</span></span>
       <span class="muted" id="broker-badge">—</span>
       <span class="muted" id="net-badge">—</span>
+      <span id="err-count" class="err-badge" hidden></span>
     </div>
     <span id="clock" class="num">--:--:--</span>
   </div>
@@ -225,6 +243,12 @@
       <div class="empty" id="activity-empty" hidden>NO ACTIVITY YET</div>
     </section>
   </div>
+
+  <section>
+    <h2><span class="err-title">Errors &amp; Bugs</span> <span class="idx">05</span></h2>
+    <ul class="log" id="error-log"></ul>
+    <div class="empty" id="errors-empty" hidden>NO ERRORS — ALL SYSTEMS NOMINAL</div>
+  </section>
 
   <footer>
     <span>Spot only · No leverage · Refresh 5s</span>
@@ -345,20 +369,42 @@ function renderActivity(rows) {
   }).join("");
 }
 
+function renderErrors(rows) {
+  document.getElementById("errors-empty").hidden = rows.length > 0;
+  const badge = document.getElementById("err-count");
+  badge.hidden = rows.length === 0;
+  badge.textContent = rows.length + (rows.length === 1 ? " ERROR" : " ERRORS");
+  const openTraces = new Set([...document.querySelectorAll("#error-log details[open]")].map((d) => d.dataset.key));
+  document.getElementById("error-log").innerHTML = rows.map((e) => {
+    const d = new Date(e.time * 1000);
+    const key = e.time + "|" + e.message;
+    const trace = e.trace
+      ? `<details data-key="${esc(key)}"${openTraces.has(key) ? " open" : ""}><summary>Traceback</summary><pre>${esc(e.trace)}</pre></details>`
+      : "";
+    return `<li>
+      <span class="when err">${exactTime(d)}</span>
+      <span class="agent">${esc(e.source)}</span>
+      <span class="msg">${esc(e.message)}${trace}</span>
+    </li>`;
+  }).join("");
+}
+
 async function refresh() {
   try {
-    const [summary, positions, trades, equity, activity] = await Promise.all([
+    const [summary, positions, trades, equity, activity, errors] = await Promise.all([
       fetch("/api/summary").then((r) => r.json()),
       fetch("/api/positions").then((r) => r.json()),
       fetch("/api/trades").then((r) => r.json()),
       fetch("/api/equity").then((r) => r.json()),
       fetch("/api/activity").then((r) => r.json()),
+      fetch("/api/errors").then((r) => r.json()),
     ]);
     renderSummary(summary);
     renderPositions(positions);
     renderTrades(trades);
     renderChart(equity);
     renderActivity(activity);
+    renderErrors(errors);
     document.getElementById("conn").textContent = "LIVE";
     document.getElementById("dot").className = "status-dot";
     document.getElementById("updated").textContent = "UPDATED " + hms(new Date());

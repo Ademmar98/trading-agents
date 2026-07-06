@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import threading
+import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -38,6 +39,17 @@ from agents.auditor import Auditor
 
 console = Console()
 memory = SharedMemory()
+
+
+def _thread_excepthook(args):
+    memory.log_error(
+        "thread",
+        f"{args.exc_type.__name__}: {args.exc_value}",
+        "".join(traceback.format_exception(args.exc_type, args.exc_value, args.exc_traceback)),
+    )
+
+
+threading.excepthook = _thread_excepthook
 mt5_broker = None
 pos_mgr = PositionManager()
 notifier = Notifier(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
@@ -64,6 +76,7 @@ def run_cycle():
                 notifier.on_sl_tp(tr)
     except Exception as e:
         memory.log("system", f"Cycle error: {e}")
+        memory.log_error("cycle", str(e), traceback.format_exc())
         notifier.on_error(str(e))
 
 
