@@ -1,0 +1,127 @@
+import json
+import time
+from pathlib import Path
+from typing import Optional
+from datetime import datetime, timezone
+
+from config import DATA_DIR, STOP_LOSS_PCT, INITIAL_BALANCE
+from core.portfolio import Portfolio, Position, save_portfolio, load_portfolio
+
+
+class PaperBroker:
+    def __init__(self, initial_balance: float = INITIAL_BALANCE):
+        self.portfolio = load_portfolio()
+        if self.portfolio.initial_balance == 0:
+            self.portfolio.initial_balance = initial_balance
+            self.portfolio.cash = initial_balance
+        self.orders_dir = DATA_DIR / "orders"
+        self.orders_dir.mkdir(parents=True, exist_ok=True)
+        self.pending_orders = []
+
+    def place_order(self, symbol: str, side: str, quantity: float,
+                    price: float, order_type: str = "market",
+                    sl: float = 0, tp: float = 0) -> dict:
+        order = {
+            "symbol": symbol,
+            "side": side.upper(),
+            "quantity": quantity,
+            "price": price,
+            "type": order_type,
+            "status": "filled",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "id": str(int(time.time() * 1000)),
+        }
+        if sl:
+            order["stop_loss"] = sl
+        if tp:
+            order["take_profit"] = tp
+        cost = quantity * price
+        if side.upper() == "BUY":
+            if symbol in self.portfolio.positions and self.portfolio.positions[symbol].quantity < 0:
+                pos = self.portfolio.positions[symbol]
+                cover_qty = min(quantity, abs(pos.quantity))
+                cost = cover_qty * price
+                self.portfolio.cash -= cost
+                realized_pnl = (pos.entry_price - price) * cover_qty
+                pos.quantity += cover_qty
+                if pos.quantity >= 0:
+                    del self.portfolio.positions[symbol]
+                order["action"] = "COVER"
+                order["realized_pnl"] = round(realized_pnl, 2)
+                self.portfolio.trades.append(order)
+            elif cost > self.portfolio.cash:
+                order["status"] = "rejected"
+                order["reason"] = "insufficient funds"
+            else:
+                self.portfolio.cash -= cost
+                if symbol in self.portfolio.positions and self.portfolio.positions[symbol].quantity > 0:
+                    pos = self.portfolio.positions[symbol]
+                    avg_cost = ((pos.entry_price * pos.quantity) + cost) / (pos.quantity + quantity)
+                    pos.quantity += quantity
+                    pos.entry_price = avg_cost
+                else:
+                    self.portfolio.positions[symbol] = Position(
+                        symbol=symbol, entry_price=price, quantity=quantity,
+                        current_price=price
+                    )
+                self.portfolio.trades.append(order)
+        elif side.upper() == "SELL":
+            if symbol in self.portfolio.positions and self.portfolio.positions[symbol].quantity > 0:
+                pos = self.portfolio.positions[symbol]
+                sell_qty = min(quantity, pos.quantity)
+                cost = sell_qty * price
+                self.portfolio.cash += cost
+                realized_pnl = (price - pos.entry_price) * sell_qty
+                pos.quantity -= sell_qty
+                if pos.quantity <= 0:
+                    del self.portfolio.positions[symbol]
+                order["action"] = "SELL"
+                order["realized_pnl"] = round(realized_pnl, 2)
+                self.portfolio.trades.append(order)
+            else:
+                cost = quantity * price
+                self.portfolio.cash += cost
+                self.portfolio.positions[symbol] = Position(
+                    symbol=symbol, entry_price=price, quantity=-quantity,
+                    current_price=price
+                )
+                order["action"] = "SHORT"
+                self.portfolio.trades.append(order)
+        order["portfolio_cash"] = round(self.portfolio.cash, 2)
+        self._save_order(order)
+        save_portfolio(self.portfolio)
+        return order
+
+    def _save_order(self, order):
+        f = self.orders_dir / f"{order['id']}.json"
+        f.write_text(json.dumps(order, indent=2))
+
+    def check_stop_losses(self, prices: dict) -> list:
+        triggered = []
+        for sym, pos in list(self.portfolio.positions.items()):
+            price = prices.get(sym, {}).get("price", 0)
+            if not price:
+                continue
+            pos.current_price = price
+            if pos.quantity >= 0:
+                pnl_pct = (price - pos.entry_price) / pos.entry_price * 100
+                side = "SELL"
+            else:
+                pnl_pct = (pos.entry_price - price) / pos.entry_price * 100
+                side = "BUY"
+            if pnl_pct <= -STOP_LOSS_PCT:
+                order = self.place_order(sym, side, abs(pos.quantity), price)
+                order["trigger"] = "stop_loss"
+                triggered.append(order)
+        return triggered
+
+    def get_status(self) -> dict:
+        return {
+            "cash": round(self.portfolio.cash, 2),
+            "positions_value": round(self.portfolio.positions_value, 2),
+            "equity": round(self.portfolio.equity, 2),
+            "total_pnl": round(self.portfolio.total_pnl, 2),
+            "total_pnl_pct": round(self.portfolio.total_pnl_pct, 2),
+            "exposure_pct": round(self.portfolio.exposure_pct, 2),
+            "positions_count": len(self.portfolio.positions),
+        }
