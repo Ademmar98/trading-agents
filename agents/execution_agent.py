@@ -1,10 +1,9 @@
 ﻿import time
 
+from config import SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT
 from agents.base_agent import BaseAgent
 
 MAX_SPREAD_PCT = 0.35
-SL_VOL_MULT = 1.5
-TP_VOL_MULT = 3.0
 
 
 class ExecutionAgent(BaseAgent):
@@ -40,15 +39,23 @@ class ExecutionAgent(BaseAgent):
                 rejected.append({**opp, "execution_reasons": ["Computed quantity is zero"]})
                 continue
 
-            vol = data.get("volatility") or (opp.get("indicators", {}) or {}).get("volatility") or 1.0
-            vol_decimal = max(vol / 100.0, 0.003)
+            vol = data.get("volatility") or (opp.get("indicators", {}) or {}).get("volatility") or 2.0
+            vol_decimal = max(vol / 100.0, 0.005)
             action = opp.get("action", "BUY")
             if action == "BUY":
+                sl_pct = vol_decimal * SL_VOL_MULT * 100
+                tp_pct = vol_decimal * TP_VOL_MULT * 100
                 sl_price = round(price * (1 - vol_decimal * SL_VOL_MULT), 5)
                 tp_price = round(price * (1 + vol_decimal * TP_VOL_MULT), 5)
             else:
+                sl_pct = vol_decimal * SL_VOL_MULT * 100
+                tp_pct = vol_decimal * TP_VOL_MULT * 100
                 sl_price = round(price * (1 + vol_decimal * SL_VOL_MULT), 5)
                 tp_price = round(price * (1 - vol_decimal * TP_VOL_MULT), 5)
+
+            if tp_pct < MIN_TP_PCT:
+                rejected.append({**opp, "execution_reasons": [f"TP too small: {tp_pct:.1f}% < {MIN_TP_PCT}%"]})
+                continue
 
             executable.append({
                 **opp,
@@ -56,6 +63,8 @@ class ExecutionAgent(BaseAgent):
                 "price": price,
                 "stop_loss": sl_price,
                 "take_profit": tp_price,
+                "tp_pct": round(tp_pct, 1),
+                "sl_pct": round(sl_pct, 1),
                 "spread_pct": round(spread_pct, 4),
                 "execution_ok": True,
             })

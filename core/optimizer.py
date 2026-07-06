@@ -4,9 +4,9 @@ from core.strategies import scan_symbol
 from config import INITIAL_BALANCE
 
 PARAM_GRID = {
-    "sl_mult": [1.5, 2.0, 2.5],
-    "tp_mult": [2.0, 3.0, 4.0],
-    "position_size_pct": [20, 25, 30],
+    "sl_mult": [1.5, 2.0, 2.5, 3.0],
+    "tp_mult": [4.0, 5.0, 6.0, 8.0],
+    "position_size_pct": [15, 20, 25],
     "confidence_threshold": [0.4, 0.5, 0.6],
 }
 
@@ -157,7 +157,7 @@ def get_optimized_params(symbol):
             "position_size_pct": row["position_size_pct"],
             "confidence_threshold": row["confidence_threshold"],
         }
-    return {"sl_mult": 1.5, "tp_mult": 3.0, "position_size_pct": 25, "confidence_threshold": 0.0}
+    return {"sl_mult": 2.0, "tp_mult": 6.0, "position_size_pct": 25, "confidence_threshold": 0.0}
 
 
 def run_all_optimizations(symbols):

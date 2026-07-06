@@ -36,7 +36,7 @@ def fetch_klines(symbol, interval="1d", limit=100):
         return []
 
 
-def _calc_sl_tp(price, side, volatility_pct, sl_mult=1.5, tp_mult=3.0):
+def _calc_sl_tp(price, side, volatility_pct, sl_mult=2.0, tp_mult=6.0):
     vol_dec = (volatility_pct or 2) / 100.0
     if side == "BUY":
         sl = round(price * (1 - vol_dec * sl_mult), 5)
