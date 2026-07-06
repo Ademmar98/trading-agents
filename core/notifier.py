@@ -21,27 +21,22 @@ class Notifier:
     def on_trade(self, order):
         if not self._enabled:
             return
-        symbol = order.get("symbol", "?")
-        side = order.get("side", "?")
-        qty = order.get("quantity", 0)
+        symbol = order.get("symbol", "?").replace("/", "")
+        side = order.get("side", order.get("action", "?"))
+        qty = order.get("quantity", order.get("qty", 0))
         price = order.get("price", 0)
-        sl = order.get("stop_loss", 0)
-        tp = order.get("take_profit", 0)
-        status = order.get("status", "?")
-        pnl = order.get("realized_pnl", order.get("pnl"))
-        icon = "+" if status == "filled" else "-"
-        lines = [
-            f"<b>[{icon}] {side} {symbol}</b>",
-            f"Qty: {qty:.4f}  @  ${price:.5f}",
-        ]
-        if sl:
-            lines.append(f"SL: ${sl:.5f}")
-        if tp:
-            lines.append(f"TP: ${tp:.5f}")
-        if pnl is not None:
-            lines.append(f"P&L: ${pnl:+.2f}")
-        lines.append(f"Time: {datetime.now(timezone.utc).strftime('%H:%M:%S')}")
-        self.send("\n".join(lines))
+        sl = order.get("stop_loss", order.get("sl", 0))
+        tp = order.get("take_profit", order.get("tp", 0))
+        status = order.get("status", "filled")
+        if status == "filled":
+            pct = abs((price - sl) / price * 100) if sl and price else 0
+            est_profit = abs((tp - price) / price * 100) if tp and price else 0
+            now = datetime.now(timezone.utc).strftime("%H:%M:%S")
+            self.send(
+                f"<b>{now}</b> trader | OPEN {side} {symbol}\n"
+                f"Entry ${price:.5f} | SL ${sl:.5f} ({pct:.1f}%)\n"
+                f"TP ${tp:.5f} ({est_profit:.1f}%) | Qty {qty:.4f}"
+            )
 
     def on_error(self, message):
         self.send(f"<b>ERROR:</b> {message}")
@@ -58,7 +53,22 @@ class Notifier:
         )
 
     def on_sl_tp(self, result):
+        now = datetime.now(timezone.utc).strftime("%H:%M:%S")
+        symbol = result.get("symbol", "?").replace("/", "")
+        reason = result.get("reason", "exit").upper()
+        pnl = result.get("pnl", 0)
+        pnl_pct = result.get("pnl_pct", 0)
+        side = result.get("side", "?")
+        icon = "+" if pnl >= 0 else "-"
         self.send(
-            f"<b>{result['reason'].upper()}</b> {result['side']} {result['symbol']}\n"
-            f"P&L: ${result['pnl']:+.2f} ({result['pnl_pct']:+.2f}%)"
+            f"<b>{now}</b> trader | {reason} {side} {symbol} {icon}\n"
+            f"P&L ${pnl:+.2f} ({pnl_pct:+.2f}%) "
+            f"| Exit ${result.get('exit_price', 0):.5f}"
         )
+
+    def on_agent_action(self, agent_name, action_text):
+        """Generic real-time notification for any agent decision."""
+        if not self._enabled:
+            return
+        now = datetime.now(timezone.utc).strftime("%H:%M:%S")
+        self.send(f"<b>{now}</b> {agent_name} | {action_text}")

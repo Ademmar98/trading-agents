@@ -1,10 +1,11 @@
 ﻿import time
 
-from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER
+from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 from agents.base_agent import BaseAgent
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
 from core.mt5_broker import MetaQuotesBroker
+from core.notifier import Notifier
 from core.positions import PositionManager
 
 
@@ -20,6 +21,7 @@ class Trader(BaseAgent):
         else:
             self.broker = PaperBroker()
         self.pos_mgr = PositionManager()
+        self.notifier = Notifier(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
 
     def run(self):
         self.log("Checking execution-approved trades")
@@ -72,6 +74,11 @@ class Trader(BaseAgent):
             orders_executed.append(order)
             if order.get("status") == "filled":
                 self.pos_mgr.open_position(symbol, action, qty, price, sl=sl_price, tp=tp_price)
+                self.notifier.on_trade({
+                    "symbol": symbol, "side": action, "qty": qty,
+                    "price": price, "stop_loss": sl_price, "take_profit": tp_price,
+                    "status": "filled",
+                })
             status = "FILLED" if order.get("status") == "filled" else "REJECTED"
             self.log(
                 f"{action} {qty} {symbol} @ ${price:.5f} "
