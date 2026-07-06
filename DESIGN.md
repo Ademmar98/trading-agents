@@ -1,41 +1,47 @@
 # Design System: Trading Agent Firm Dashboard
 
+Style: **Editorial Brutalism** (Bloomberg Businessweek lineage), per the
+huashu-design style library. Previous rounded-dark-card design was retired —
+it sat squarely in that library's "banned clichés" (uniform dark-slate base,
+accent glow, rounded cards).
+
 ## 1. Visual Theme & Atmosphere
-A dense, utilitarian night-trading terminal with a calm, OLED-dark atmosphere.
-The mood is "mission control at 2 AM": deep midnight surfaces, restrained amber
-signal lighting, and data as the hero. No decoration that does not carry
-information. High contrast for glanceability, whisper-soft depth, minimal glow
-on live elements only.
+A newsroom trading terminal. Pure black ground, white ink, structure carried
+entirely by rule lines — no cards, no shadows, no rounded corners, no glow.
+Numbers are the imagery: the account equity is set as a giant headline. Dense,
+squared-off, unapologetically utilitarian. Every event carries an exact
+HH:MM:SS timestamp, like a tape.
 
 ## 2. Color Palette & Roles
-- **Abyss Navy (#0A0F1E)** — page background; the darkest layer.
-- **Midnight Slate (#0F172A)** — card/panel surfaces, one step above the abyss.
-- **Hairline Steel (#1E293B)** — borders and dividers; visible but quiet.
-- **Signal Amber (#F59E0B)** — primary accent: headings, equity line, live dot.
-- **Soft Gold (#FBBF24)** — hover states of amber elements.
-- **Electric Violet (#8B5CF6)** — secondary accent for agent activity.
-- **Profit Emerald (#10B981)** — positive P&L, wins, buy side.
-- **Loss Crimson (#EF4444)** — negative P&L, losses, sell side.
-- **Frost White (#F8FAFC)** — primary text.
-- **Muted Slate (#94A3B8)** — secondary text, labels, timestamps.
+Derivation: black ground and white ink from terminal heritage; green/red are
+the tape's own profit/loss semantics, brightened for legibility on black.
+- **Terminal Black (#000000)** — the page. Not near-black: black.
+- **Ink White (#FFFFFF)** — text, strong rules (masthead 4px, table heads 1px).
+- **Hairline Gray (#2A2A2A)** — quiet rules dividing cells, rows, columns.
+- **Tape Green (#00C24E)** — profit, buy side, LIVE dot, rising equity line.
+- **Signal Red (#FF433D)** — loss, sell side, offline state, falling line.
+- **Gray Ink (#9A9AA2)** — labels, axis ticks, secondary text.
 
 ## 3. Typography Rules
-- **Headings & numerals:** Orbitron — geometric, technical, used sparingly for
-  the brand mark and the big money figures.
-- **Body & tables:** Exo 2 — legible at small sizes, slightly futuristic,
-  weights 300–600. Labels are uppercase, letter-spaced (0.08em), muted slate.
+Modular scale 1.2 (dashboard density), body 15px Inter.
+- **Archivo Black/Bold** — masthead and section titles only. Display duty.
+- **Inter 400–600** — small body workhorse (its correct role; never display).
+- **JetBrains Mono** — every number, timestamp, label, and badge;
+  `font-variant-numeric: tabular-nums` throughout. Uppercase, letter-spaced
+  labels (0.08–0.1em).
 
 ## 4. Component Stylings
-- **Stat cards:** subtly rounded corners (10px), midnight slate surface,
-  hairline steel border, no shadow — depth comes from layered darkness.
-- **Tables:** borderless rows separated by hairline dividers; numeric columns
-  right-aligned; P&L cells colored emerald/crimson.
-- **Badges:** pill-shaped, tinted backgrounds at 15% opacity of their accent.
-- **Live indicator:** small amber dot with a soft pulsing glow
-  (respects prefers-reduced-motion).
+- **Stat strip:** one grid row of cells split by 1px hairlines. No boxes.
+- **Tables:** header row under a 1px white rule; body rows under hairlines;
+  numerals right-aligned mono; first column is always the exact time.
+- **Activity log:** `HH:MM:SS` white mono, agent name gray uppercase, message
+  in Inter. Reads like a wire feed.
+- **Chart:** single 2px line, green when up / red when down, no fill, faint
+  #1A1A1A grid, mono ticks, square white tooltip.
+- **Status:** square (not round) green dot, step-blink; red when offline.
 
 ## 5. Layout Principles
-- Single-page dashboard, max width 1200px, centered.
-- Responsive grid: 6 stat cards → 3 → 2 columns as the viewport narrows.
-- Chart is full-width below the stats; positions, history, and activity stack
-  beneath it. Consistent 16px gutter rhythm throughout.
+Max width 1280px. Masthead (4px rule) → stat strip → full-width chart →
+positions table → two hairline-divided columns (trade history | activity).
+Collapses 5→3→2 stat columns and to a single column below 900px.
+Sections carry mono index marks (01–04).
