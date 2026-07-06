@@ -28,6 +28,7 @@ from core.positions import PositionManager
 from core import websocket_prices
 from core.notifier import Notifier
 from core.analytics import get_analytics, get_strategy_stats
+from core.webserver import start_webserver
 from core.backtester import run_all_backtests, get_backtest_results, backtest_symbol
 from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
@@ -327,6 +328,9 @@ def main():
     ws_testnet = BROKER_TYPE == "binance" and BINANCE_USE_TESTNET
     websocket_prices.start(testnet=ws_testnet)
     console.print("[dim]WebSocket price feed started[/dim]")
+
+    web_port = start_webserver()
+    console.print(f"[dim]Dashboard running on port {web_port}[/dim]")
 
     if BROKER_TYPE == "mt5":
         mt5_broker = MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)

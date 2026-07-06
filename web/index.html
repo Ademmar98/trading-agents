@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trading Agent Firm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0A0F1E;
+    --surface: #0F172A;
+    --border: #1E293B;
+    --amber: #F59E0B;
+    --gold: #FBBF24;
+    --violet: #8B5CF6;
+    --green: #10B981;
+    --red: #EF4444;
+    --text: #F8FAFC;
+    --muted: #94A3B8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Exo 2", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand h1 {
+    font-family: Orbitron, sans-serif; font-size: 20px; font-weight: 600;
+    letter-spacing: 0.06em; color: var(--text);
+  }
+  .live-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--amber); box-shadow: 0 0 10px var(--amber);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot { animation: none; }
+    * { transition: none !important; }
+  }
+  .badges { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .badge {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 4px 12px; border-radius: 999px;
+  }
+  .badge.amber { color: var(--amber); background: rgba(245, 158, 11, 0.15); }
+  .badge.violet { color: var(--violet); background: rgba(139, 92, 246, 0.15); }
+  .badge.green { color: var(--green); background: rgba(16, 185, 129, 0.15); }
+  #updated { font-size: 12px; color: var(--muted); }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: 16px; margin-bottom: 24px;
+  }
+  @media (max-width: 1024px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 640px)  { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+    transition: border-color 200ms ease;
+  }
+  .card:hover { border-color: #334155; }
+  .card .label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px;
+  }
+  .card .value {
+    font-family: Orbitron, sans-serif; font-size: 20px; font-weight: 500;
+    white-space: nowrap;
+  }
+  @media (max-width: 640px) { .card .value { font-size: 17px; } }
+  .card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .pos { color: var(--green); }
+  .neg { color: var(--red); }
+
+  .panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px; margin-bottom: 24px;
+  }
+  .panel h2 {
+    font-size: 13px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel h2 svg { width: 16px; height: 16px; }
+  .chart-box { position: relative; height: 280px; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th {
+    text-align: left; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    padding: 8px 10px; border-bottom: 1px solid var(--border);
+  }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .table-scroll { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+  .side {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    padding: 2px 8px; border-radius: 4px; text-transform: uppercase;
+  }
+  .side.buy { color: var(--green); background: rgba(16, 185, 129, 0.15); }
+  .side.sell { color: var(--red); background: rgba(239, 68, 68, 0.15); }
+  .empty { color: var(--muted); font-size: 14px; padding: 20px 0; text-align: center; }
+
+  .feed { list-style: none; max-height: 420px; overflow-y: auto; }
+  .feed li {
+    display: flex; gap: 10px; padding: 8px 0;
+    border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .feed li:last-child { border-bottom: none; }
+  .feed .agent {
+    flex-shrink: 0; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--violet); width: 90px; padding-top: 2px;
+  }
+  .feed .msg { flex: 1; color: var(--text); word-break: break-word; }
+  .feed .when { flex-shrink: 0; font-size: 12px; color: var(--muted); }
+
+  footer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  a { color: var(--amber); }
+  a:focus, button:focus { outline: 2px solid var(--gold); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="live-dot" aria-hidden="true"></span>
+      <h1>TRADING AGENT FIRM</h1>
+    </div>
+    <div class="badges">
+      <span class="badge amber" id="broker-badge">—</span>
+      <span class="badge green" id="net-badge">—</span>
+      <span id="updated" role="status">connecting…</span>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Portfolio summary">
+    <div class="card"><div class="label">Balance</div><div class="value" id="s-equity">—</div><div class="sub" id="s-initial"></div></div>
+    <div class="card"><div class="label">Total P&amp;L</div><div class="value" id="s-pnl">—</div><div class="sub" id="s-pnlpct"></div></div>
+    <div class="card"><div class="label">Cash</div><div class="value" id="s-cash">—</div></div>
+    <div class="card"><div class="label">Win Rate</div><div class="value" id="s-winrate">—</div><div class="sub" id="s-trades"></div></div>
+    <div class="card"><div class="label">Open Positions</div><div class="value" id="s-open">—</div></div>
+    <div class="card"><div class="label">Exposure</div><div class="value" id="s-exposure">—</div></div>
+  </section>
+
+  <section class="panel">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg>Equity Curve</h2>
+    <div class="chart-box"><canvas id="equity-chart" role="img" aria-label="Equity over time line chart"></canvas></div>
+  </section>
+
+  <section class="panel">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Open Positions</h2>
+    <div class="table-scroll">
+      <table id="positions-table" aria-label="Open positions">
+        <thead><tr><th>Symbol</th><th>Side</th><th class="num">Qty</th><th class="num">Entry</th><th class="num">Price</th><th class="num">SL</th><th class="num">TP</th><th class="num">P&amp;L</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty" id="positions-empty" hidden>No open positions</div>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="panel">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Trade History</h2>
+      <div class="table-scroll">
+        <table id="trades-table" aria-label="Trade history">
+          <thead><tr><th>Closed</th><th>Symbol</th><th>Side</th><th class="num">P&amp;L</th><th class="num">%</th><th>Reason</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty" id="trades-empty" hidden>No trades yet</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" aria-hidden="true"><path d="M12 3a4 4 0 014 4v1a4 4 0 01-8 0V7a4 4 0 014-4z"/><path d="M5 21v-2a5 5 0 015-5h4a5 5 0 015 5v2"/></svg>Agent Activity</h2>
+      <ul class="feed" id="activity-feed"></ul>
+      <div class="empty" id="activity-empty" hidden>No activity yet</div>
+    </section>
+  </div>
+
+  <footer>Spot-only, no leverage · Auto-refreshes every 5 seconds</footer>
+</div>
+
+<script>
+const fmtUsd = (v) => (v == null ? "—" : (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+const fmtPct = (v) => (v == null ? "—" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%");
+const fmtQty = (v) => v.toLocaleString("en-US", {maximumFractionDigits: 6});
+const fmtPrice = (v) => (v ? "$" + v.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 5}) : "—");
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const timeAgo = (ts) => {
+  const s = Math.max(0, (Date.now() / 1000) - ts);
+  if (s < 60) return Math.floor(s) + "s ago";
+  if (s < 3600) return Math.floor(s / 60) + "m ago";
+  if (s < 86400) return Math.floor(s / 3600) + "h ago";
+  return Math.floor(s / 86400) + "d ago";
+};
+const fmtDate = (s) => {
+  if (!s) return "—";
+  const d = new Date(s.includes("T") ? s : s.replace(" ", "T") + "Z");
+  return isNaN(d) ? s : d.toLocaleString(undefined, {month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"});
+};
+const pnlClass = (v) => (v >= 0 ? "pos" : "neg");
+
+let chart = null;
+function renderChart(points) {
+  const labels = points.map((p, i) => (p.t === "start" ? "Start" : p.t === "now" ? "Now" : fmtDate(p.t)));
+  const values = points.map((p) => p.equity);
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = values;
+    chart.update("none");
+    return;
+  }
+  const ctx = document.getElementById("equity-chart").getContext("2d");
+  const grad = ctx.createLinearGradient(0, 0, 0, 280);
+  grad.addColorStop(0, "rgba(245, 158, 11, 0.25)");
+  grad.addColorStop(1, "rgba(245, 158, 11, 0)");
+  chart = new Chart(ctx, {
+    type: "line",
+    data: { labels, datasets: [{
+      data: values, borderColor: "#F59E0B", backgroundColor: grad,
+      borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 12,
+    }]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: "#1E293B", titleColor: "#94A3B8", bodyColor: "#F8FAFC",
+        callbacks: { label: (c) => " " + fmtUsd(c.parsed.y) },
+      }},
+      scales: {
+        x: { ticks: { color: "#94A3B8", maxTicksLimit: 8, font: {size: 11} }, grid: { color: "rgba(30, 41, 59, 0.6)" } },
+        y: { ticks: { color: "#94A3B8", font: {size: 11}, callback: (v) => "$" + v.toLocaleString() }, grid: { color: "rgba(30, 41, 59, 0.6)" } },
+      },
+    },
+  });
+}
+
+function renderSummary(s) {
+  document.getElementById("s-equity").textContent = fmtUsd(s.equity);
+  document.getElementById("s-initial").textContent = "started " + fmtUsd(s.initial_balance);
+  const pnl = document.getElementById("s-pnl");
+  pnl.textContent = fmtUsd(s.total_pnl);
+  pnl.className = "value " + pnlClass(s.total_pnl);
+  const pct = document.getElementById("s-pnlpct");
+  pct.textContent = fmtPct(s.total_pnl_pct);
+  pct.className = "sub " + pnlClass(s.total_pnl_pct);
+  document.getElementById("s-cash").textContent = fmtUsd(s.cash);
+  document.getElementById("s-winrate").textContent = s.total_trades ? s.win_rate.toFixed(0) + "%" : "—";
+  document.getElementById("s-trades").textContent = s.total_trades + " closed trade" + (s.total_trades === 1 ? "" : "s");
+  document.getElementById("s-open").textContent = s.open_positions;
+  document.getElementById("s-exposure").textContent = s.exposure_pct.toFixed(1) + "%";
+  document.getElementById("broker-badge").textContent = s.broker;
+  const net = document.getElementById("net-badge");
+  net.textContent = s.testnet ? "Testnet" : "Live";
+  net.className = "badge " + (s.testnet ? "green" : "amber");
+}
+
+function renderPositions(rows) {
+  const tbody = document.querySelector("#positions-table tbody");
+  document.getElementById("positions-empty").hidden = rows.length > 0;
+  tbody.innerHTML = rows.map((p) => `<tr>
+    <td>${esc(p.symbol)}</td>
+    <td><span class="side ${p.side === "sell" ? "sell" : "buy"}">${esc(p.side)}</span></td>
+    <td class="num">${fmtQty(p.quantity)}</td>
+    <td class="num">${fmtPrice(p.entry_price)}</td>
+    <td class="num">${fmtPrice(p.current_price)}</td>
+    <td class="num">${fmtPrice(p.stop_loss)}</td>
+    <td class="num">${fmtPrice(p.take_profit)}</td>
+    <td class="num ${pnlClass(p.pnl)}">${fmtUsd(p.pnl)} (${fmtPct(p.pnl_pct)})</td>
+  </tr>`).join("");
+}
+
+function renderTrades(rows) {
+  const tbody = document.querySelector("#trades-table tbody");
+  document.getElementById("trades-empty").hidden = rows.length > 0;
+  tbody.innerHTML = rows.map((t) => `<tr>
+    <td>${fmtDate(t.closed_at)}</td>
+    <td>${esc(t.symbol)}</td>
+    <td><span class="side ${t.side === "sell" ? "sell" : "buy"}">${esc(t.side)}</span></td>
+    <td class="num ${pnlClass(t.pnl)}">${fmtUsd(t.pnl)}</td>
+    <td class="num ${pnlClass(t.pnl_pct)}">${fmtPct(t.pnl_pct)}</td>
+    <td>${esc(t.reason || "—")}</td>
+  </tr>`).join("");
+}
+
+function renderActivity(rows) {
+  const feed = document.getElementById("activity-feed");
+  document.getElementById("activity-empty").hidden = rows.length > 0;
+  feed.innerHTML = rows.slice().reverse().map((e) => `<li>
+    <span class="agent">${esc(e.agent)}</span>
+    <span class="msg">${esc(e.message)}</span>
+    <span class="when">${timeAgo(e.time)}</span>
+  </li>`).join("");
+}
+
+async function refresh() {
+  try {
+    const [summary, positions, trades, equity, activity] = await Promise.all([
+      fetch("/api/summary").then((r) => r.json()),
+      fetch("/api/positions").then((r) => r.json()),
+      fetch("/api/trades").then((r) => r.json()),
+      fetch("/api/equity").then((r) => r.json()),
+      fetch("/api/activity").then((r) => r.json()),
+    ]);
+    renderSummary(summary);
+    renderPositions(positions);
+    renderTrades(trades);
+    renderChart(equity);
+    renderActivity(activity);
+    document.getElementById("updated").textContent = "updated " + new Date().toLocaleTimeString();
+  } catch (e) {
+    document.getElementById("updated").textContent = "connection lost — retrying";
+  }
+}
+
+refresh();
+setInterval(refresh, 5000);
+</script>
+</body>
+</html>
