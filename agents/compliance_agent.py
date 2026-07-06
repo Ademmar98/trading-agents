@@ -22,6 +22,10 @@ class ComplianceAgent(BaseAgent):
         halted = False
         blockers = []
         warnings = []
+        health = self.memory.read("reports", "health") or {}
+        if health.get("halted"):
+            halted = True
+            blockers.extend(health.get("issues", []))
         if LEVERAGE_ENABLED:
             halted = True
             blockers.append("Leverage enabled; system is configured for spot-only trading")

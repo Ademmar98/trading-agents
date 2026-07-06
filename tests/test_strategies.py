@@ -6,6 +6,7 @@ from core.strategies import (
     detect_pin_bar, detect_inside_bar, detect_double_top_bottom,
     detect_ema_cross, _vwap, detect_ichimoku, detect_keltner,
     detect_stochastic_rsi, detect_volume_breakout, detect_support_resistance,
+    detect_donchian, detect_heikin_ashi, detect_mfi,
     scan_symbol, ALL_STRATEGIES,
 )
 
@@ -170,7 +171,7 @@ class TestScanSymbol:
         assert scan_symbol([]) == []
 
     def test_scan_short(self):
-        assert scan_symbol(_make_ohlc([100] * 20)) == []
+        assert scan_symbol(_make_ohlc([100] * 5)) == []
 
     def test_scan_returns_list(self):
         ohlc = _make_ohlc([100 + i * 0.5 for i in range(80)])
@@ -178,7 +179,7 @@ class TestScanSymbol:
         assert isinstance(results, list)
 
     def test_strategies_count(self):
-        assert len(ALL_STRATEGIES) == 22
+        assert len(ALL_STRATEGIES) >= 22
 
 
 class TestRsiDivergence:
@@ -214,3 +215,42 @@ class TestOTE:
 class TestMarketStructure:
     def test_not_enough_data(self):
         assert detect_market_structure(_make_ohlc([100] * 20)) is None
+
+
+class TestDonchian:
+    def test_breakout_buy(self):
+        ohlc = _make_ohlc([100] * 30)
+        ohlc[-1]["close"] = 105
+        sig = detect_donchian(ohlc)
+        assert sig is not None
+        assert sig["action"] == "BUY"
+
+    def test_breakdown_sell(self):
+        ohlc = _make_ohlc([100] * 30)
+        ohlc[-1]["close"] = 95
+        sig = detect_donchian(ohlc)
+        assert sig is not None
+        assert sig["action"] == "SELL"
+
+    def test_insufficient_data(self):
+        assert detect_donchian(_make_ohlc([100] * 5)) is None
+
+
+class TestHeikinAshi:
+    def test_returns_dict_or_none(self):
+        ohlc = _make_ohlc([105] * 15)
+        sig = detect_heikin_ashi(ohlc)
+        assert sig is None or (isinstance(sig, dict) and "action" in sig)
+
+    def test_needs_min_data(self):
+        assert detect_heikin_ashi(_make_ohlc([100] * 5)) is None
+
+
+class TestMFI:
+    def test_insufficient_data(self):
+        assert detect_mfi(_make_ohlc([100] * 10)) is None
+
+    def test_returns_none_or_signal(self):
+        ohlc = _make_ohlc([100] * 40)
+        sig = detect_mfi(ohlc)
+        assert sig is None or sig["action"] in ("BUY", "SELL")

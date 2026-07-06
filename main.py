@@ -39,11 +39,13 @@ from agents.analyst import ResearchAnalyst
 from agents.sentiment_agent import SentimentAgent
 from agents.regime_agent import RegimeAgent
 from agents.risk_manager import RiskManager
+from agents.position_sizer import PositionSizer
 from agents.portfolio_manager import PortfolioManagerAgent
 from agents.compliance_agent import ComplianceAgent
 from agents.execution_agent import ExecutionAgent
 from agents.trader import Trader
 from agents.auditor import Auditor
+from agents.health_monitor import HealthMonitor
 
 console = Console()
 memory = SharedMemory()
@@ -94,9 +96,11 @@ def make_broker():
 CYCLE_AGENTS = (
     Orchestrator,
     ResearchAnalyst,
+    HealthMonitor,
     SentimentAgent,
     RegimeAgent,
     RiskManager,
+    PositionSizer,
     PortfolioManagerAgent,
     ComplianceAgent,
     ExecutionAgent,

@@ -19,6 +19,7 @@ from core.memory import SharedMemory
 from core.portfolio import Portfolio, save_portfolio, load_portfolio
 from agents.sentiment_agent import SentimentAgent
 from agents.risk_manager import RiskManager
+from agents.position_sizer import PositionSizer
 from agents.portfolio_manager import PortfolioManagerAgent
 from agents.compliance_agent import ComplianceAgent
 from agents.execution_agent import ExecutionAgent
@@ -79,6 +80,7 @@ def test_full_pipeline_places_paper_trades():
 
     SentimentAgent().run()
     RiskManager().run()
+    PositionSizer().run()
     PortfolioManagerAgent().run()
 
     gate = ComplianceAgent().run()

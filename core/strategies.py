@@ -508,6 +508,78 @@ def detect_support_resistance(ohlc):
     return None
 
 
+def detect_donchian(ohlc, period=20):
+    if len(ohlc) < period + 3:
+        return None
+    recent = ohlc[-period:]
+    upper = max(c["high"] for c in recent)
+    lower = min(c["low"] for c in recent)
+    current = ohlc[-1]["close"]
+    if current > upper and ohlc[-2]["close"] <= upper:
+        return {"action": "BUY", "confidence": 0.6, "reasons": ["Donchian breakout upper"]}
+    if current < lower and ohlc[-2]["close"] >= lower:
+        return {"action": "SELL", "confidence": 0.6, "reasons": ["Donchian breakdown lower"]}
+    return None
+
+
+def detect_heikin_ashi(ohlc):
+    if len(ohlc) < 10:
+        return None
+    ha = []
+    for i in range(len(ohlc)):
+        c = ohlc[i]
+        ha_close = (c["open"] + c["high"] + c["low"] + c["close"]) / 4
+        ha_open = ha[-1]["open"] if ha else (c["open"] + c["close"]) / 2
+        ha_high = max(c["high"], ha_open, ha_close)
+        ha_low = min(c["low"], ha_open, ha_close)
+        ha.append({"open": ha_open, "close": ha_close, "high": ha_high, "low": ha_low})
+    last5 = ha[-5:]
+    green = sum(1 for c in last5 if c["close"] > c["open"])
+    bodies = [abs(c["close"] - c["open"]) for c in last5]
+    avg_body = sum(bodies) / len(bodies) if bodies else 0
+    if green >= 4 and avg_body > 0:
+        return {"action": "BUY", "confidence": 0.55, "reasons": ["Heikin-Ashi strong uptrend"]}
+    if green <= 1 and avg_body > 0:
+        return {"action": "SELL", "confidence": 0.55, "reasons": ["Heikin-Ashi strong downtrend"]}
+    return None
+
+
+def _typical_price(ohlc):
+    return [(c["high"] + c["low"] + c["close"]) / 3 for c in ohlc]
+
+
+def _raw_money_flow(ohlc):
+    tp = _typical_price(ohlc)
+    return [tp[i] * ohlc[i]["volume"] for i in range(len(ohlc))]
+
+
+def detect_mfi(ohlc, period=14):
+    if len(ohlc) < period * 2:
+        return None
+    closes = [c["close"] for c in ohlc]
+    mf = _raw_money_flow(ohlc)
+    mfi_vals = []
+    for i in range(period, len(mf)):
+        pos = neg = 0
+        for j in range(i - period, i):
+            if closes[j + 1] > closes[j]:
+                pos += mf[j]
+            else:
+                neg += mf[j]
+        mfi_val = 100 - (100 / (1 + pos / neg)) if neg > 0 else 100
+        mfi_vals.append(mfi_val)
+    if len(mfi_vals) < 3:
+        return None
+    cur_mfi = mfi_vals[-1]
+    prev_price = closes[-3]
+    cur_price = closes[-1]
+    if cur_mfi < 20 and cur_price > prev_price:
+        return {"action": "BUY", "confidence": 0.6, "reasons": ["MFI oversold bullish divergence"]}
+    if cur_mfi > 80 and cur_price < prev_price:
+        return {"action": "SELL", "confidence": 0.6, "reasons": ["MFI overbought bearish divergence"]}
+    return None
+
+
 ALL_STRATEGIES = [
     ("ICT - FVG", detect_fvg),
     ("ICT - Order Block", detect_order_block),
@@ -531,6 +603,9 @@ ALL_STRATEGIES = [
     ("PA - Double Top/Bot", detect_double_top_bottom),
     ("PA - Volume Breakout", detect_volume_breakout),
     ("PA - S/R Levels", detect_support_resistance),
+    ("Classic - Donchian Channel", detect_donchian),
+    ("PA - Heikin-Ashi", detect_heikin_ashi),
+    ("Classic - MFI", detect_mfi),
 ]
 
 
