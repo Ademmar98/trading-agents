@@ -20,20 +20,26 @@ def _to_binance_symbol(symbol):
     return s
 
 
+import concurrent.futures
+
 def fetch_klines(symbol, interval="1d", limit=100):
     bsym = _to_binance_symbol(symbol)
-    try:
-        r = requests.get("https://api.binance.com/api/v3/klines", params={
+    def _fetch():
+        return requests.get("https://api.binance.com/api/v3/klines", params={
             "symbol": bsym, "interval": interval, "limit": limit
-        }, timeout=10)
-        data = r.json()
-        return [{
-            "date": datetime.fromtimestamp(k[0] / 1000, tz=timezone.utc).isoformat(),
-            "open": float(k[1]), "high": float(k[2]), "low": float(k[3]),
-            "close": float(k[4]), "volume": float(k[5]), "ts": k[0] // 1000
-        } for k in data]
-    except Exception:
-        return []
+        }, timeout=15)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        try:
+            future = pool.submit(_fetch)
+            r = future.result(timeout=20)
+            data = r.json()
+            return [{
+                "date": datetime.fromtimestamp(k[0] / 1000, tz=timezone.utc).isoformat(),
+                "open": float(k[1]), "high": float(k[2]), "low": float(k[3]),
+                "close": float(k[4]), "volume": float(k[5]), "ts": k[0] // 1000
+            } for k in data]
+        except Exception:
+            return []
 
 
 def _calc_sl_tp(price, side, volatility_pct, sl_mult=2.0, tp_mult=6.0):
