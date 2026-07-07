@@ -30,13 +30,6 @@ class Trader(BaseAgent):
         all_prices = {s: d.get("price", 0) for s, d in all_analyses.items() if isinstance(d, dict)}
         orders_executed = []
 
-        stop_losses = self.broker.check_stop_losses(
-            {s: {"price": p} for s, p in all_prices.items() if p}
-        )
-        for sl in stop_losses:
-            orders_executed.append(sl)
-            self.log(f"Stop-loss triggered: {sl['symbol']} at ${sl['price']:.2f}")
-
         if execution.get("status") == "halted":
             self.log("Trading skipped: execution plan halted")
             self.memory.write("orders", "trade_log", {

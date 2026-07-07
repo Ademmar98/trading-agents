@@ -106,6 +106,7 @@ def apply_fill(p: Portfolio, symbol: str, side: str, quantity: float, price: flo
 
 
 def save_portfolio(p: Portfolio):
+    import tempfile
     data = {
         "cash": p.cash,
         "initial_balance": p.initial_balance,
@@ -126,7 +127,10 @@ def save_portfolio(p: Portfolio):
         "trades": p.trades[-50:],
     }
     (DATA_DIR / "reports").mkdir(parents=True, exist_ok=True)
-    (DATA_DIR / "reports" / "portfolio.json").write_text(json.dumps(data, indent=2))
+    dst = DATA_DIR / "reports" / "portfolio.json"
+    tmp = dst.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, indent=2))
+    tmp.replace(dst)
 
 
 def load_portfolio() -> Portfolio:

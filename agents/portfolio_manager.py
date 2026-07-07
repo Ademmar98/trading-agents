@@ -32,10 +32,11 @@ class PortfolioManagerAgent(BaseAgent):
             sent = (sentiment.get("symbols", {}) or {}).get(symbol, {})
             reg = (regimes.get("symbols", {}) or {}).get(symbol, {})
 
-            confidence *= sent.get("confidence_multiplier", 1.0)
-            max_qty *= sent.get("size_multiplier", 1.0)
-            confidence *= reg.get("confidence_multiplier", 1.0)
-            max_qty *= reg.get("size_multiplier", 1.0)
+            sent_conf = sent.get("confidence_multiplier", 1.0)
+            reg_conf = reg.get("confidence_multiplier", 1.0)
+            combined_mult = 1.0 + (sent_conf - 1.0) + (reg_conf - 1.0)
+            confidence *= max(combined_mult, 0.5)
+            max_qty *= sent.get("size_multiplier", 1.0) * reg.get("size_multiplier", 1.0)
 
             if sent.get("block_buy") and action == "BUY":
                 item["risk_ok"] = False

@@ -13,6 +13,11 @@ from core import websocket_prices
 
 WEB_DIR = BASE_DIR / "web"
 DASHBOARD_PASSWORD = os.getenv("DASHBOARD_PASSWORD", "")
+if not DASHBOARD_PASSWORD:
+    import secrets
+    DASHBOARD_PASSWORD = secrets.token_hex(16)
+    print("[WARNING] DASHBOARD_PASSWORD not set — generated random password. "
+          "Set the env var to avoid losing access on restart.", flush=True)
 
 memory = SharedMemory()
 

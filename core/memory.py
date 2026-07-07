@@ -21,7 +21,9 @@ class SharedMemory:
     def write(self, category: str, filename: str, data: Any):
         path = self.dirs[category] / f"{filename}.json"
         data["_timestamp"] = time.time()
-        path.write_text(json.dumps(data, indent=2, default=str))
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, indent=2, default=str))
+        tmp.replace(path)
 
     def read(self, category: str, filename: str) -> dict | None:
         path = self.dirs[category] / f"{filename}.json"

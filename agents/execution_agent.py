@@ -36,7 +36,7 @@ class ExecutionAgent(BaseAgent):
                 rejected.append({**opp, "execution_reasons": [f"Spread too wide: {spread_pct:.2f}%"]})
                 continue
 
-            qty = round(opp.get("max_qty", 0) * opp.get("confidence", 0.5), 8)
+            qty = round(opp.get("max_qty", 0), 8)
             if qty <= 0:
                 rejected.append({**opp, "execution_reasons": ["Computed quantity is zero"]})
                 continue

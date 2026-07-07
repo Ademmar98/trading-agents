@@ -145,12 +145,6 @@ def _save_analytics(data):
     """, [data["total_trades"], data["win_rate"], data["profit_factor"],
           data["sharpe_ratio"], data["max_drawdown_pct"], data["total_pnl"],
           data["expectancy"]])
-    execute("DELETE FROM strategy_stats")
-    for s in data.get("strategy_breakdown", []):
-        execute("""
-            INSERT INTO strategy_stats (strategy, trades, win_rate, pnl)
-            VALUES (?, ?, ?, ?)
-        """, [s["strategy"], s["trades"], s["win_rate"], s["pnl"]])
 
 
 def get_analytics():

@@ -6,8 +6,12 @@ BASE_DIR = Path(__file__).parent
 DATA_DIR = Path(os.getenv("TRADING_DATA_DIR", BASE_DIR / "data"))
 
 # Load variables from a local .env file if present (real env vars take priority)
+# WARNING: .env stores secrets in plaintext — never commit it, restrict file perms
 _env_file = BASE_DIR / ".env"
 if _env_file.exists():
+    import sys
+    print("[WARNING] Loading secrets from .env — plaintext on disk. "
+          "Set env vars directly in production.", file=sys.stderr)
     for _line in _env_file.read_text(encoding="utf-8").splitlines():
         _line = _line.strip()
         if _line and not _line.startswith("#") and "=" in _line:

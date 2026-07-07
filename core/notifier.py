@@ -92,7 +92,7 @@ class Notifier:
             upnl_s = f"${upnl:+,.2f}" if isinstance(upnl, (int, float)) else "?"
             positions_str += f"\n{sym} {side} @ ${entry:.5f} → ${current:.5f} ({upnl_s})"
         self.send(
-            f"<b>{now}</b> 📊 Portfolio Snapshot\n"
+            f"<b>{now}</b> Portfolio Snapshot\n"
             f"Value: ${total_value:,.2f} | P&L: {pnl_s}\n"
             f"Cash: ${cash:,.2f} | Positions: {len(positions)}{positions_str}"
         )

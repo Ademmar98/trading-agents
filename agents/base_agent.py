@@ -3,12 +3,15 @@ from core.memory import SharedMemory
 from core.notifier import Notifier
 
 
+_SHARED_NOTIFIER = Notifier(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+
+
 class BaseAgent:
     name: str = "base"
+    notifier = _SHARED_NOTIFIER
 
     def __init__(self):
         self.memory = SharedMemory()
-        self.notifier = Notifier(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
 
     def log(self, message: str):
         self.memory.log(self.name, message)
