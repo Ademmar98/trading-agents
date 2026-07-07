@@ -39,7 +39,7 @@ class ComplianceAgent(BaseAgent):
         if day_pnl < -DAILY_LOSS_LIMIT_PCT:
             halted = True
             blockers.append(f"Daily loss {day_pnl:.2f}% breached the {DAILY_LOSS_LIMIT_PCT}% circuit breaker — no new trades today")
-        if BROKER_TYPE not in {"paper", "binance", "mt5", "alpaca"}:
+        if BROKER_TYPE not in {"paper", "binance", "mt5", "alpaca", "dxtrade"}:
             halted = True
             blockers.append(f"Unknown broker type: {BROKER_TYPE}")
 
