@@ -1,9 +1,10 @@
 ﻿import time
 from datetime import datetime, timezone
 
-from config import SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT
+from config import SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
+from core.portfolio import load_portfolio
 
 MAX_SPREAD_PCT = 0.35
 
@@ -58,6 +59,14 @@ class ExecutionAgent(BaseAgent):
             if tp_pct < MIN_TP_PCT:
                 rejected.append({**opp, "execution_reasons": [f"TP too small: {tp_pct:.1f}% < {MIN_TP_PCT}%"]})
                 continue
+
+            risk_amount = load_portfolio().equity * (RISK_PER_TRADE_PCT / 100)
+            if sl_price and price:
+                risk_per_unit = abs(price - sl_price)
+                if risk_per_unit > 0:
+                    risk_capped_qty = risk_amount / risk_per_unit
+                    if risk_capped_qty < qty:
+                        qty = round(risk_capped_qty, 8)
 
             plan_id = f"plan_{symbol}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S%f')}"
             rr = round(tp_pct / sl_pct, 2) if sl_pct > 0 else 0

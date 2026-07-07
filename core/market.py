@@ -13,6 +13,9 @@ except ImportError:
     pass
 
 
+MAX_CACHE_SIZE = 200
+
+
 class MarketData:
     def __init__(self):
         self.cache = {}
@@ -38,6 +41,13 @@ class MarketData:
 
     def _set_cache(self, key, val):
         self.cache[key] = (time.time(), val)
+        if len(self.cache) > MAX_CACHE_SIZE:
+            oldest = sorted(self.cache.keys(), key=lambda k: self.cache[k][0])[:len(self.cache) - MAX_CACHE_SIZE]
+            for k in oldest:
+                del self.cache[k]
+
+    def clear_cache(self):
+        self.cache.clear()
 
     def fetch_prices(self, symbols=None):
         symbols = symbols or WATCHED_SYMBOLS

@@ -50,6 +50,7 @@ TRAILING_ACTIVATION_PCT = float(os.getenv("TRAILING_ACTIVATION_PCT", "4"))
 SL_VOL_MULT = float(os.getenv("SL_VOL_MULT", "2.0"))
 TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "6.0"))
 MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "5.0"))
+RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
 LOCK_PORT = int(os.getenv("TRADING_LOCK_PORT", "48620"))
 
 TRADING_INTERVAL_MINUTES = int(os.getenv("TRADING_INTERVAL_MINUTES", "60"))
