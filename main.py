@@ -142,6 +142,7 @@ def _rebalance_positions():
         broker = make_broker_with_retry()
         close_side = "SELL" if worst["side"] == "BUY" else "BUY"
         order = broker.place_order(worst["symbol"], close_side, worst["quantity"], worst["current_price"])
+        pos_mgr.close_position(worst["id"], worst["current_price"], reason="rebalance")
         memory.log("system", f"Rebalance closed {worst['symbol']} ${worst['pnl']:+.2f} for {high_conf[0]['symbol']}")
         notifier.send(
             f"Rebalance: closed {worst['symbol']} ({worst['pnl']:+.2f}%) to deploy into {high_conf[0]['symbol']}"

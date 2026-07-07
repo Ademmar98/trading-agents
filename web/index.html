@@ -212,6 +212,7 @@
     <div class="cell"><div class="label">Open Positions</div><div class="v" id="s-open">—</div></div>
     <div class="cell"><div class="label">Exposure</div><div class="v" id="s-exposure">—</div></div>
     <div class="cell"><div class="label">Started With</div><div class="v" id="s-initial">—</div></div>
+    <div class="cell"><div class="label">Portfolio P&amp;L</div><div class="v" id="s-portfolio-pnl">—</div></div>
   </div>
 
   <section>
@@ -449,6 +450,7 @@ function renderSummary(s) {
   document.getElementById("s-open").textContent = s.open_positions;
   document.getElementById("s-exposure").textContent = s.exposure_pct.toFixed(1) + "%";
   document.getElementById("s-initial").textContent = fmtUsd(s.initial_balance);
+  document.getElementById("s-portfolio-pnl").textContent = s.portfolio_pnl != null ? fmtUsd(s.portfolio_pnl) + " " + fmtPct(s.portfolio_pnl_pct) : "—";
   document.getElementById("broker-badge").textContent = s.broker.toUpperCase();
   document.getElementById("net-badge").textContent = s.testnet ? "TESTNET" : "LIVE FUNDS";
 }

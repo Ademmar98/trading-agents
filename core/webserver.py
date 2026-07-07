@@ -23,19 +23,23 @@ def get_market_prices():
 
 def get_summary():
     p = load_portfolio()
-    rows = fetchall("SELECT pnl FROM trades")
-    pnls = [r["pnl"] for r in rows]
+    trades = fetchall("SELECT pnl FROM trades")
+    pnls = [r["pnl"] for r in trades]
+    total_trades = len(pnls)
     wins = len([x for x in pnls if x > 0])
+    closed_pnl = sum(pnls)
     return {
-        "equity": p.equity,
-        "cash": p.cash,
+        "equity": round(p.equity, 2),
+        "cash": round(p.cash, 2),
         "initial_balance": p.initial_balance,
-        "total_pnl": p.total_pnl,
-        "total_pnl_pct": p.total_pnl_pct,
-        "exposure_pct": p.exposure_pct,
+        "total_pnl": round(closed_pnl, 2),
+        "total_pnl_pct": round((closed_pnl / p.initial_balance * 100) if p.initial_balance else 0, 2),
+        "portfolio_pnl": round(p.total_pnl, 2),
+        "portfolio_pnl_pct": round(p.total_pnl_pct, 2),
+        "exposure_pct": round(p.exposure_pct, 2),
         "open_positions": len(p.positions),
-        "total_trades": len(pnls),
-        "win_rate": (wins / len(pnls) * 100) if pnls else 0,
+        "total_trades": total_trades,
+        "win_rate": (wins / total_trades * 100) if total_trades else 0,
         "broker": BROKER_TYPE,
         "testnet": BINANCE_USE_TESTNET,
     }
