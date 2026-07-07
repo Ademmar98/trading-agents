@@ -6,7 +6,7 @@ import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from config import BASE_DIR, BROKER_TYPE, BINANCE_USE_TESTNET
-from core.database import fetchall
+from core.database import fetchall, get_plans
 from core.portfolio import load_portfolio
 from core.memory import SharedMemory
 
@@ -190,6 +190,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(get_activity())
             elif self.path == "/api/errors":
                 self._json(get_errors())
+            elif self.path == "/api/plans":
+                self._json(get_plans())
             elif self.path == "/api/opportunities":
                 self._json(self.get_opportunities())
             elif self.path == "/api/regime":

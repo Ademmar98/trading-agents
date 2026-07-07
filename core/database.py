@@ -119,6 +119,25 @@ def init_db():
                 value TEXT
             );
 
+            CREATE TABLE IF NOT EXISTS trade_plans (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                plan_id TEXT NOT NULL UNIQUE,
+                timestamp TEXT NOT NULL DEFAULT (datetime('now')),
+                symbol TEXT NOT NULL,
+                direction TEXT NOT NULL,
+                entry_price REAL NOT NULL,
+                stop_loss REAL NOT NULL,
+                take_profit REAL NOT NULL,
+                position_size_usd REAL,
+                position_size_units REAL,
+                confidence REAL,
+                strategy TEXT,
+                regime TEXT,
+                rationale TEXT,
+                risk_reward_ratio REAL,
+                status TEXT DEFAULT 'created'
+            );
+
             CREATE TABLE IF NOT EXISTS optimization_results (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 symbol TEXT NOT NULL,
@@ -174,6 +193,43 @@ def _migrate(conn):
         "sharpe_ratio": "REAL DEFAULT 0",
         "optimized_at": "TEXT",
     })
+
+
+def save_plan(plan: dict):
+    execute("""
+        INSERT OR REPLACE INTO trade_plans
+            (plan_id, timestamp, symbol, direction, entry_price, stop_loss,
+             take_profit, position_size_usd, position_size_units, confidence,
+             strategy, regime, rationale, risk_reward_ratio, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, [
+        plan.get("plan_id", ""),
+        plan.get("timestamp", ""),
+        plan.get("symbol", ""),
+        plan.get("direction", plan.get("action", "")),
+        plan.get("entry_price", plan.get("price", 0)),
+        plan.get("stop_loss", 0),
+        plan.get("take_profit", 0),
+        plan.get("position_size_usd", 0),
+        plan.get("position_size_units", plan.get("qty", 0)),
+        plan.get("confidence"),
+        plan.get("strategy", ""),
+        plan.get("regime", ""),
+        plan.get("rationale", ""),
+        plan.get("risk_reward_ratio"),
+        plan.get("status", "created"),
+    ])
+
+
+def update_plan_status(plan_id: str, status: str):
+    execute("UPDATE trade_plans SET status=? WHERE plan_id=?", [status, plan_id])
+
+
+def get_plans(limit=50):
+    rows = fetchall(
+        "SELECT * FROM trade_plans ORDER BY timestamp DESC LIMIT ?", [limit]
+    )
+    return [dict(r) for r in rows]
 
 
 def get_meta(key, default=None):

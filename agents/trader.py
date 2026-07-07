@@ -6,6 +6,7 @@ from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
 from core.mt5_broker import MetaQuotesBroker
 from core.positions import PositionManager
+from core.database import update_plan_status
 
 
 class Trader(BaseAgent):
@@ -70,7 +71,10 @@ class Trader(BaseAgent):
 
             order = self.broker.place_order(symbol, action, qty, price, sl=sl_price, tp=tp_price)
             orders_executed.append(order)
+            plan_id = planned.get("plan_id")
             if order.get("status") == "filled":
+                if plan_id:
+                    update_plan_status(plan_id, "executed")
                 self.pos_mgr.open_position(symbol, action, qty, price, sl=sl_price, tp=tp_price)
                 self.notifier.on_trade({
                     "symbol": symbol, "side": action, "qty": qty,

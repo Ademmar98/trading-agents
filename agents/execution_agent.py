@@ -1,7 +1,9 @@
 ﻿import time
+from datetime import datetime, timezone
 
 from config import SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT
 from agents.base_agent import BaseAgent
+from core.database import save_plan, update_plan_status
 
 MAX_SPREAD_PCT = 0.35
 
@@ -57,6 +59,27 @@ class ExecutionAgent(BaseAgent):
                 rejected.append({**opp, "execution_reasons": [f"TP too small: {tp_pct:.1f}% < {MIN_TP_PCT}%"]})
                 continue
 
+            plan_id = f"plan_{symbol}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S%f')}"
+            rr = round(tp_pct / sl_pct, 2) if sl_pct > 0 else 0
+            plan_entry = {
+                "plan_id": plan_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "symbol": symbol,
+                "direction": action,
+                "entry_price": price,
+                "stop_loss": sl_price,
+                "take_profit": tp_price,
+                "position_size_usd": round(price * qty, 2),
+                "position_size_units": qty,
+                "confidence": opp.get("confidence", 0),
+                "strategy": (opp.get("strategies") or [None])[0] if opp.get("strategies") else "",
+                "regime": opp.get("regime", ""),
+                "rationale": ", ".join(opp.get("reasons", [])[:3]),
+                "risk_reward_ratio": rr,
+                "status": "created",
+            }
+            save_plan(plan_entry)
+
             executable.append({
                 **opp,
                 "qty": qty,
@@ -67,6 +90,7 @@ class ExecutionAgent(BaseAgent):
                 "sl_pct": round(sl_pct, 1),
                 "spread_pct": round(spread_pct, 4),
                 "execution_ok": True,
+                "plan_id": plan_id,
             })
 
         report = {
