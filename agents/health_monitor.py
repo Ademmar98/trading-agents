@@ -49,8 +49,9 @@ class HealthMonitor(BaseAgent):
         if missing:
             warnings.append(f"Agents with no output: {', '.join(sorted(missing))}")
 
+        status = "halted" if halted else "degraded" if issues else ("warning" if warnings else "ok")
         report = {
-            "status": "halted" if halted else "degraded" if issues else ("warning" if warnings else "ok"),
+            "status": status,
             "halted": halted,
             "issues": issues,
             "warnings": warnings,
@@ -60,10 +61,12 @@ class HealthMonitor(BaseAgent):
             "timestamp": time.time(),
         }
         self.memory.write("reports", "health", report)
-        msg = f"Health: {report['status']}"
+        msg = f"Health: {status}"
         if issues:
             msg += f", {len(issues)} issues"
         if warnings:
             msg += f", {len(warnings)} warnings"
         self.log(msg)
+        if status != "ok":
+            self.notifier.on_agent_action("health", f"status={status} | {len(issues)} issues {len(warnings)} warnings")
         return report

@@ -75,4 +75,6 @@ class RiskManager(BaseAgent):
         }
         self.memory.write("decisions", "risk_assessment", report)
         self.log(f"Risk verdict: {risk_verdict}, {len(risks)} warnings")
+        if risk_verdict in ("high_risk", "critical"):
+            self.notifier.on_agent_action("risk_manager", f"verdict={risk_verdict} | exposure {exposure:.0f}% | {len(risks)} warnings")
         return report

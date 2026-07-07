@@ -75,7 +75,15 @@ class PortfolioManagerAgent(BaseAgent):
             "timestamp": time.time(),
         }
         self.memory.write("decisions", "portfolio_plan", report)
-        self.log(f"Portfolio plan: {len([o for o in adjusted if o.get('risk_ok', False)])} candidates")
+        approved = [o for o in adjusted if o.get("risk_ok", False)]
+        self.log(f"Portfolio plan: {len(approved)} candidates")
+        if approved:
+            top = approved[0]
+            self.notifier.on_agent_action(
+                "portfolio", f"approved {len(approved)} | top: {top['action']} {top['symbol']} ({top['confidence']:.0%})"
+            )
+        elif adjusted:
+            self.notifier.on_agent_action("portfolio", f"0 approved — all {len(adjusted)} candidates blocked")
         return report
 
     @staticmethod

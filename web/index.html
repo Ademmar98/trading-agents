@@ -9,12 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
-  /*
-   * Editorial Brutalism (Bloomberg Businessweek lineage).
-   * Color rationale: black ground + white ink from terminal heritage;
-   * green #00C24E / red #FF433D are the tape's own profit/loss semantics,
-   * brightened for legibility on black. No decoration, rules carry structure.
-   */
   :root {
     --bg: #000000;
     --ink: #FFFFFF;
@@ -23,6 +17,8 @@
     --muted: #9A9AA2;
     --green: #00C24E;
     --red: #FF433D;
+    --yellow: #FFB800;
+    --orange: #FF8C00;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; border-radius: 0; }
   html { background: var(--bg); }
@@ -37,18 +33,24 @@
   .num { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; }
   .wrap { max-width: 1280px; margin: 0 auto; padding: 0 20px 80px; }
 
-  /* ---- masthead ---- */
   .topbar {
     display: flex; justify-content: space-between; align-items: center;
     padding: 10px 0; border-bottom: 1px solid var(--rule-strong);
     font-family: "JetBrains Mono", monospace; font-size: 12px;
     text-transform: uppercase; letter-spacing: 0.08em;
   }
-  .topbar .left { display: flex; gap: 16px; align-items: center; }
+  .topbar .left { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
   .status-dot { display: inline-block; width: 8px; height: 8px; background: var(--green); }
+  .status-dot.warning { background: var(--yellow); }
   .status-dot.down { background: var(--red); }
+  .status-dot.halted { background: var(--red); animation: pulse 1s step-end infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
   #clock { color: var(--ink); }
   .topbar .muted { color: var(--muted); }
+  .badge { border: 1px solid var(--muted); padding: 1px 8px; font-size: 11px; }
+  .badge.red { border-color: var(--red); color: var(--red); }
+  .badge.yellow { border-color: var(--yellow); color: var(--yellow); }
+  .badge.green { border-color: var(--green); color: var(--green); }
 
   .masthead { padding: 28px 0 24px; border-bottom: 4px solid var(--rule-strong); }
   .masthead h1 {
@@ -70,7 +72,6 @@
   .up { color: var(--green); }
   .down-c { color: var(--red); }
 
-  /* ---- stat strip: cells split by hairlines, no cards ---- */
   .strip {
     display: grid; grid-template-columns: repeat(5, 1fr);
     border-bottom: 1px solid var(--rule);
@@ -80,20 +81,21 @@
   .cell .v { font-family: "JetBrains Mono", monospace; font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
   .cell .s { font-size: 12px; color: var(--muted); font-family: "JetBrains Mono", monospace; }
   @media (max-width: 900px) {
-    .strip { grid-template-columns: repeat(3, 1fr); }
+    .strip:not(.no-break) { grid-template-columns: repeat(3, 1fr); }
+    .strip.no-break { grid-template-columns: repeat(4, 1fr); }
     .cell:nth-child(4) { border-left: none; padding-left: 0; }
     .cell { border-top: 1px solid var(--rule); }
     .cell:nth-child(-n+3) { border-top: none; }
   }
   @media (max-width: 560px) {
-    .strip { grid-template-columns: repeat(2, 1fr); }
+    .strip:not(.no-break) { grid-template-columns: repeat(2, 1fr); }
+    .strip.no-break { grid-template-columns: repeat(2, 1fr); }
     .cell:nth-child(odd) { border-left: none; padding-left: 0; }
     .cell:nth-child(even) { border-left: 1px solid var(--rule); padding-left: 16px; }
     .cell:nth-child(-n+2) { border-top: none; }
     .cell:nth-child(n+3) { border-top: 1px solid var(--rule); }
   }
 
-  /* ---- sections ---- */
   section { border-bottom: 1px solid var(--rule); padding: 20px 0 28px; }
   section > h2 {
     font-family: Archivo, sans-serif; font-weight: 700; font-size: 15px;
@@ -113,7 +115,6 @@
     .cols > section + section { border-left: none; padding-left: 0; }
   }
 
-  /* ---- tables ---- */
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th {
     font-family: "JetBrains Mono", monospace; font-weight: 400; font-size: 11px;
@@ -133,7 +134,6 @@
   .table-scroll { overflow-x: auto; max-height: 460px; overflow-y: auto; }
   .empty { color: var(--muted); font-family: "JetBrains Mono", monospace; font-size: 13px; padding: 18px 0; }
 
-  /* ---- activity log ---- */
   .log { list-style: none; max-height: 460px; overflow-y: auto; font-size: 13px; }
   .log li { display: flex; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--rule); }
   .log li:last-child { border-bottom: none; }
@@ -145,7 +145,6 @@
   }
   .log .msg { flex: 1; word-break: break-word; }
 
-  /* ---- errors ---- */
   .err-badge { color: var(--red); border: 1px solid var(--red); padding: 1px 8px; }
   .err-title { color: var(--red); }
   .log .when.err { color: var(--red); }
@@ -161,18 +160,23 @@
     color: var(--muted); background: #0A0A0A; border-left: 2px solid var(--red);
     padding: 10px 12px; margin-top: 6px; overflow-x: auto; white-space: pre-wrap;
   }
+  .health-ok     { color: var(--green); }
+  .health-warning{ color: var(--yellow); }
+  .health-degraded{color: var(--orange); }
+  .health-halted { color: var(--red); }
+
+  .flash { animation: flash 1s ease-out; }
+  @keyframes flash { 0% { opacity: 0.3; } 100% { opacity: 1; } }
 
   footer {
     padding: 16px 0; font-family: "JetBrains Mono", monospace; font-size: 11px;
     color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em;
     display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
   }
-  @media (prefers-reduced-motion: no-preference) {
-    .status-dot { animation: blink 2s step-end infinite; }
-    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-  }
   a { color: var(--ink); }
   :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .auto-scroll label { cursor: pointer; font-size: 11px; color: var(--muted); font-family: "JetBrains Mono", monospace; text-transform: uppercase; letter-spacing: 0.08em; user-select: none; }
+  .auto-scroll input { accent-color: var(--green); margin-right: 4px; vertical-align: middle; }
 </style>
 </head>
 <body>
@@ -182,7 +186,8 @@
       <span><span class="status-dot" id="dot" aria-hidden="true"></span> <span id="conn">LIVE</span></span>
       <span class="muted" id="broker-badge">—</span>
       <span class="muted" id="net-badge">—</span>
-      <span id="err-count" class="err-badge" hidden></span>
+      <span id="err-count" class="badge red" hidden></span>
+      <span id="health-badge" class="badge" hidden></span>
     </div>
     <span id="clock" class="num">--:--:--</span>
   </div>
@@ -237,14 +242,14 @@
   </section>
 
   <section>
-    <h2>Risk Assessment <span class="idx">04</span></h2>
+    <h2>Risk &amp; Health <span class="idx">04</span></h2>
     <div id="risk-panel">
-      <div class="empty" id="risk-empty" hidden>NO RISK DATA YET</div>
-      <div class="strip" id="risk-strip" style="border-bottom:none;grid-template-columns:repeat(4,1fr);" hidden>
+      <div class="empty" id="risk-empty" hidden>NO DATA YET</div>
+      <div class="strip no-break" id="risk-strip" style="border-bottom:none;grid-template-columns:repeat(4,1fr);" hidden>
         <div class="cell"><div class="label">Verdict</div><div class="v" id="risk-verdict">—</div></div>
         <div class="cell"><div class="label">Exposure</div><div class="v" id="risk-exposure">—</div></div>
         <div class="cell"><div class="label">Max Trade</div><div class="v" id="risk-max-trade">—</div></div>
-        <div class="cell"><div class="label">Day P&amp;L</div><div class="v" id="risk-day-pnl">—</div></div>
+        <div class="cell"><div class="label">Health</div><div class="v" id="risk-health">—</div></div>
       </div>
       <ul class="log" id="risk-details"></ul>
     </div>
@@ -263,7 +268,7 @@
     </section>
 
     <section>
-      <h2>Agent Activity <span class="idx">06</span></h2>
+      <h2>Agent Activity <span class="idx">06</span> <span class="auto-scroll"><label><input type="checkbox" id="auto-scroll" checked> Auto-scroll</label></span></h2>
       <ul class="log" id="activity-log"></ul>
       <div class="empty" id="activity-empty" hidden>NO ACTIVITY YET</div>
     </section>
@@ -273,6 +278,17 @@
     <h2><span class="err-title">Errors &amp; Bugs</span> <span class="idx">07</span></h2>
     <ul class="log" id="error-log"></ul>
     <div class="empty" id="errors-empty" hidden>NO ERRORS — ALL SYSTEMS NOMINAL</div>
+  </section>
+
+  <section>
+    <h2>Regime &amp; Market <span class="idx">08</span> <span class="idx" id="regime-summary"></span></h2>
+    <div class="table-scroll">
+      <table aria-label="Market regime per symbol">
+        <thead><tr><th>Symbol</th><th>Regime</th><th class="r">Confidence</th><th class="r">Size</th><th>Favored</th><th>Notes</th></tr></thead>
+        <tbody id="regime-body"></tbody>
+      </table>
+      <div class="empty" id="regime-empty" hidden>NO REGIME DATA</div>
+    </div>
   </section>
 
   <footer>
@@ -290,7 +306,6 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;"
 const pnlClass = (v) => (v >= 0 ? "up" : "down-c");
 const pad = (n) => String(n).padStart(2, "0");
 
-/* Exact time on every action: 12:29:45 — plus the date when it isn't today */
 const hms = (d) => pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
 const dmy = (d) => d.toLocaleDateString(undefined, {month: "short", day: "numeric"}).toUpperCase();
 const parseSql = (s) => new Date(s.includes("T") ? s : s.replace(" ", "T") + "Z");
@@ -302,7 +317,6 @@ function exactTime(d) {
 const exactSql = (s) => (s ? exactTime(parseSql(s)) : "—");
 const exactUnix = (ts) => exactTime(new Date(ts * 1000));
 
-/* live terminal clock */
 setInterval(() => { document.getElementById("clock").textContent = hms(new Date()); }, 1000);
 
 let chart = null;
@@ -381,9 +395,13 @@ function renderTrades(rows) {
   </tr>`).join("");
 }
 
+let prevActivityLen = 0;
 function renderActivity(rows) {
   document.getElementById("activity-empty").hidden = rows.length > 0;
-  document.getElementById("activity-log").innerHTML = rows.slice().reverse().map((e) => {
+  const logEl = document.getElementById("activity-log");
+  const autoScroll = document.getElementById("auto-scroll").checked;
+  const atBottom = autoScroll || (logEl.scrollTop >= logEl.scrollHeight - logEl.clientHeight - 20);
+  logEl.innerHTML = rows.slice().reverse().map((e) => {
     const d = new Date(e.time * 1000);
     const dateSmall = isToday(d) ? "" : `<small>${dmy(d)}</small>`;
     return `<li>
@@ -392,10 +410,14 @@ function renderActivity(rows) {
       <span class="msg">${esc(e.message)}</span>
     </li>`;
   }).join("");
+  if (rows.length > prevActivityLen && atBottom) {
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  prevActivityLen = rows.length;
 }
 
 function renderErrors(rows) {
-  document.getElementById("errors-empty").hidden = rows.length > 0;
+  document.getElementById("errors-empty").hidden = rows.length === 0;
   const badge = document.getElementById("err-count");
   badge.hidden = rows.length === 0;
   badge.textContent = rows.length + (rows.length === 1 ? " ERROR" : " ERRORS");
@@ -431,8 +453,11 @@ function renderOpportunities(rows) {
   }).join("");
 }
 
-function renderRisk(risk) {
-  if (!risk || !risk.verdict) {
+const HEALTH_CLS = { ok: "health-ok", warning: "health-warning", degraded: "health-degraded", halted: "health-halted" };
+function renderRisk(risk, health) {
+  const hasRisk = risk && risk.verdict;
+  const hasHealth = health && health.status;
+  if (!hasRisk && !hasHealth) {
     document.getElementById("risk-empty").hidden = false;
     document.getElementById("risk-strip").hidden = true;
     document.getElementById("risk-details").innerHTML = "";
@@ -440,21 +465,78 @@ function renderRisk(risk) {
   }
   document.getElementById("risk-empty").hidden = true;
   document.getElementById("risk-strip").hidden = false;
-  const vc = {low:"green",moderate_risk:"yellow",high_risk:"red",critical:"#FF433D"};
-  document.getElementById("risk-verdict").style.color = vc[risk.verdict] || "white";
-  document.getElementById("risk-verdict").textContent = risk.verdict.replace("_", " ").toUpperCase();
-  document.getElementById("risk-exposure").textContent = (risk.exposure_pct || 0).toFixed(1) + "%";
-  document.getElementById("risk-max-trade").textContent = fmtUsd(risk.max_trade_size);
-  document.getElementById("risk-day-pnl").textContent = (risk.day_pnl_pct != null ? fmtPct(risk.day_pnl_pct) : "—");
-  const risks = risk.risks || [];
-  document.getElementById("risk-details").innerHTML = risks.map((r) =>
-    `<li><span class="agent" style="color:var(--red)">RISK</span><span class="msg">${esc(r)}</span></li>`
+
+  if (hasRisk) {
+    const vc = {low:"green",moderate_risk:"yellow",high_risk:"red",critical:"#FF433D"};
+    document.getElementById("risk-verdict").style.color = vc[risk.verdict] || "white";
+    document.getElementById("risk-verdict").textContent = risk.verdict.replace("_", " ").toUpperCase();
+    document.getElementById("risk-exposure").textContent = (risk.exposure_pct || 0).toFixed(1) + "%";
+    document.getElementById("risk-max-trade").textContent = fmtUsd(risk.max_trade_size);
+  } else {
+    document.getElementById("risk-verdict").textContent = "—";
+    document.getElementById("risk-exposure").textContent = "—";
+    document.getElementById("risk-max-trade").textContent = "—";
+  }
+
+  if (hasHealth) {
+    const hc = {ok: "green", warning: "yellow", degraded: "orange", halted: "red"};
+    document.getElementById("risk-health").style.color = hc[health.status] || "white";
+    document.getElementById("risk-health").textContent = health.status.toUpperCase();
+  } else {
+    document.getElementById("risk-health").textContent = "—";
+  }
+
+  const items = [];
+  if (risk && risk.risks) items.push(...risk.risks.map((r) => `RISK: ${r}`));
+  if (health && health.issues) items.push(...health.issues.map((i) => `HALT: ${i}`));
+  if (health && health.warnings) items.push(...health.warnings.map((w) => `WARN: ${w}`));
+  document.getElementById("risk-details").innerHTML = items.map((r) =>
+    `<li><span class="agent" style="color:${r.startsWith("HALT") ? "var(--red)" : r.startsWith("WARN") ? "var(--yellow)" : "var(--red)"}">${r.startsWith("HALT") ? "HALT" : r.startsWith("WARN") ? "WARN" : "RISK"}</span><span class="msg">${esc(r.replace(/^(HALT|WARN|RISK):\s*/, ""))}</span></li>`
   ).join("");
 }
 
+function renderHealth(health) {
+  const badge = document.getElementById("health-badge");
+  if (!health || !health.status || health.status === "ok") {
+    badge.hidden = true;
+    return;
+  }
+  badge.hidden = false;
+  const clsMap = { warning: "yellow", degraded: "yellow", halted: "red" };
+  badge.className = "badge " + (clsMap[health.status] || "yellow");
+  badge.textContent = health.status.toUpperCase();
+  const dot = document.getElementById("dot");
+  dot.className = "status-dot " + (health.status === "halted" ? "halted" : health.status === "ok" ? "" : "warning");
+}
+
+function renderRegime(regime) {
+  const symbols = (regime && regime.symbols) || {};
+  const summary = (regime && regime.summary) || {};
+  const rows = Object.entries(symbols);
+  document.getElementById("regime-empty").hidden = rows.length > 0;
+  const summaryEl = document.getElementById("regime-summary");
+  summaryEl.textContent = Object.entries(summary).map(([k, v]) => `${k}: ${v}`).join(" · ");
+  document.getElementById("regime-body").innerHTML = rows.map(([sym, r]) => {
+    if (typeof r !== "object") {
+      return `<tr><td>${esc(sym)}</td><td colspan="5">${esc(String(r))}</td></tr>`;
+    }
+    const regime = r.regime || "unknown";
+    const cls = regime.includes("up") ? "up" : regime.includes("down") ? "down-c" : "";
+    return `<tr>
+      <td>${esc(sym)}</td>
+      <td class="${cls} mono" style="font-weight:600">${esc(regime.replace("_", " "))}</td>
+      <td class="r num">${r.confidence_multiplier != null ? (r.confidence_multiplier * 100).toFixed(0) + "%" : "—"}</td>
+      <td class="r num">${r.size_multiplier != null ? (r.size_multiplier * 100).toFixed(0) + "%" : "—"}</td>
+      <td class="mono" style="font-size:12px">${r.favored_action ? `<span class="${r.favored_action === "BUY" ? "side-b" : "side-s"}">${r.favored_action}</span>` : "—"}</td>
+      <td style="font-size:12px;color:var(--muted)">${(r.notes || []).slice(0, 1).join("; ")}</td>
+    </tr>`;
+  }).join("");
+}
+
+let prevEquity = null;
 async function refresh() {
   try {
-    const [summary, positions, trades, equity, activity, errors, opportunities, risk] = await Promise.all([
+    const [summary, positions, trades, equity, activity, errors, opportunities, risk, health, regime] = await Promise.all([
       fetch("/api/summary").then((r) => r.json()),
       fetch("/api/positions").then((r) => r.json()),
       fetch("/api/trades").then((r) => r.json()),
@@ -463,6 +545,8 @@ async function refresh() {
       fetch("/api/errors").then((r) => r.json()),
       fetch("/api/opportunities").then((r) => r.json()),
       fetch("/api/risk").then((r) => r.json()),
+      fetch("/api/health").then((r) => r.json()),
+      fetch("/api/regime").then((r) => r.json()),
     ]);
     renderSummary(summary);
     renderPositions(positions);
@@ -471,10 +555,19 @@ async function refresh() {
     renderActivity(activity);
     renderErrors(errors);
     renderOpportunities(opportunities);
-    renderRisk(risk);
+    renderRisk(risk, health);
+    renderHealth(health);
+    renderRegime(regime);
     document.getElementById("conn").textContent = "LIVE";
-    document.getElementById("dot").className = "status-dot";
+    const healthOk = !health || !health.status || health.status === "ok";
+    document.getElementById("dot").className = "status-dot" + (healthOk ? "" : health.status === "halted" ? " halted" : " warning");
     document.getElementById("updated").textContent = "UPDATED " + hms(new Date());
+    if (prevEquity != null && summary.equity !== prevEquity) {
+      document.getElementById("big-equity").classList.remove("flash");
+      void document.getElementById("big-equity").offsetWidth;
+      document.getElementById("big-equity").classList.add("flash");
+    }
+    prevEquity = summary.equity;
   } catch (e) {
     document.getElementById("conn").textContent = "OFFLINE";
     document.getElementById("dot").className = "status-dot down";

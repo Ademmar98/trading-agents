@@ -154,6 +154,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
         risk = memory.read("decisions", "risk_assessment")
         return risk or {}
 
+    def get_health(self):
+        health = memory.read("reports", "health")
+        return health or {}
+
     def get_config(self):
         from config import BROKER_TYPE, TRADING_INTERVAL_MINUTES, WATCHED_SYMBOLS, INITIAL_BALANCE, BINANCE_USE_TESTNET
         return {
@@ -196,6 +200,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(self.get_optimizations())
             elif self.path == "/api/risk":
                 self._json(self.get_risk())
+            elif self.path == "/api/health":
+                self._json(self.get_health())
             elif self.path == "/api/config":
                 self._json(self.get_config())
             else:

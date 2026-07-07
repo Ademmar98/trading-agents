@@ -41,4 +41,8 @@ class RegimeAgent(BaseAgent):
         report = {"symbols": regimes, "summary": counts, "timestamp": time.time()}
         self.memory.write("analyses", "regime_scan", report)
         self.log(f"Regime scan complete: {counts}")
+        dominant = max(counts, key=counts.get) if counts else "unknown"
+        found_volatile = any(r.get("regime") == "volatile" for r in regimes.values() if isinstance(r, dict))
+        if found_volatile:
+            self.notifier.on_agent_action("regime", f"VOLATILE detected | dominant: {dominant}")
         return report

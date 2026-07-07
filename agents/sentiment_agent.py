@@ -65,4 +65,6 @@ class SentimentAgent(BaseAgent):
         }
         self.memory.write("analyses", "sentiment_scan", report)
         self.log(f"Sentiment: {market_mood}, breadth {positive_breadth:.0%}, avg {avg_change:+.2f}%")
+        if market_mood != "neutral":
+            self.notifier.on_agent_action("sentiment", f"mood: {market_mood} | breadth {positive_breadth:.0%} avg {avg_change:+.1f}%")
         return report

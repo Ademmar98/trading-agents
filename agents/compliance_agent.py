@@ -75,4 +75,8 @@ class ComplianceAgent(BaseAgent):
         }
         self.memory.write("decisions", "compliance_gate", report)
         self.log(f"Compliance: {len(approved)} approved, {len(rejected)} rejected, halted={halted}")
+        if halted:
+            self.notifier.on_agent_action("compliance", f"HALTED — {'; '.join(blockers[:2])}")
+        elif rejected:
+            self.notifier.on_agent_action("compliance", f"{len(approved)} approved, {len(rejected)} rejected")
         return report

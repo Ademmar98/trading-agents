@@ -83,4 +83,9 @@ class ResearchAnalyst(BaseAgent):
             "timestamp": time.time(),
         })
         self.log(summary)
+        if opportunities:
+            top = opportunities[0]
+            self.notifier.on_agent_action(
+                "analyst", f"{len(opportunities)} signals | top: {top['action']} {top['symbol']} ({top['confidence']:.0%})"
+            )
         return analyses

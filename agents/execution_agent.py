@@ -77,4 +77,9 @@ class ExecutionAgent(BaseAgent):
         }
         self.memory.write("orders", "execution_plan", report)
         self.log(f"Execution plan: {len(executable)} ready, {len(rejected)} rejected")
+        if executable:
+            e = executable[0]
+            self.notifier.on_agent_action(
+                "execution", f"{len(executable)} orders ready | top: {e['action']} {e['qty']} {e['symbol']} SL={e['sl_pct']:.1f}% TP={e['tp_pct']:.1f}%"
+            )
         return report

@@ -50,6 +50,8 @@ class PositionSizer(BaseAgent):
         }
         self.memory.write("decisions", "position_sizing", report)
         self.log(f"Sizing: Kelly {kelly_pct:.1f}%, {len(sized)} opportunities sized")
+        if kelly_pct < 10:
+            self.notifier.on_agent_action("position_sizer", f"Kelly {kelly_pct:.1f}% — aggressive size reduction")
         return report
 
     @staticmethod
