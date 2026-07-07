@@ -12,12 +12,6 @@ from core.memory import SharedMemory
 from core import websocket_prices
 
 WEB_DIR = BASE_DIR / "web"
-DASHBOARD_PASSWORD = os.getenv("DASHBOARD_PASSWORD", "")
-if not DASHBOARD_PASSWORD:
-    import secrets
-    DASHBOARD_PASSWORD = secrets.token_hex(16)
-    print("[WARNING] DASHBOARD_PASSWORD not set — generated random password. "
-          "Set the env var to avoid losing access on restart.", flush=True)
 
 memory = SharedMemory()
 
@@ -129,15 +123,6 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
 
-    def _authorized(self):
-        if not DASHBOARD_PASSWORD:
-            return True
-        header = self.headers.get("Authorization", "")
-        expected = "Basic " + base64.b64encode(
-            f"trader:{DASHBOARD_PASSWORD}".encode()
-        ).decode()
-        return header == expected
-
     def _send(self, status, content_type, body):
         self.send_response(status)
         self.send_header("Content-Type", content_type)
@@ -192,11 +177,6 @@ class DashboardHandler(BaseHTTPRequestHandler):
         }
 
     def do_GET(self):
-        if not self._authorized():
-            self.send_response(401)
-            self.send_header("WWW-Authenticate", 'Basic realm="Trading Dashboard"')
-            self.end_headers()
-            return
         try:
             if self.path in ("/", "/index.html"):
                 page = (WEB_DIR / "index.html").read_bytes()
