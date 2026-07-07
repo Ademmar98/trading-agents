@@ -461,18 +461,28 @@ def make_layout(portfolio) -> Layout:
         Layout(name="right"),
     )
     layout["left"].split(
-        Layout(make_status_panel(portfolio)),
-        Layout(make_market_panel()),
-        Layout(make_positions_panel()),
-        Layout(make_opportunities_panel()),
+        Layout(name="left-top"),
+        Layout(name="left-mid", ratio=3),
+        Layout(name="left-bot"),
     )
+    layout["left-top"].split_row(
+        Layout(make_status_panel(portfolio), ratio=2),
+        Layout(make_market_panel(), ratio=3),
+    )
+    layout["left-mid"].update(make_positions_panel())
+    layout["left-bot"].update(make_opportunities_panel())
     layout["right"].split(
+        Layout(name="right-top"),
+        Layout(name="right-mid", ratio=2),
+        Layout(name="right-bot"),
+    )
+    layout["right-top"].split_row(
         Layout(make_analytics_panel()),
         Layout(make_backtest_panel()),
         Layout(make_risk_panel()),
-        Layout(make_trades_panel()),
-        Layout(make_activity_panel()),
     )
+    layout["right-mid"].update(make_trades_panel())
+    layout["right-bot"].update(make_activity_panel())
     layout["footer"].update(Panel(
         f"[dim]Press Ctrl+C to stop  |  "
         "Spot-only (no leverage)  |  "
