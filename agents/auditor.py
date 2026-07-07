@@ -17,7 +17,7 @@ class Auditor(BaseAgent):
         logs = self.memory.get_recent_logs(50)
         analytics = compute_analytics()
 
-        trade_rows = fetchall("SELECT strategy, pnl FROM trades WHERE strategy != ''")
+        trade_rows = fetchall("SELECT COALESCE(NULLIF(strategy, ''), 'unknown') AS strategy, pnl FROM trades")
         strat_stats = {}
         for r in trade_rows:
             s = strat_stats.setdefault(r["strategy"], {"pnls": [], "wins": 0, "total": 0})

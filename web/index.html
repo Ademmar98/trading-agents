@@ -337,7 +337,7 @@
 
 <script>
 const _fmt = (v, minD, maxD) => { const s = Math.abs(v).toFixed(maxD); const p = s.split("."); let i = p[0]; if (i.length > 3) i = i.replace(/\B(?=(\d{3})+(?!\d))/g, ","); let d = p[1]; if (d && minD != null && d.length < minD) d = d.padEnd(minD, "0"); return (v < 0 ? "-" : "") + i + (d != null ? "." + d : ""); };
-const fmtUsd = (v) => (v == null ? "—" : (v < 0 ? "-$" : "$") + _fmt(v, 2, 2));
+const fmtUsd = (v) => (v == null ? "—" : (v < 0 ? "-$" : "$") + _fmt(Math.abs(v), 2, 2));
 const fmtPct = (v) => (v == null ? "—" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%");
 const fmtQty = (v) => _fmt(v, 0, 6);
 const fmtPrice = (v) => (v ? _fmt(v, 2, 5) : "—");
@@ -346,7 +346,7 @@ const pnlClass = (v) => (v >= 0 ? "up" : "down-c");
 const pad = (n) => String(n).padStart(2, "0");
 
 const hms = (d) => pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
-const dmy = (d) => d.toLocaleDateString(undefined, {month: "short", day: "numeric"}).toUpperCase();
+const dmy = (d) => d.toLocaleDateString("en-US", {month: "short", day: "numeric"}).toUpperCase();
 const parseSql = (s) => new Date(s.includes("T") ? s : s.replace(" ", "T") + "Z");
 const isToday = (d) => d.toDateString() === new Date().toDateString();
 function exactTime(d) {
