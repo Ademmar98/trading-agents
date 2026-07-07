@@ -211,7 +211,8 @@ def make_positions_panel() -> Panel:
     table.add_column("SL", justify="right", width=10)
     table.add_column("TP", justify="right", width=10)
     table.add_column("P&L", justify="right", width=10)
-    for pos in summary["positions"]:
+    rows = summary["positions"]
+    for pos in rows[:20]:
         color = "green" if pos["pnl"] >= 0 else "red"
         table.add_row(
             pos["symbol"],
@@ -223,6 +224,9 @@ def make_positions_panel() -> Panel:
             f"${pos['take_profit']:.5f}" if pos["take_profit"] else "-",
             f"[{color}]${pos['pnl']:+.2f}[/{color}]",
         )
+    extra = len(rows) - 20
+    if extra > 0:
+        table.add_row("[dim]...[/dim]", "", "", "", "", "", "", f"[dim]{extra} more[/dim]")
     return Panel(table, title=f"[bold cyan]Positions ({summary['count']})[/bold cyan]", box=box.ROUNDED)
 
 
@@ -274,7 +278,7 @@ def make_status_panel(portfolio: Portfolio) -> Panel:
 
 
 def make_trades_panel() -> Panel:
-    trades = pos_mgr.get_recent_trades(10)
+    trades = pos_mgr.get_recent_trades(20)
     if not trades:
         return Panel("[dim]No trades yet[/dim]", title="[bold cyan]Closed Trades[/bold cyan]")
     table = Table(box=box.SIMPLE)
@@ -286,7 +290,7 @@ def make_trades_panel() -> Panel:
     table.add_column("Exit", justify="right", width=10)
     table.add_column("Reason", width=8)
     table.add_column("P&L", justify="right", width=10)
-    for t in trades:
+    for t in trades[:15]:
         color = "green" if t["pnl"] >= 0 else "red"
         ts = t.get("closed_at", "")
         tm = ts[11:19] if len(ts) > 19 else ts[:10]
@@ -300,6 +304,9 @@ def make_trades_panel() -> Panel:
             t.get("reason", "close")[:8],
             f"[{color}]${t['pnl']:+.2f}[/{color}]",
         )
+    extra = len(trades) - 15
+    if extra > 0:
+        table.add_row("", "[dim]...[/dim]", "", "", "", "", "", f"[dim]{extra} more[/dim]")
     return Panel(table, title="[bold cyan]Closed Trades[/bold cyan]", box=box.ROUNDED)
 
 
@@ -335,7 +342,7 @@ def make_backtest_panel() -> Panel:
     table.add_column("PF", justify="right", width=6)
     table.add_column("Sharpe", justify="right", width=7)
     table.add_column("MaxDD", justify="right", width=7)
-    for r in results[:6]:
+    for r in results[:10]:
         ret_c = "green" if r["total_return"] >= 0 else "red"
         table.add_row(
             r["symbol"][:8],
@@ -404,7 +411,7 @@ def make_opportunities_panel() -> Panel:
     table.add_column("Price", justify="right")
     table.add_column("Conf.", justify="right")
     table.add_column("Reasons")
-    for opp in opps[:8]:
+    for opp in opps[:12]:
         table.add_row(
             opp["symbol"],
             opp.get("action", "?"),
@@ -412,6 +419,9 @@ def make_opportunities_panel() -> Panel:
             f"{opp['confidence']:.0%}",
             ", ".join(opp.get("reasons", [])[:2]),
         )
+    extra = len(opps) - 12
+    if extra > 0:
+        table.add_row("[dim]...[/dim]", "", "", "", f"[dim]{extra} more[/dim]")
     return Panel(table, title="[bold cyan]Opportunities[/bold cyan]", box=box.ROUNDED)
 
 
@@ -451,16 +461,16 @@ def make_layout(portfolio) -> Layout:
         Layout(name="right"),
     )
     layout["left"].split(
-        Layout(make_status_panel(portfolio), size=7),
-        Layout(make_market_panel(), size=10),
-        Layout(make_positions_panel(), size=8),
+        Layout(make_status_panel(portfolio)),
+        Layout(make_market_panel()),
+        Layout(make_positions_panel()),
         Layout(make_opportunities_panel()),
     )
     layout["right"].split(
-        Layout(make_analytics_panel(), size=7),
-        Layout(make_backtest_panel(), size=7),
-        Layout(make_risk_panel(), size=8),
-        Layout(make_trades_panel(), size=8),
+        Layout(make_analytics_panel()),
+        Layout(make_backtest_panel()),
+        Layout(make_risk_panel()),
+        Layout(make_trades_panel()),
         Layout(make_activity_panel()),
     )
     layout["footer"].update(Panel(
