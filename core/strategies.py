@@ -94,6 +94,8 @@ def detect_order_block(ohlc, window=8):
         return None
     for i in range(len(ohlc) - window, len(ohlc) - 2):
         candle = ohlc[i]
+        if candle["close"] == 0:
+            continue
         forward_move = abs(ohlc[i + 2]["close"] - candle["close"]) / candle["close"]
         if forward_move < 0.002:
             continue
@@ -104,7 +106,7 @@ def detect_order_block(ohlc, window=8):
             if ohlc[min(i + 4, len(ohlc) - 1)]["close"] > body_top:
                 continue
             current = ohlc[-1]
-            if abs(current["close"] - body_top) / body_top < 0.003:
+            if body_top and abs(current["close"] - body_top) / body_top < 0.003:
                 return {"action": "BUY", "confidence": 0.6, "reasons": ["Bullish OB near retest"]}
         else:
             body_bot = candle["close"]
@@ -113,7 +115,7 @@ def detect_order_block(ohlc, window=8):
             if ohlc[min(i + 4, len(ohlc) - 1)]["close"] < body_bot:
                 continue
             current = ohlc[-1]
-            if abs(current["close"] - body_bot) / body_bot < 0.003:
+            if body_bot and abs(current["close"] - body_bot) / body_bot < 0.003:
                 return {"action": "SELL", "confidence": 0.6, "reasons": ["Bearish OB near retest"]}
     return None
 
@@ -357,9 +359,9 @@ def detect_double_top_bottom(ohlc, window=10):
     low1 = min(c["low"] for c in earlier)
     low1_idx = min(i for i, c in enumerate(earlier) if c["low"] == low1)
     low2 = min(c["low"] for c in recent)
-    if abs(high2 - high1) / high1 < 0.005 and high2 >= high1:
+    if high1 and abs(high2 - high1) / high1 < 0.005 and high2 >= high1:
         return {"action": "SELL", "confidence": 0.6, "reasons": ["Double top rejection"]}
-    if abs(low2 - low1) / low1 < 0.005 and low2 <= low1:
+    if low1 and abs(low2 - low1) / low1 < 0.005 and low2 <= low1:
         return {"action": "BUY", "confidence": 0.6, "reasons": ["Double bottom reversal"]}
     return None
 
@@ -367,15 +369,16 @@ def detect_double_top_bottom(ohlc, window=10):
 # ---- ADDITIONAL STRATEGIES ----
 
 def _vwap(ohlc):
-    if len(ohlc) < 20:
+    if len(ohlc) < 21:
         return None
-    vol_sum = sum(c["volume"] for c in ohlc[-20:])
+    ref = ohlc[-21:-1]
+    vol_sum = sum(c["volume"] for c in ref)
     if vol_sum == 0:
         return None
-    pv_sum = sum(c["close"] * c["volume"] for c in ohlc[-20:])
+    pv_sum = sum(c["close"] * c["volume"] for c in ref)
     vwap = pv_sum / vol_sum
     current = ohlc[-1]["close"]
-    bands = (max(c["high"] for c in ohlc[-20:]) - min(c["low"] for c in ohlc[-20:])) / vwap
+    bands = (max(c["high"] for c in ref) - min(c["low"] for c in ref)) / vwap
     if current < vwap * (1 - bands * 0.5):
         return {"action": "BUY", "confidence": 0.55, "reasons": ["Price below VWAP support"]}
     if current > vwap * (1 + bands * 0.5):
@@ -608,10 +611,58 @@ ALL_STRATEGIES = [
     ("Classic - MFI", detect_mfi),
 ]
 
+REGIME_STRATEGIES = {
+    "trending_up": [
+        "ICT - BOS/CHoCH", "ICT - Market Structure", "ICT - Order Block",
+        "Classic - SMA Crossover", "Classic - EMA Cross 9/21",
+        "Classic - MACD", "Classic - Ichimoku",
+        "Classic - Donchian Channel", "PA - Heikin-Ashi",
+        "ICT - Liquidity Sweep", "Classic - ATR Breakout",
+    ],
+    "trending_down": [
+        "ICT - BOS/CHoCH", "ICT - Market Structure", "ICT - Order Block",
+        "Classic - SMA Crossover", "Classic - EMA Cross 9/21",
+        "Classic - MACD", "Classic - Ichimoku",
+        "Classic - Donchian Channel", "PA - Heikin-Ashi",
+        "ICT - Liquidity Sweep", "Classic - ATR Breakout",
+    ],
+    "trending": [
+        "ICT - BOS/CHoCH", "ICT - Market Structure", "ICT - Order Block",
+        "Classic - SMA Crossover", "Classic - EMA Cross 9/21",
+        "Classic - MACD", "Classic - Ichimoku",
+        "Classic - Donchian Channel", "PA - Heikin-Ashi",
+        "ICT - Liquidity Sweep",
+    ],
+    "ranging": [
+        "ICT - OTE", "ICT - FVG", "ICT - Order Block",
+        "Classic - Bollinger", "Classic - RSI Divergence",
+        "Classic - Stochastic RSI", "Classic - Keltner Channel",
+        "PA - Inside Bar", "PA - Engulfing", "PA - Pin Bar",
+        "PA - Double Top/Bot", "PA - S/R Levels",
+        "Classic - VWAP", "Classic - MFI",
+    ],
+    "volatile": [
+        "ICT - FVG", "ICT - Liquidity Sweep",
+        "Classic - ATR Breakout", "PA - Volume Breakout",
+        "Classic - VWAP", "Classic - Bollinger",
+        "PA - Double Top/Bot", "PA - Engulfing", "PA - Pin Bar",
+        "ICT - Order Block",
+    ],
+}
 
-def scan_symbol(ohlc):
+
+def strategies_for_regime(regime):
+    names = REGIME_STRATEGIES.get(regime)
+    if not names:
+        return ALL_STRATEGIES
+    name_set = set(names)
+    return [(n, fn) for n, fn in ALL_STRATEGIES if n in name_set]
+
+
+def scan_symbol(ohlc, regime=None):
+    strategies = strategies_for_regime(regime) if regime else ALL_STRATEGIES
     signals = []
-    for name, fn in ALL_STRATEGIES:
+    for name, fn in strategies:
         try:
             sig = fn(ohlc)
             if sig:

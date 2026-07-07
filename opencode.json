@@ -1,0 +1,32 @@
+{
+  "skills": {
+    "agent-browser": {
+      "path": ".agents/skills/agent-browser",
+      "description": "Web browsing and automation skill for agents"
+    },
+    "find-skills": {
+      "path": ".agents/skills/find-skills",
+      "description": "Search and discover skills for agents"
+    },
+    "trading-signal": {
+      "path": ".agents/skills/trading-signal",
+      "description": "Binance trading signals and market analysis"
+    },
+    "tradingview-quantitative": {
+      "path": ".agents/skills/tradingview-quantitative",
+      "description": "TradingView quantitative analysis strategies"
+    },
+    "finance-expert": {
+      "path": ".agents/skills/finance-expert",
+      "description": "Financial expertise for market analysis and planning"
+    },
+    "fix-errors": {
+      "path": ".agents/skills/fix-errors",
+      "description": "Common error fixing patterns for code troubleshooting"
+    },
+    "capture-api-response-test-fixture": {
+      "path": ".agents/skills/capture-api-response-test-fixture",
+      "description": "Capture API responses as test fixtures for AI SDK testing"
+    }
+  }
+}

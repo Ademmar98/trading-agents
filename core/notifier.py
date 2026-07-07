@@ -72,3 +72,27 @@ class Notifier:
             return
         now = datetime.now(timezone.utc).strftime("%H:%M:%S")
         self.send(f"<b>{now}</b> {agent_name} | {action_text}")
+
+    def portfolio_snapshot(self, portfolio):
+        if not self._enabled:
+            return
+        now = datetime.now(timezone.utc).strftime("%H:%M:%S")
+        total_pnl = portfolio.get("total_pnl", 0)
+        total_value = portfolio.get("total_value", 0)
+        cash = portfolio.get("cash", 0)
+        positions = portfolio.get("positions", portfolio.get("open_positions", []))
+        pnl_s = f"${total_pnl:+,.2f}"
+        positions_str = ""
+        for p in positions:
+            sym = p.get("symbol", "?")
+            side = p.get("side", p.get("direction", "LONG"))
+            entry = p.get("entry_price", p.get("avg_price", 0))
+            current = p.get("current_price", p.get("mark_price", 0))
+            upnl = p.get("unrealized_pnl", (current - entry) if current and entry else 0)
+            upnl_s = f"${upnl:+,.2f}" if isinstance(upnl, (int, float)) else "?"
+            positions_str += f"\n{sym} {side} @ ${entry:.5f} → ${current:.5f} ({upnl_s})"
+        self.send(
+            f"<b>{now}</b> 📊 Portfolio Snapshot\n"
+            f"Value: ${total_value:,.2f} | P&L: {pnl_s}\n"
+            f"Cash: ${cash:,.2f} | Positions: {len(positions)}{positions_str}"
+        )

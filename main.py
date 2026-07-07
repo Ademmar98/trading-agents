@@ -11,6 +11,9 @@ from pathlib import Path
 # Headless mode: no dashboard, for running on a server (use --headless or HEADLESS=true)
 HEADLESS = "--headless" in sys.argv or os.getenv("HEADLESS", "").lower() == "true"
 
+# Reset flag: delete all data and start fresh
+RESET = "--reset" in sys.argv
+
 from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
@@ -25,12 +28,12 @@ from core.binance_broker import BinanceBroker
 from core.mt5_broker import MetaQuotesBroker
 from core.portfolio import load_portfolio, save_portfolio, Portfolio
 from core.memory import SharedMemory
-from core.database import init_db
+from core.database import init_db, fetchall
 from core.positions import PositionManager
 from core import websocket_prices
 from core.notifier import Notifier
 from core.analytics import get_analytics, get_strategy_stats
-from core.webserver import start_webserver
+from core.webserver import start_webserver, get_market_prices
 from core.backtester import run_all_backtests, get_backtest_results, backtest_symbol
 from core.equity import snapshot_equity, build_daily_summary, pop_completed_day
 from core.reconcile import reconcile_with_exchange
@@ -91,6 +94,59 @@ def make_broker():
     return PaperBroker()
 
 
+_BROKER_RETRY = {}
+
+
+def make_broker_with_retry():
+    """Return broker. Retry connection on failure with exponential backoff."""
+    global _BROKER_RETRY
+    now = time.time()
+    last_attempt = _BROKER_RETRY.get("last", 0)
+    attempt = _BROKER_RETRY.get("count", 0)
+    backoff = min(60, 2 ** attempt)
+    if now - last_attempt < backoff and BROKER_TYPE != "paper":
+        return _BROKER_RETRY.get("cached")
+    b = make_broker()
+    _BROKER_RETRY["last"] = now
+    if BROKER_TYPE != "paper" and hasattr(b, "connected") and not b.connected:
+        _BROKER_RETRY["count"] = attempt + 1
+        _BROKER_RETRY["cached"] = b
+        memory.log("system", f"Broker {BROKER_TYPE} disconnected, retry in {backoff}s (attempt {attempt+1})")
+    else:
+        _BROKER_RETRY["count"] = 0
+        _BROKER_RETRY["cached"] = b
+    return b
+
+
+def _rebalance_positions():
+    """Close worst underwater position if better opportunities exist."""
+    try:
+        audit = memory.read("reports", "audit") or {}
+        if not audit.get("needs_rebalance"):
+            return
+        positions = fetchall("SELECT * FROM positions WHERE status='open' ORDER BY pnl ASC")
+        if len(positions) < 1:
+            return
+        worst = positions[0]
+        pnl_pct = worst["pnl_pct"]
+        if pnl_pct > -5:
+            return
+        opportunities = memory.read("analyses", "market_scan") or {}
+        opps = opportunities.get("opportunities", [])
+        high_conf = [o for o in opps if o.get("confidence", 0) > 0.75]
+        if not high_conf:
+            return
+        broker = make_broker_with_retry()
+        close_side = "SELL" if worst["side"] == "BUY" else "BUY"
+        order = broker.place_order(worst["symbol"], close_side, worst["quantity"], worst["current_price"])
+        memory.log("system", f"Rebalance closed {worst['symbol']} ${worst['pnl']:+.2f} for {high_conf[0]['symbol']}")
+        notifier.send(
+            f"Rebalance: closed {worst['symbol']} ({worst['pnl']:+.2f}%) to deploy into {high_conf[0]['symbol']}"
+        )
+    except Exception as e:
+        memory.log_error("rebalance", str(e))
+
+
 # The Trader consumes orders/execution_plan, which only exists if the whole
 # chain runs: analysis -> sentiment/regime -> risk -> portfolio -> compliance -> execution
 CYCLE_AGENTS = (
@@ -109,7 +165,12 @@ CYCLE_AGENTS = (
 )
 
 
+_cycle_count = 0
+
+
 def run_cycle():
+    global _cycle_count
+    _cycle_count += 1
     try:
         for agent_cls in CYCLE_AGENTS:
             agent_cls().run()
@@ -117,19 +178,20 @@ def run_cycle():
         prices = websocket_prices.get_all_prices()
         if prices:
             triggered = pos_mgr.update_prices(prices)
-            broker = make_broker() if triggered else None
+            broker = make_broker_with_retry() if triggered else None
             for tr in triggered:
-                # Execute the exit on the broker so cash/holdings stay in sync
-                # with the position tracker instead of drifting apart
                 close_side = "SELL" if tr["side"] == "BUY" else "BUY"
                 order = broker.place_order(tr["symbol"], close_side, tr["qty"], tr["exit_price"])
                 memory.log("system", f"{tr['reason']}: {tr['symbol']} ${tr['pnl']:+.2f} (exit {order.get('status', '?')})")
                 notifier.on_sl_tp(tr)
 
+        _rebalance_positions()
         snapshot_equity()
         completed_day = pop_completed_day()
         if completed_day:
             notifier.daily_summary(build_daily_summary(completed_day))
+        if _cycle_count % 30 == 0:
+            notifier.portfolio_snapshot(pos_mgr.get_positions_summary())
     except Exception as e:
         memory.log("system", f"Cycle error: {e}")
         memory.log_error("cycle", str(e), traceback.format_exc())
@@ -251,7 +313,7 @@ def make_analytics_panel() -> Panel:
     text.append(f"P&L: ${a['total_pnl']:+,.2f}  ", style="green" if a['total_pnl'] >= 0 else "red")
     text.append(f"PF: {a['profit_factor'] or '--'}\n", style="yellow")
     text.append(f"Sharpe: {a['sharpe_ratio']}  ", style="cyan")
-    text.append(f"MaxDD: {a['max_drawdown']:.1f}%\n", style="red" if a['max_drawdown'] > 10 else "white")
+    text.append(f"MaxDD: {a.get('max_drawdown_pct', a.get('max_drawdown', 0)):.1f}%\n", style="red" if a.get('max_drawdown_pct', 0) > 10 else "white")
     text.append(f"Expect: ${a['expectancy']:+.2f}", style="green" if a['expectancy'] >= 0 else "red")
     strat = a.get("strategy_breakdown", [])
     if strat:
@@ -297,6 +359,31 @@ def make_activity_panel() -> Panel:
         msg = entry.get("message", "")
         table.add_row(f"[bold]{agent}[/bold]", msg[:70])
     return Panel(table, title="[bold cyan]Activity Log[/bold cyan]", box=box.ROUNDED)
+
+
+def make_market_panel() -> Panel:
+    prices = websocket_prices.get_all_prices()
+    if not prices:
+        return Panel("[dim]Waiting for price data...[/dim]", title="[bold cyan]Market Prices[/bold cyan]")
+    table = Table(box=box.SIMPLE)
+    table.add_column("Symbol", style="yellow")
+    table.add_column("Price", justify="right", width=12)
+    table.add_column("24h", justify="right", width=8)
+    table.add_column("Vol", justify="right", width=10)
+    for sym in sorted(prices.keys()):
+        p = prices[sym]
+        price = p.get("price", 0)
+        chg = p.get("change_24h", 0)
+        vol = p.get("volume_24h", 0)
+        chg_color = "green" if chg >= 0 else "red"
+        vol_s = f"${vol/1e6:.1f}M" if vol >= 1e6 else f"${vol:,.0f}"
+        table.add_row(
+            sym[:10],
+            f"${price:,.2f}" if price > 1 else f"${price:.5f}",
+            f"[{chg_color}]{chg:+.2f}%[/{chg_color}]",
+            vol_s,
+        )
+    return Panel(table, title=f"[bold cyan]Market Prices ({len(prices)})[/bold cyan]", box=box.ROUNDED)
 
 
 def make_opportunities_panel() -> Panel:
@@ -365,6 +452,7 @@ def make_layout(portfolio) -> Layout:
     )
     layout["left"].split(
         Layout(make_status_panel(portfolio), size=7),
+        Layout(make_market_panel(), size=10),
         Layout(make_positions_panel(), size=8),
         Layout(make_opportunities_panel()),
     )
@@ -388,6 +476,15 @@ def make_layout(portfolio) -> Layout:
 
 def main():
     global mt5_broker
+
+    if RESET:
+        import shutil
+        console.print("[bold yellow]--reset: wiping data directory...[/bold yellow]")
+        if DATA_DIR.exists():
+            shutil.rmtree(DATA_DIR)
+            console.print(f"[dim]Removed {DATA_DIR}[/dim]")
+        console.print("[bold green]Data reset complete. Starting fresh.[/bold green]")
+
     console.clear()
     console.print("[bold cyan]Trading Agent Firm[/bold cyan]")
 

@@ -6,14 +6,20 @@ import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from config import BASE_DIR, BROKER_TYPE, BINANCE_USE_TESTNET
-from core.database import fetchall, get_plans
+from core.database import fetchall, get_plans, get_strategy_stats_list
 from core.portfolio import load_portfolio
 from core.memory import SharedMemory
+from core import websocket_prices
 
 WEB_DIR = BASE_DIR / "web"
 DASHBOARD_PASSWORD = os.getenv("DASHBOARD_PASSWORD", "")
 
 memory = SharedMemory()
+
+
+def get_market_prices():
+    prices = websocket_prices.get_all_prices()
+    return prices
 
 
 def get_summary():
@@ -50,6 +56,14 @@ def get_trades(limit=100):
         "SELECT symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, "
         "reason, closed_at FROM trades ORDER BY closed_at DESC LIMIT ?",
         [limit],
+    )
+    return [dict(r) for r in rows]
+
+
+def get_trade_journal():
+    rows = fetchall(
+        "SELECT symbol, side, pnl, pnl_pct, strategy, closed_at FROM trades "
+        "ORDER BY closed_at ASC LIMIT 200"
     )
     return [dict(r) for r in rows]
 
@@ -158,6 +172,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
         health = memory.read("reports", "health")
         return health or {}
 
+    def get_sentiment(self):
+        sentiment = memory.read("analyses", "sentiment_scan")
+        return sentiment or {}
+
     def get_config(self):
         from config import BROKER_TYPE, TRADING_INTERVAL_MINUTES, WATCHED_SYMBOLS, INITIAL_BALANCE, BINANCE_USE_TESTNET
         return {
@@ -192,6 +210,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(get_errors())
             elif self.path == "/api/plans":
                 self._json(get_plans())
+            elif self.path == "/api/market-prices":
+                self._json(get_market_prices())
+            elif self.path == "/api/strategy-stats":
+                self._json(get_strategy_stats_list())
+            elif self.path == "/api/trade-journal":
+                self._json(get_trade_journal())
             elif self.path == "/api/opportunities":
                 self._json(self.get_opportunities())
             elif self.path == "/api/regime":
@@ -204,6 +228,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(self.get_risk())
             elif self.path == "/api/health":
                 self._json(self.get_health())
+            elif self.path == "/api/sentiment":
+                self._json(self.get_sentiment())
             elif self.path == "/api/config":
                 self._json(self.get_config())
             else:

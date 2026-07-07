@@ -16,11 +16,11 @@ class PositionManager:
         r = fetchone("SELECT id FROM positions WHERE symbol=? AND status='open'", [symbol])
         return r is not None
 
-    def open_position(self, symbol, side, qty, price, sl=0, tp=0):
+    def open_position(self, symbol, side, qty, price, sl=0, tp=0, strategy=""):
         cur = execute("""
-            INSERT INTO positions (symbol, side, quantity, entry_price, current_price, stop_loss, take_profit, peak_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, [symbol, side.upper(), qty, price, price, sl, tp, price])
+            INSERT INTO positions (symbol, side, quantity, entry_price, current_price, stop_loss, take_profit, peak_price, strategy)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, [symbol, side.upper(), qty, price, price, sl, tp, price, strategy])
         return cur.lastrowid
 
     def close_position(self, position_id, exit_price, reason="manual"):
@@ -39,11 +39,11 @@ class PositionManager:
             WHERE id=?
         """, [now, exit_price, round(pnl, 2), round(pnl_pct, 2), now, position_id])
         execute("""
-            INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, opened_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, opened_at, strategy)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, [position_id, pos["symbol"], pos["side"], pos["quantity"],
               pos["entry_price"], exit_price, round(pnl, 2), round(pnl_pct, 2),
-              reason, pos["opened_at"]])
+              reason, pos["opened_at"], pos.get("strategy", "")])
         return {"symbol": pos["symbol"], "side": pos["side"], "qty": pos["quantity"],
                 "entry_price": pos["entry_price"], "exit_price": exit_price,
                 "pnl": round(pnl, 2), "pnl_pct": round(pnl_pct, 2), "reason": reason}

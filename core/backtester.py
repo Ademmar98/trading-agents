@@ -144,6 +144,10 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
 
 def _compute_metrics(symbol, trades, equity_curve, initial_capital):
     final_equity = equity_curve[-1] if equity_curve else initial_capital
+    if not equity_curve:
+        return {"symbol": symbol, "total_return": 0, "final_equity": initial_capital,
+                "total_trades": 0, "win_rate": 0, "avg_win": 0, "avg_loss": 0,
+                "profit_factor": None, "max_drawdown": 0, "sharpe_ratio": 0, "trades": []}
     total_return = ((final_equity - initial_capital) / initial_capital) * 100
     total_trades = len(trades)
     winning = [t for t in trades if t["pnl"] > 0]

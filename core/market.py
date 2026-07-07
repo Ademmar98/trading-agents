@@ -250,6 +250,7 @@ class MarketData:
             if symbol.isalpha() and len(symbol) == 6:
                 yahoo_sym = f"{symbol}=X"
             r = requests.get(
+                f"https://query1.finance.yahoo.com/v8/finance/chart/{yahoo_sym}",
                 params={"range": f"{days}d", "interval": "1d"},
                 headers={"User-Agent": "Mozilla/5.0"},
                 timeout=10

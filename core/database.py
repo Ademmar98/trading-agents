@@ -1,15 +1,16 @@
 ﻿import sqlite3
 from pathlib import Path
 
-from config import DATA_DIR
+import config
 
 
-DB_PATH = Path(DATA_DIR) / "trading.db"
+def _db_path():
+    return Path(config.DATA_DIR) / "trading.db"
 
 
 def get_connection():
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    config.DATA_DIR.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(_db_path())
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -32,7 +33,7 @@ def fetchall(sql, params=None):
 
 
 def init_db():
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     with get_connection() as conn:
         conn.executescript(
             """
@@ -193,6 +194,20 @@ def _migrate(conn):
         "sharpe_ratio": "REAL DEFAULT 0",
         "optimized_at": "TEXT",
     })
+    _ensure_columns(conn, "trades", {
+        "strategy": "TEXT DEFAULT ''",
+    })
+    _ensure_columns(conn, "positions", {
+        "strategy": "TEXT DEFAULT ''",
+    })
+    _ensure_columns(conn, "strategy_stats", {
+        "avg_pnl": "REAL DEFAULT 0",
+        "sharpe": "REAL DEFAULT 0",
+    })
+    try:
+        conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_strategy_stats_name ON strategy_stats(strategy)")
+    except Exception:
+        pass
 
 
 def save_plan(plan: dict):
@@ -223,6 +238,25 @@ def save_plan(plan: dict):
 
 def update_plan_status(plan_id: str, status: str):
     execute("UPDATE trade_plans SET status=? WHERE plan_id=?", [status, plan_id])
+
+
+def save_strategy_stats(stats: dict):
+    """Upsert per-strategy performance stats."""
+    for strat_name, s in stats.items():
+        execute("""
+            INSERT INTO strategy_stats (strategy, trades, win_rate, pnl, avg_pnl)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(strategy) DO UPDATE SET
+                trades=excluded.trades, win_rate=excluded.win_rate,
+                pnl=excluded.pnl, avg_pnl=excluded.avg_pnl,
+                computed_at=datetime('now')
+        """, [strat_name, s.get("trades", 0), s.get("win_rate", 0.0),
+              s.get("pnl", 0.0), s.get("avg_pnl", 0.0)])
+
+
+def get_strategy_stats_list():
+    rows = fetchall("SELECT strategy, trades, win_rate, pnl, avg_pnl FROM strategy_stats ORDER BY pnl DESC")
+    return [dict(r) for r in rows]
 
 
 def get_plans(limit=50):

@@ -220,7 +220,34 @@
   </section>
 
   <section>
-    <h2>Opportunities <span class="idx">02</span></h2>
+    <h2>Trade Journal <span class="idx">02</span></h2>
+    <div class="chart-box" style="height:160px"><canvas id="pnl-chart" role="img" aria-label="P&amp;L per trade bar chart"></canvas></div>
+  </section>
+
+  <section>
+    <h2>Strategy Performance <span class="idx">03</span></h2>
+    <div class="table-scroll">
+      <table aria-label="Per-strategy performance">
+        <thead><tr><th>Strategy</th><th class="r">Trades</th><th class="r">Win Rate</th><th class="r">Total P&amp;L</th><th class="r">Avg P&amp;L</th></tr></thead>
+        <tbody id="strat-body"></tbody>
+      </table>
+      <div class="empty" id="strat-empty" hidden>NO STRATEGY DATA YET</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Market Prices <span class="idx">04</span></h2>
+    <div class="table-scroll">
+      <table aria-label="Live market prices">
+        <thead><tr><th>Symbol</th><th class="r">Price</th><th class="r">24h Change</th><th class="r">Volume 24h</th><th>Updated</th></tr></thead>
+        <tbody id="market-body"></tbody>
+      </table>
+      <div class="empty" id="market-empty" hidden>WAITING FOR PRICE DATA...</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Opportunities <span class="idx">05</span></h2>
     <div class="table-scroll">
       <table aria-label="Trading signals">
         <thead><tr><th>Symbol</th><th>Signal</th><th class="r">Price</th><th class="r">Confidence</th><th>Strategies</th><th>Reasons</th></tr></thead>
@@ -231,7 +258,7 @@
   </section>
 
   <section>
-    <h2>Open Positions <span class="idx">03</span></h2>
+    <h2>Open Positions <span class="idx">06</span></h2>
     <div class="table-scroll">
       <table aria-label="Open positions">
         <thead><tr><th>Opened</th><th>Symbol</th><th>Side</th><th class="r">Qty</th><th class="r">Entry</th><th class="r">Price</th><th class="r">SL</th><th class="r">TP</th><th class="r">P&amp;L</th></tr></thead>
@@ -242,7 +269,7 @@
   </section>
 
   <section>
-    <h2>Risk &amp; Health <span class="idx">04</span></h2>
+    <h2>Risk &amp; Health <span class="idx">07</span></h2>
     <div id="risk-panel">
       <div class="empty" id="risk-empty" hidden>NO DATA YET</div>
       <div class="strip no-break" id="risk-strip" style="border-bottom:none;grid-template-columns:repeat(4,1fr);" hidden>
@@ -257,7 +284,7 @@
 
   <div class="cols">
     <section>
-      <h2>Trade History <span class="idx">05</span></h2>
+      <h2>Trade History <span class="idx">08</span></h2>
       <div class="table-scroll">
         <table aria-label="Trade history">
           <thead><tr><th>Closed</th><th>Symbol</th><th>Side</th><th class="r">P&amp;L</th><th class="r">%</th><th>Reason</th></tr></thead>
@@ -268,20 +295,20 @@
     </section>
 
     <section>
-      <h2>Agent Activity <span class="idx">06</span> <span class="auto-scroll"><label><input type="checkbox" id="auto-scroll" checked> Auto-scroll</label></span></h2>
+      <h2>Agent Activity <span class="idx">09</span> <span class="auto-scroll"><label><input type="checkbox" id="auto-scroll" checked> Auto-scroll</label></span></h2>
       <ul class="log" id="activity-log"></ul>
       <div class="empty" id="activity-empty" hidden>NO ACTIVITY YET</div>
     </section>
   </div>
 
   <section>
-    <h2><span class="err-title">Errors &amp; Bugs</span> <span class="idx">07</span></h2>
+    <h2><span class="err-title">Errors &amp; Bugs</span> <span class="idx">10</span></h2>
     <ul class="log" id="error-log"></ul>
     <div class="empty" id="errors-empty" hidden>NO ERRORS — ALL SYSTEMS NOMINAL</div>
   </section>
 
   <section>
-    <h2>Trade Plans <span class="idx">09</span></h2>
+    <h2>Trade Plans <span class="idx">11</span></h2>
     <div class="table-scroll">
       <table aria-label="Trade plans">
         <thead><tr><th>Time</th><th>Symbol</th><th>Dir</th><th class="r">Entry</th><th class="r">SL</th><th class="r">TP</th><th class="r">Size</th><th class="r">Conf</th><th class="r">RR</th><th>Status</th><th>Rationale</th></tr></thead>
@@ -292,7 +319,7 @@
   </section>
 
   <section>
-    <h2>Regime &amp; Market <span class="idx">08</span> <span class="idx" id="regime-summary"></span></h2>
+    <h2>Regime &amp; Market <span class="idx">12</span> <span class="idx" id="regime-summary"></span></h2>
     <div class="table-scroll">
       <table aria-label="Market regime per symbol">
         <thead><tr><th>Symbol</th><th>Regime</th><th class="r">Confidence</th><th class="r">Size</th><th>Favored</th><th>Notes</th></tr></thead>
@@ -309,10 +336,11 @@
 </div>
 
 <script>
-const fmtUsd = (v) => (v == null ? "—" : (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+const _fmt = (v, minD, maxD) => { const s = Math.abs(v).toFixed(maxD); const p = s.split("."); let i = p[0]; if (i.length > 3) i = i.replace(/\B(?=(\d{3})+(?!\d))/g, ","); let d = p[1]; if (d && minD != null && d.length < minD) d = d.padEnd(minD, "0"); return (v < 0 ? "-" : "") + i + (d != null ? "." + d : ""); };
+const fmtUsd = (v) => (v == null ? "—" : (v < 0 ? "-$" : "$") + _fmt(v, 2, 2));
 const fmtPct = (v) => (v == null ? "—" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%");
-const fmtQty = (v) => v.toLocaleString("en-US", {maximumFractionDigits: 6});
-const fmtPrice = (v) => (v ? v.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 5}) : "—");
+const fmtQty = (v) => _fmt(v, 0, 6);
+const fmtPrice = (v) => (v ? _fmt(v, 2, 5) : "—");
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const pnlClass = (v) => (v >= 0 ? "up" : "down-c");
 const pad = (n) => String(n).padStart(2, "0");
@@ -358,10 +386,56 @@ function renderChart(points) {
       }},
       scales: {
         x: { ticks: { color: "#9A9AA2", maxTicksLimit: 7, font: {family: "'JetBrains Mono', monospace", size: 10} }, grid: { color: "#1A1A1A" }, border: { color: "#2A2A2A" } },
-        y: { ticks: { color: "#9A9AA2", font: {family: "'JetBrains Mono', monospace", size: 10}, callback: (v) => "$" + v.toLocaleString() }, grid: { color: "#1A1A1A" }, border: { color: "#2A2A2A" } },
+        y: { ticks: { color: "#9A9AA2", font: {family: "'JetBrains Mono', monospace", size: 10}, callback: (v) => "$" + _fmt(v, 0, 0) }, grid: { color: "#1A1A1A" }, border: { color: "#2A2A2A" } },
       },
     },
   });
+}
+
+let pnlChart = null;
+function renderPnlChart(trades) {
+  const labels = trades.map((t) => exactSql(t.closed_at));
+  const values = trades.map((t) => t.pnl);
+  const colors = trades.map((t) => (t.pnl >= 0 ? "#00C24E" : "#FF433D"));
+  if (pnlChart) {
+    pnlChart.data.labels = labels;
+    pnlChart.data.datasets[0].data = values;
+    pnlChart.data.datasets[0].backgroundColor = colors;
+    pnlChart.update("none");
+    return;
+  }
+  pnlChart = new Chart(document.getElementById("pnl-chart"), {
+    type: "bar",
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, borderRadius: 2 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        backgroundColor: "#FFFFFF", titleColor: "#000000", bodyColor: "#000000",
+        cornerRadius: 0, titleFont: {family: "'JetBrains Mono', monospace"},
+        bodyFont: {family: "'JetBrains Mono', monospace"},
+        callbacks: { label: (c) => " " + fmtUsd(c.parsed.y) },
+      }},
+      scales: {
+        x: { ticks: { color: "#9A9AA2", maxTicksLimit: 10, font: {family: "'JetBrains Mono', monospace", size: 8} }, grid: { display: false }, border: { color: "#2A2A2A" } },
+        y: { ticks: { color: "#9A9AA2", font: {family: "'JetBrains Mono', monospace", size: 9}, callback: (v) => "$" + _fmt(v, 0, 0) }, grid: { color: "#1A1A1A" }, border: { color: "#2A2A2A" } },
+      },
+    },
+  });
+}
+
+function renderStrategyStats(rows) {
+  document.getElementById("strat-empty").hidden = rows.length > 0;
+  document.getElementById("strat-body").innerHTML = rows.map((s) => {
+    const wrCls = s.win_rate >= 50 ? "up" : "down-c";
+    const pnlCls = s.pnl >= 0 ? "up" : "down-c";
+    return `<tr>
+      <td style="font-weight:600">${esc(s.strategy)}</td>
+      <td class="r num">${s.trades}</td>
+      <td class="r num ${wrCls}">${s.win_rate.toFixed(0)}%</td>
+      <td class="r num ${pnlCls}">${fmtUsd(s.pnl)}</td>
+      <td class="r num">${fmtUsd(s.avg_pnl)}</td>
+    </tr>`;
+  }).join("");
 }
 
 function renderSummary(s) {
@@ -444,6 +518,26 @@ function renderErrors(rows) {
       <span class="agent">${esc(e.source)}</span>
       <span class="msg">${esc(e.message)}${trace}</span>
     </li>`;
+  }).join("");
+}
+
+function renderMarketPrices(prices) {
+  const entries = Object.entries(prices || {});
+  document.getElementById("market-empty").hidden = entries.length > 0;
+  document.getElementById("market-body").innerHTML = entries.map(([sym, p]) => {
+    const price = p.price || 0;
+    const chg = p.change_24h || 0;
+    const vol = p.volume_24h || 0;
+    const vol_s = vol >= 1e6 ? "$" + (vol / 1e6).toFixed(1) + "M" : vol >= 1e3 ? "$" + (vol / 1e3).toFixed(1) + "K" : "$" + vol.toFixed(0);
+    const chgCls = chg >= 0 ? "up" : "down-c";
+    const updated = p.timestamp ? exactSql(p.timestamp) : "—";
+    return `<tr>
+      <td style="font-weight:600">${esc(sym)}</td>
+      <td class="r num">${price > 1 ? "$" + _fmt(price, 2, 2) : "$" + price.toFixed(5)}</td>
+      <td class="r num ${chgCls}">${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%</td>
+      <td class="r num" style="color:var(--muted)">${vol_s}</td>
+      <td class="t">${updated}</td>
+    </tr>`;
   }).join("");
 }
 
@@ -570,7 +664,7 @@ function renderRegime(regime) {
 let prevEquity = null;
 async function refresh() {
   try {
-    const [summary, positions, trades, equity, activity, errors, opportunities, risk, health, regime, plans] = await Promise.all([
+    const [summary, positions, trades, equity, activity, errors, opportunities, risk, health, regime, plans, marketPrices, tradeJournal, stratStats] = await Promise.all([
       fetch("/api/summary").then((r) => r.json()),
       fetch("/api/positions").then((r) => r.json()),
       fetch("/api/trades").then((r) => r.json()),
@@ -582,11 +676,17 @@ async function refresh() {
       fetch("/api/health").then((r) => r.json()),
       fetch("/api/regime").then((r) => r.json()),
       fetch("/api/plans").then((r) => r.json()),
+      fetch("/api/market-prices").then((r) => r.json()),
+      fetch("/api/trade-journal").then((r) => r.json()),
+      fetch("/api/strategy-stats").then((r) => r.json()),
     ]);
     renderSummary(summary);
+    renderMarketPrices(marketPrices);
     renderPositions(positions);
     renderTrades(trades);
     renderChart(equity);
+    renderPnlChart(tradeJournal || []);
+    renderStrategyStats(stratStats || []);
     renderActivity(activity);
     renderErrors(errors);
     renderOpportunities(opportunities);

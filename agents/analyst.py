@@ -1,3 +1,4 @@
+import subprocess
 import time
 
 from config import WATCHED_SYMBOLS
@@ -5,6 +6,27 @@ from agents.base_agent import BaseAgent
 from core.market import MarketData
 from core.strategies import scan_symbol
 from core.multiframe import analyze_symbol_multiframe
+
+
+def _scrape_news_headlines(symbol: str) -> list:
+    """Pull news headlines via agent-browser from Yahoo Finance."""
+    try:
+        url = f"https://finance.yahoo.com/quote/{symbol.replace('/','')}/"
+        result = subprocess.run(
+            ["npx", "agent-browser", "open", url,
+             "&&", "agent-browser", "snapshot", "-i", "-c",
+             "&&", "agent-browser", "close"],
+            capture_output=True, text=True, timeout=30,
+        )
+        out = result.stdout or ""
+        headlines = []
+        for line in out.splitlines():
+            line = line.strip()
+            if line.startswith("@e") and ("news" in line.lower() or "headline" in line.lower() or line.count('"') >= 2):
+                headlines.append(line)
+        return headlines[:5]
+    except Exception:
+        return []
 
 
 class ResearchAnalyst(BaseAgent):
@@ -27,16 +49,23 @@ class ResearchAnalyst(BaseAgent):
 
         analyses = {}
         opportunities = []
+        regime_scan = self.memory.read("analyses", "regime_scan") or {}
+        symbol_regimes = regime_scan.get("symbols", {})
         for symbol, data in prices.items():
             ohlc = self.market.get_ohlc(symbol, days=100)
             hist = self.market.get_historical(symbol)
             indicators = self.market.compute_indicators(hist)
 
-            mtf_signal = None
-            if "/" in symbol:
-                mtf_signal = analyze_symbol_multiframe(symbol)
+            mtf_signal = analyze_symbol_multiframe(symbol)
 
-            signals = scan_symbol(ohlc) if ohlc and len(ohlc) >= 30 else []
+            news = _scrape_news_headlines(symbol)
+
+            regime = symbol_regimes.get(symbol, {}).get("regime") if symbol_regimes else None
+            signals = scan_symbol(ohlc, regime=regime) if ohlc and len(ohlc) >= 30 else []
+            if news:
+                for sig in signals:
+                    sig["reasons"].append(f"news:{len(news)} headlines")
+                    sig["confidence"] = min(sig["confidence"] + 0.03, 0.95)
             analyses[symbol] = {
                 "price": data["price"],
                 "change_24h": data["change_24h"],
@@ -47,6 +76,7 @@ class ResearchAnalyst(BaseAgent):
                 **indicators,
                 "signals": signals,
                 "mtf_signal": mtf_signal,
+                "news": news,
             }
             seen_actions = set()
             for sig in signals:
@@ -64,9 +94,11 @@ class ResearchAnalyst(BaseAgent):
                     "action": action,
                     "confidence": min(confidence, 0.95),
                     "price": data["price"],
-                    "reasons": reasons[:4],
+                    "reasons": reasons[:5],
                     "strategies": sig["strategies"],
+                    "regime": regime,
                     "multi_timeframe": mtf_signal is not None,
+                    "news_count": len(news),
                     "indicators": {
                         "trend": indicators.get("trend", "neutral"),
                         "rsi": indicators.get("rsi_14", 50),

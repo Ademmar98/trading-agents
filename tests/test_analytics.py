@@ -1,0 +1,107 @@
+import os
+import tempfile
+from pathlib import Path
+
+import pytest
+
+import config as app_config
+from core.database import init_db, execute
+from core.analytics import compute_analytics, get_analytics, _compute_strategy_stats, _value_at_risk, _rolling_drawdown, _trade_duration_stats
+
+
+@pytest.fixture(autouse=True)
+def sandbox_data_dir(monkeypatch):
+    tmp = Path(tempfile.mkdtemp(prefix="trading-test-"))
+    monkeypatch.setattr(app_config, "DATA_DIR", tmp)
+    monkeypatch.setenv("TRADING_DATA_DIR", str(tmp))
+    init_db()
+    yield
+    import shutil
+    shutil.rmtree(str(tmp), ignore_errors=True)
+
+
+def seed_trades(count=10, strategy="FVG"):
+    for i in range(count):
+        pnl = 50.0 if i % 2 == 0 else -20.0
+        execute(
+            "INSERT INTO trades (symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, strategy, opened_at, closed_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            ["BTC/USD", "BUY", 0.1, 60000.0, 61000.0, pnl, 1.0, "TP", strategy,
+             "2024-01-01T00:00:00", "2024-01-02T00:00:00"],
+        )
+
+
+def test_empty_analytics():
+    result = compute_analytics()
+    assert result["total_trades"] == 0
+    assert result["win_rate"] == 0
+    assert result["strategy_breakdown"] == []
+
+
+def test_compute_analytics_with_trades():
+    seed_trades(10)
+    result = compute_analytics()
+    assert result["total_trades"] == 10
+    assert result["win_rate"] == 50.0
+    assert result["total_pnl"] == 150.0
+    assert result["var_95"] > 0
+
+
+def test_strategy_breakdown():
+    seed_trades(5, "ICT-FVG")
+    seed_trades(5, "MACD")
+    result = compute_analytics()
+    assert len(result["strategy_breakdown"]) == 2
+    names = [s["strategy"] for s in result["strategy_breakdown"]]
+    assert "ICT-FVG" in names
+    assert "MACD" in names
+
+
+def test_get_analytics_empty():
+    result = get_analytics()
+    assert result["total_trades"] == 0
+
+
+def test_get_analytics_cached():
+    seed_trades(5)
+    compute_analytics()
+    result = get_analytics()
+    assert result["total_trades"] == 5
+    assert 0 < result["win_rate"] <= 100
+
+
+def test_value_at_risk():
+    pnls = [100, 200, -50, -300, 150, -100, 50, 75, -25, 10]
+    var = _value_at_risk(pnls, 0.95)
+    assert var > 0
+
+
+def test_value_at_risk_short():
+    assert _value_at_risk([1, 2], 0.95) == 0
+
+
+def test_rolling_drawdown():
+    pnls = [100, 200, -50, -300]
+    max_dd, rolling = _rolling_drawdown(pnls)
+    assert max_dd > 0
+    assert len(rolling) == 4
+
+
+def test_trade_duration_stats():
+    from datetime import datetime, timezone
+    trades = [
+        {"opened_at": "2024-01-01T00:00:00", "closed_at": "2024-01-02T00:00:00"},
+        {"opened_at": "2024-01-01T00:00:00", "closed_at": "2024-01-01T06:00:00"},
+    ]
+    stats = _trade_duration_stats(trades)
+    assert stats["count"] == 2
+    assert stats["avg_hours"] == 15.0
+
+
+def test_trade_duration_stats_empty():
+    assert _trade_duration_stats([])["count"] == 0
+
+
+def test_trade_duration_stats_no_dates():
+    trades = [{"pnl": 100}, {"pnl": -50}]
+    assert _trade_duration_stats(trades)["count"] == 0

@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "skills": {
+    "agent-browser": {
+      "source": "vercel-labs/agent-browser",
+      "sourceType": "github",
+      "skillPath": "skills/agent-browser/SKILL.md",
+      "computedHash": "ecc7641aea05f85ca3b11e7759d32aaf52fe05946ab4b63739c7bf78a41237a2"
+    },
+    "agent-trading-predictor": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "7dfe1d4586c4db26bbaa3c676746cebf31dddba82a60da984590b0c40f2d94c2"
+    },
+    "capture-api-response-test-fixture": {
+      "source": "vercel/ai",
+      "sourceType": "github",
+      "skillPath": "skills/capture-api-response-test-fixture/SKILL.md",
+      "computedHash": "d54838c1adda55a469cc7aafba8e09aaf7a4e59445fe43f6cadda01781a5a154"
+    },
+    "crypto-market-rank": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/crypto-market-rank/SKILL.md",
+      "computedHash": "4f2bc27fb48ba2728f428289bce5308b21367e644d2ee37bd8f53ed96d70aa6d"
+    },
+    "crypto-report": {
+      "source": "claude-office-skills/skills",
+      "sourceType": "github",
+      "skillPath": "crypto-report/SKILL.md",
+      "computedHash": "86cfe81d35225ad27e669ed55f82c3fae826174ff3f4298bfb5fd7b041c8e017"
+    },
+    "crypto-ta-analyzer": {
+      "source": "dkyazzentwatwa/chatgpt-skills",
+      "sourceType": "github",
+      "skillPath": "crypto-ta-analyzer/SKILL.md",
+      "computedHash": "5eb52443ea0b869f302dd7b3ee743abbe4756e563e2800e0f9b44c6cffc3551c"
+    },
+    "crypto-trading-advisor": {
+      "source": "0xrikt/crypto-skills",
+      "sourceType": "github",
+      "skillPath": "crypto-trading-advisor/SKILL.md",
+      "computedHash": "9a6925560bb9f9940e891aca9a392e293f80ea37284618b65007e8eb98586185"
+    },
+    "docker-expert": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/docker-expert/SKILL.md",
+      "computedHash": "7be30b1c18b91628dcd8437a89e7e20acce76bae4349533e4ebdeb376a660bcb"
+    },
+    "entry-signals": {
+      "source": "0xhubed/agent-trading-arena",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/entry-signals/SKILL.md",
+      "computedHash": "cf787db058d4e16fe4c8cee443e3d4683185f99604b09adad376d95a0e2b9a56"
+    },
+    "finance-expert": {
+      "source": "personamanagmentlayer/pcl",
+      "sourceType": "github",
+      "skillPath": "stdlib/domains/finance-expert/SKILL.md",
+      "computedHash": "83ff6d943fe47f1cec6c79b2d364303c2e058366c3fdfc6bc5938539cc914b33"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "781bd6d3f9b19f8c9af6b53d8d0e4876d0183841b565db34ca7092ffa412d111"
+    },
+    "fix-errors": {
+      "source": "warpdotdev/common-skills",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/fix-errors/SKILL.md",
+      "computedHash": "3e674209191285cb0698b746dfc7bf470e742bce0838b2d3dca76674233db034"
+    },
+    "huashu-design": {
+      "source": "alchaincyf/huashu-design",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "73bff3eabe7fe30abbc7b3d7399a35b1b2b0a41bb9bd4bed8a8bc7f68b0e4cd3"
+    },
+    "llm-trading-agent-security": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/llm-trading-agent-security/SKILL.md",
+      "computedHash": "603585631eeb0e3f7eeda29afb7a5228fa1e5e36497b0387e7ba3c73cec27061"
+    },
+    "market-regimes": {
+      "source": "0xhubed/agent-trading-arena",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/market-regimes/SKILL.md",
+      "computedHash": "f173ae2296191530747b5fe1d1dd4b887ada47920604431e3c6319ec55d0d16f"
+    },
+    "mmt-tradingview-charts": {
+      "source": "emeraldls/mmt-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/mmt-tradingview-charts/SKILL.md",
+      "computedHash": "1f00c293e2843f152b0bdc87fab09ef35ab4e33083421ad3cd71e7e01957e638"
+    },
+    "portfolio-manager": {
+      "source": "tradermonty/claude-trading-skills",
+      "sourceType": "github",
+      "skillPath": "skills/portfolio-manager/SKILL.md",
+      "computedHash": "5a7f954f1add7f8efbd662cce29c5d984f5f87187e9be4e328dc627e579773e1"
+    },
+    "python-logging-strategist": {
+      "source": "jorgealves/agent_skills",
+      "sourceType": "github",
+      "skillPath": "python-logging-strategist/SKILL.md",
+      "computedHash": "d18b551f8cf919017e2e637f531afa94c2f16b1555a6541a83e6fcc51c4ea771"
+    },
+    "python-testing-patterns": {
+      "source": "wshobson/agents",
+      "sourceType": "github",
+      "skillPath": "plugins/python-development/skills/python-testing-patterns/SKILL.md",
+      "computedHash": "f4de9bdbf2db1c1f8e8211e6af463ad49956f15aa604e2f08ae716c71e71f64b"
+    },
+    "risk-management": {
+      "source": "0xhubed/agent-trading-arena",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/risk-management/SKILL.md",
+      "computedHash": "fa9e92d9c3beae760ddda9d2c6abb8e15be8d1a2e18f557541b53b2410731107"
+    },
+    "simul8or-trader": {
+      "source": "day-trading-simulator/simul8or-trader",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "841f49491ae26d09b888adc7a3cb4bda620f7cfe355081ad36669eda95b586bf"
+    },
+    "trading-signal": {
+      "source": "binance/binance-skills-hub",
+      "sourceType": "github",
+      "skillPath": "skills/binance-web3/trading-signal/SKILL.md",
+      "computedHash": "ab9ce2059f0007cc0195d331cb58cda14484a48ab8130d1aebc01b4dd696087b"
+    },
+    "trading-strategies": {
+      "source": "agentmc15/polymarket-trader",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/trading-strategies/SKILL.md",
+      "computedHash": "6e1f4ba1ad82ef825935bb3821eee699b7e6cd75f33214cae894ac2aaa3d8fb9"
+    },
+    "trading-wisdom": {
+      "source": "0xhubed/agent-trading-arena",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/trading-wisdom/SKILL.md",
+      "computedHash": "ed54e06e64d2eef10a38b92fe9bd236358c6c8cd305f3241b8025d76de7e7c61"
+    },
+    "tradingagents-analysis": {
+      "source": "kylinmountain/tradingagents-ashare",
+      "sourceType": "github",
+      "skillPath": "skills/tradingagents-analysis/SKILL.md",
+      "computedHash": "cc1c4d291a5a8a949c3c07c82deba15d9bed4eeba18baef5052b4b3be9c133d9"
+    },
+    "tradingview-quantitative": {
+      "source": "hypier/tradingview-quantitative-skills",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "22f3e1d220f2ae4d8b3f6c0f070e26eae0952f5d928d80d0ab5ca748799db616"
+    }
+  }
+}

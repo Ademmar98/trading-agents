@@ -4,6 +4,7 @@ from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
 from core.memory import SharedMemory
 from core.analytics import compute_analytics, get_analytics
+from core.database import fetchall, save_strategy_stats
 
 
 class Auditor(BaseAgent):
@@ -15,6 +16,22 @@ class Auditor(BaseAgent):
         trade_log = self.memory.read_latest("orders")
         logs = self.memory.get_recent_logs(50)
         analytics = compute_analytics()
+
+        trade_rows = fetchall("SELECT strategy, pnl FROM trades WHERE strategy != ''")
+        strat_stats = {}
+        for r in trade_rows:
+            s = strat_stats.setdefault(r["strategy"], {"pnls": [], "wins": 0, "total": 0})
+            s["pnls"].append(r["pnl"])
+            s["total"] += 1
+            if r["pnl"] > 0:
+                s["wins"] += 1
+        for name, s in strat_stats.items():
+            s["trades"] = s["total"]
+            s["win_rate"] = (s["wins"] / s["total"] * 100) if s["total"] else 0
+            s["pnl"] = sum(s["pnls"])
+            s["avg_pnl"] = (s["pnl"] / s["total"]) if s["total"] else 0
+        if strat_stats:
+            save_strategy_stats(strat_stats)
 
         total_trades = len(portfolio.trades)
         winning_trades = sum(1 for t in portfolio.trades
@@ -61,7 +78,7 @@ class Auditor(BaseAgent):
                 "analytics": {
                     "sharpe": analytics["sharpe_ratio"],
                     "profit_factor": analytics["profit_factor"],
-                    "max_drawdown": analytics["max_drawdown"],
+                    "max_drawdown": analytics.get("max_drawdown_pct", analytics.get("max_drawdown", 0)),
                     "expectancy": analytics["expectancy"],
                 },
             },

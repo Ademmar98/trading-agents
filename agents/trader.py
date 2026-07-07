@@ -72,10 +72,12 @@ class Trader(BaseAgent):
             order = self.broker.place_order(symbol, action, qty, price, sl=sl_price, tp=tp_price)
             orders_executed.append(order)
             plan_id = planned.get("plan_id")
+            strategies = planned.get("strategies") or []
+            strategy = strategies[0] if strategies else ""
             if order.get("status") == "filled":
                 if plan_id:
                     update_plan_status(plan_id, "executed")
-                self.pos_mgr.open_position(symbol, action, qty, price, sl=sl_price, tp=tp_price)
+                self.pos_mgr.open_position(symbol, action, qty, price, sl=sl_price, tp=tp_price, strategy=strategy)
                 self.notifier.on_trade({
                     "symbol": symbol, "side": action, "qty": qty,
                     "price": price, "stop_loss": sl_price, "take_profit": tp_price,

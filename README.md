@@ -1,14 +1,45 @@
 # Trading Agents
 
-Local Python trading-agent workspace.
+Multi-agent crypto trading bot with paper/live broker support, 25+ strategies, regime detection, risk management, and a real-time dashboard.
 
-## Structure
+## Architecture
 
-- `agents/` contains agent roles such as analyst, trader, risk manager, auditor, and orchestrator.
-- `core/` contains broker, market, portfolio, strategy, memory, database, and analytics code.
-- `data/` contains generated local runtime data and is ignored by Git.
-- `main.py` is the main entry point.
-- `test_full_cycle.py` exercises the full trading-agent cycle.
+Agents run sequentially each cycle in a defined pipeline, sharing state through JSON files in `data/reports/`:
+
+```
+Orchestrator → ResearchAnalyst → HealthMonitor → SentimentAgent → RegimeAgent
+→ RiskManager → PositionSizer → PortfolioManagerAgent → ComplianceAgent
+→ ExecutionAgent → Trader → Auditor
+```
+
+- **Orchestrator** — coordinates the cycle; writes start/end markers to shared memory
+- **ResearchAnalyst** — fetches OHLC data, runs 25+ strategies per symbol, produces opportunities
+- **HealthMonitor** — checks broker connectivity, data freshness, error rates
+- **SentimentAgent** — scores market mood from price breadth and Fear & Greed Index
+- **RegimeAgent** — detects regime (trending/ranging/volatile) per symbol via ADX, BB width, ATR
+- **RiskManager** — sets portfolio-level risk limits (per-symbol, volatility, correlation)
+- **PositionSizer** — computes Kelly-optimal position sizes based on historical trade stats
+- **PortfolioManagerAgent** — allocates capital across opportunities with strategy-weighted scoring
+- **ComplianceAgent** — enforces spot-only, exposure, concentration, and daily-loss gates
+- **ExecutionAgent** — builds formal trade plans with SL/TP/RR, checks spread before approval
+- **Trader** — executes orders through the selected broker; checks stop-losses on every cycle
+- **Auditor** — reviews performance, generates suggestions, tracks agent health
+
+## Features
+
+| Feature | Details |
+|---|---|
+| **25+ Strategies** | ICT (FVG, OB, Liquidity Sweep, BOS/CHoCH, OTE, Market Structure), Classic (SMA, EMA, MACD, Bollinger, RSI Div, Stochastic, Ichimoku, Keltner, VWAP, ATR, Donchian, MFI), PA (Engulfing, Pin Bar, Inside Bar, Double Top/Bot, Volume Breakout, S/R, Heikin-Ashi) |
+| **Regime-Adaptive** | Strategies are filtered by detected regime (trending → momentum, ranging → mean-reversion, volatile → breakout) |
+| **Real Sentiment** | Fetches Fear & Greed Index from alternative.me and blends it with price breadth |
+| **Risk Metrics** | VaR (95%), rolling max drawdown, trade duration stats, Sharpe, profit factor, Kelly sizing |
+| **Trade Plans** | Each potential trade is saved to SQLite with SL, TP, R:R ratio, strategy, regime, rationale |
+| **Multi-Broker** | Paper (default), Binance (testnet/live), MetaQuotes 5, Alpaca |
+| **Web Dashboard** | Live dashboard on port 8000 with positions, trades, equity curve, risk, plans |
+| **Telegram** | Notifications for trades, SL/TP hits, errors, daily summaries |
+| **Backtester** | 90-day backtest per symbol using daily klines; stores results in DB |
+| **Optimizer** | Grid-search SL/TP multipliers, position size, and confidence thresholds |
+| **Trailing Stops** | Activates after configurable profit threshold; locks in gains |
 
 ## Setup
 
@@ -18,15 +49,48 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+Copy `.env.example` to `.env` and configure:
+
+| Variable | Default | Description |
+|---|---|---|
+| `BROKER_TYPE` | `binance` | `paper`, `binance`, `mt5`, `alpaca` |
+| `TRADING_CAPITAL` | `10000` | Initial paper balance |
+| `TRADING_INTERVAL_MINUTES` | `60` | Minutes between trading cycles |
+| `WATCHED_SYMBOLS` | 20 cryptos | Comma-separated symbol list |
+| `TELEGRAM_BOT_TOKEN` | — | Bot token for notifications |
+| `TELEGRAM_CHAT_ID` | — | Chat ID for notifications |
+| `DASHBOARD_PASSWORD` | — | HTTP basic auth for dashboard |
+
+## Usage
+
+```powershell
+# Start trading (with live dashboard)
+python main.py
+
+# Headless mode (server)
+python main.py --headless
+
+# Reset all data and start fresh
+python main.py --reset
+
+# Override broker
+$env:BROKER_TYPE = "paper"; python main.py
+```
+
+Open `http://localhost:8000` for the web dashboard.
+
 ## Tests
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest
+python -m pytest
 ```
 
-The smoke test runs the full agent pipeline offline against canned market data
-in a sandboxed data directory — it never touches the live ledger or exchange.
+136 tests covering all agents, broker, portfolio, position manager, database, memory, strategies, analytics, backtester, and the full pipeline smoke test. All tests run offline against sandboxed data directories.
 
-## Notes
+### Test coverage
 
-Generated databases, logs, orders, reports, decisions, analyses, caches, and virtual environments should stay out of version control.
+- `test_broker.py` — PaperBroker orders, fills, SL/TP, short selling, funds checking
+- `test_analytics.py` — compute_analytics, strategy breakdown, VaR, drawdown, duration stats
+- `test_backtester.py` — _calc_sl_tp, _compute_metrics, _to_binance_symbol
+- `test_agents_extended.py` — SentimentAgent, RegimeAgent, ExecutionAgent, ComplianceAgent, Auditor, strategy selector
+- `test_pipeline_smoke.py` — end-to-end pipeline against canned data (no network)
