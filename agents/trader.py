@@ -4,7 +4,7 @@ from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE
 from agents.base_agent import BaseAgent
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
-from core.mt5_broker import MetaQuotesBroker
+from core.live_broker import MetaQuotesBroker
 from core.dxtrade_broker import DXTradeBroker
 from core.positions import PositionManager
 from core.database import update_plan_status

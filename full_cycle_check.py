@@ -2,7 +2,7 @@ import sys; sys.path.insert(0, '.')
 import os; os.environ['BROKER_TYPE'] = 'mt5'
 from core.memory import SharedMemory
 from core.portfolio import load_portfolio, save_portfolio, Portfolio
-from core.mt5_broker import MetaQuotesBroker
+from core.live_broker import MetaQuotesBroker
 from config import MT5_LOGIN, MT5_PASSWORD, MT5_SERVER
 
 memory = SharedMemory()
