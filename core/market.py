@@ -284,74 +284,20 @@ class MarketData:
         except Exception:
             return []
 
-    def get_ohlc(self, symbol, days=100):
-        cache_key = f"ohlc_{symbol}_{days}"
+    def get_ohlc(self, symbol, days=100, interval="1d"):
+        cache_key = f"ohlc_{symbol}_{interval}_{days}"
         cached = self._get_cached(cache_key, ttl=300)
         if cached:
             return cached
-        if symbol.isalpha() and len(symbol) == 6 and self._ensure_mt5():
-            try:
-                rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_D1, 0, days)
-                if rates is not None and len(rates) > 0:
-                    ohlc = []
-                    for r in rates:
-                        ohlc.append({
-                            "date": datetime.fromtimestamp(r[0], tz=timezone.utc).isoformat(),
-                            "open": r[1], "high": r[2], "low": r[3], "close": r[4],
-                            "volume": r[5], "ts": r[0]
-                        })
-                    self._set_cache(cache_key, ohlc)
-                    return ohlc
-            except Exception:
-                pass
-        try:
-            yahoo_sym = symbol.replace("/", "-")
-            if symbol.isalpha() and len(symbol) == 6:
-                yahoo_sym = f"{symbol}=X"
-            r = requests.get(
-                f"https://query1.finance.yahoo.com/v8/finance/chart/{yahoo_sym}",
-                params={"range": f"{days}d", "interval": "1d"},
-                headers={"User-Agent": "Mozilla/5.0"},
-                timeout=10
-            )
-            data = r.json()
-            result = data.get("chart", {}).get("result", [{}])[0]
-            quotes = result.get("indicators", {}).get("quote", [{}])[0]
-            timestamps = result.get("timestamp", [])
-            ohlc = []
-            for i, ts in enumerate(timestamps):
-                ohlc.append({
-                    "date": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
-                    "open": quotes.get("open", [None])[i] if quotes.get("open") else None,
-                    "high": quotes.get("high", [None])[i] if quotes.get("high") else None,
-                    "low": quotes.get("low", [None])[i] if quotes.get("low") else None,
-                    "close": quotes.get("close", [None])[i] if quotes.get("close") else None,
-                    "volume": quotes.get("volume", [0])[i] if quotes.get("volume") else 0,
-                    "ts": ts
-                })
-            ohlc = [c for c in ohlc if c["close"] is not None]
+        from core.data_provider import fetch_ohlc
+        ohlc = fetch_ohlc(symbol, interval=interval, limit=days + 50)
+        if ohlc and len(ohlc) >= 2:
             self._set_cache(cache_key, ohlc)
             return ohlc
-        except Exception:
-            return []
+        return []
 
     def compute_indicators(self, prices):
         if not prices or len(prices) < 20:
             return {}
-        closes = [p["close"] for p in prices]
-        sma_20 = sum(closes[-20:]) / 20
-        sma_50 = sum(closes[-50:]) / 50 if len(closes) >= 50 else sma_20
-        high = max(closes[-14:]) if len(closes) >= 14 else max(closes)
-        low = min(closes[-14:]) if len(closes) >= 14 else min(closes)
-        current = closes[-1]
-        rsi = 50
-        if high != low:
-            rsi = 100 - (100 / (1 + (current - low) / (high - current + 0.01)))
-        return {
-            "current_price": current,
-            "sma_20": round(sma_20, 2),
-            "sma_50": round(sma_50, 2),
-            "rsi_14": round(rsi, 2),
-            "trend": "bullish" if sma_20 > sma_50 else "bearish",
-            "volatility": round((high - low) / low * 100, 2) if low else 0
-        }
+        from core.indicators import compute_all
+        return compute_all(prices)

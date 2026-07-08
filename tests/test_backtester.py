@@ -1,6 +1,7 @@
 import pytest
 
-from core.backtester import _calc_sl_tp, _compute_metrics, _to_binance_symbol
+from core.backtester import _calc_sl_tp, _compute_metrics
+from core.data_provider import _to_binance_symbol
 
 
 def test_to_binance_symbol():

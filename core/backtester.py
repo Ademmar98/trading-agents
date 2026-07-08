@@ -1,8 +1,4 @@
-import time
-from datetime import datetime, timezone
 from statistics import stdev, mean
-
-import requests
 
 from config import WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT
 from core.database import execute, fetchone, fetchall, get_unprofitable_strategies
@@ -13,33 +9,9 @@ BACKTEST_DAYS = 90
 POSITION_SIZE_PCT = 25
 
 
-def _to_binance_symbol(symbol):
-    s = symbol.replace("/", "").upper()
-    if s.endswith("USD") and not s.endswith("USDT"):
-        return s + "T"
-    return s
-
-
-import concurrent.futures
-
 def fetch_klines(symbol, interval="1d", limit=100):
-    bsym = _to_binance_symbol(symbol)
-    def _fetch():
-        return requests.get("https://api.binance.com/api/v3/klines", params={
-            "symbol": bsym, "interval": interval, "limit": limit
-        }, timeout=15)
-    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-        try:
-            future = pool.submit(_fetch)
-            r = future.result(timeout=20)
-            data = r.json()
-            return [{
-                "date": datetime.fromtimestamp(k[0] / 1000, tz=timezone.utc).isoformat(),
-                "open": float(k[1]), "high": float(k[2]), "low": float(k[3]),
-                "close": float(k[4]), "volume": float(k[5]), "ts": k[0] // 1000
-            } for k in data]
-        except Exception:
-            return []
+    from core.data_provider import fetch_ohlc
+    return fetch_ohlc(symbol, interval=interval, limit=limit)
 
 
 def _calc_sl_tp(price, side, volatility_pct, sl_mult=2.0, tp_mult=6.0):
@@ -120,8 +92,7 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
             buy_signals = [s for s in signals if s["action"] == "BUY"]
             sell_signals = [s for s in signals if s["action"] == "SELL"]
             if buy_signals or sell_signals:
-                hist = [{"close": c["close"]} for c in slice_data[-30:]]
-                ind = market.compute_indicators(hist)
+                ind = market.compute_indicators(slice_data[-30:])
                 vol = ind.get("volatility", 2)
                 best = max(buy_signals + sell_signals, key=lambda s: s["confidence"])
                 side = best["action"]

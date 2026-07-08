@@ -3,11 +3,11 @@ from core.backtester import fetch_klines
 from core.regime import detect_regime
 
 TIMEFRAMES = {
-    "15m": {"binance": "15m", "weight": 0.10},
-    "1h":  {"binance": "1h",  "weight": 0.15},
-    "4h":  {"binance": "4h",  "weight": 0.30},
-    "1d":  {"binance": "1d",  "weight": 0.35},
-    "1w":  {"binance": "1w",  "weight": 0.10},
+    "15m": {"interval": "15m", "weight": 0.10},
+    "1h":  {"interval": "1h",  "weight": 0.15},
+    "4h":  {"interval": "4h",  "weight": 0.30},
+    "1d":  {"interval": "1d",  "weight": 0.35},
+    "1w":  {"interval": "1w",  "weight": 0.10},
 }
 
 HIGHER_TFS = ["4h", "1d", "1w"]
@@ -20,7 +20,7 @@ def analyze_symbol_multiframe(symbol):
     regimes = {}
     for tf_name, tf_info in TIMEFRAMES.items():
         limit = LOOKBACK.get(tf_name, 100)
-        ohlc = fetch_klines(symbol, interval=tf_info["binance"], limit=limit)
+        ohlc = fetch_klines(symbol, interval=tf_info["interval"], limit=limit)
         if ohlc and len(ohlc) >= 30:
             signals = scan_symbol(ohlc)
             regime = detect_regime(ohlc)
