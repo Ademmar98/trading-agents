@@ -65,6 +65,10 @@ class Trader(BaseAgent):
             if qty <= 0 or price <= 0:
                 continue
 
+            if self.pos_mgr.has_position(symbol):
+                self.log(f"Skipping {symbol}: position already open")
+                continue
+
             order = self.broker.place_order(symbol, action, qty, price, sl=sl_price, tp=tp_price)
             orders_executed.append(order)
             plan_id = planned.get("plan_id")

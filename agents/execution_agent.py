@@ -5,12 +5,17 @@ from config import SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
 from core.portfolio import load_portfolio
+from core.positions import PositionManager
 
 MAX_SPREAD_PCT = 0.35
 
 
 class ExecutionAgent(BaseAgent):
     name = "execution"
+
+    def __init__(self):
+        super().__init__()
+        self._pos_mgr = PositionManager()
 
     def run(self):
         self.log("Preparing executable orders with spread and slippage checks")
@@ -35,6 +40,10 @@ class ExecutionAgent(BaseAgent):
             spread_pct = ((ask - bid) / price * 100) if price and ask and bid and ask >= bid else 0
             if spread_pct > MAX_SPREAD_PCT:
                 rejected.append({**opp, "execution_reasons": [f"Spread too wide: {spread_pct:.2f}%"]})
+                continue
+
+            if self._pos_mgr.has_position(symbol):
+                rejected.append({**opp, "execution_reasons": ["Position already open for this symbol"]})
                 continue
 
             qty = round(opp.get("max_qty", 0), 8)

@@ -3,6 +3,7 @@
 from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT
 from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
+from core.positions import PositionManager
 from core.equity import daily_loss_pct
 
 MIN_CONFIDENCE = 0.55
@@ -11,6 +12,10 @@ MAX_TRADES_PER_CYCLE = 3
 
 class ComplianceAgent(BaseAgent):
     name = "compliance"
+
+    def __init__(self):
+        super().__init__()
+        self._pos_mgr = PositionManager()
 
     def run(self):
         self.log("Running safety and compliance gate")
@@ -59,6 +64,8 @@ class ComplianceAgent(BaseAgent):
                 reasons.append("Confidence below compliance threshold")
             if opp.get("price", 0) <= 0 or opp.get("max_qty", 0) <= 0:
                 reasons.append("Invalid price or quantity")
+            if self._pos_mgr.has_position(opp.get("symbol", "")):
+                reasons.append("Position already open")
             if reasons:
                 rejected.append({**opp, "compliance_reasons": reasons})
             else:
