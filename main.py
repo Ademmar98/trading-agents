@@ -42,6 +42,7 @@ from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
 from agents.sentiment_agent import SentimentAgent
 from agents.regime_agent import RegimeAgent
+from agents.pricing_agent import PricingAgent
 from agents.risk_manager import RiskManager
 from agents.position_sizer import PositionSizer
 from agents.portfolio_manager import PortfolioManagerAgent
@@ -170,6 +171,7 @@ CYCLE_AGENTS = (
     HealthMonitor,
     SentimentAgent,
     RegimeAgent,
+    PricingAgent,
     RiskManager,
     PositionSizer,
     PortfolioManagerAgent,
@@ -512,7 +514,7 @@ def make_layout(portfolio) -> Layout:
         "Spot-only (no leverage)  |  "
         f"Broker: {BROKER_TYPE.upper()}  |  "
         f"Open: {pos_mgr.get_positions_summary()['count']}  |  "
-        "Agents: Orchestrator → Analyst → Sentiment → Regime → Risk → PositionSizer → PortfolioMgr → Compliance → Execution → Trader → Auditor → Optimizer[/dim]",
+        "Agents: Orchestrator → Analyst → Sentiment → Regime → Pricing → Risk → PositionSizer → PortfolioMgr → Compliance → Execution → Trader → Auditor → Optimizer[/dim]",
         box=box.SIMPLE,
     ))
     return layout

@@ -22,6 +22,8 @@ class ExecutionAgent(BaseAgent):
         gate = self.memory.read("decisions", "compliance_gate") or {}
         analysis = self.memory.read("analyses", "market_scan") or {}
         all_analyses = analysis.get("all_analyses", {}) or {}
+        pricing = self.memory.read("decisions", "pricing") or {}
+        pricing_map = pricing.get("pricing_map", {}) or {}
         executable = []
         rejected = []
 
@@ -51,32 +53,44 @@ class ExecutionAgent(BaseAgent):
                 rejected.append({**opp, "execution_reasons": ["Computed quantity is zero"]})
                 continue
 
-            vol = data.get("volatility") or (opp.get("indicators", {}) or {}).get("volatility") or 2.0
-            vol_decimal = max(vol / 100.0, 0.005)
-            action = opp.get("action", "BUY")
-            if action == "BUY":
-                sl_pct = vol_decimal * SL_VOL_MULT * 100
-                tp_pct = vol_decimal * TP_VOL_MULT * 100
-                sl_price = round(price * (1 - vol_decimal * SL_VOL_MULT), 5)
-                tp_price = round(price * (1 + vol_decimal * TP_VOL_MULT), 5)
+            pricing_entry = pricing_map.get(symbol) if isinstance(pricing_map, dict) else None
+            if pricing_entry:
+                entry_price = pricing_entry.get("entry_price", price)
+                sl_price = pricing_entry.get("stop_loss", 0)
+                tp_price = pricing_entry.get("take_profit", 0)
+                sl_pct = pricing_entry.get("sl_pct", 0)
+                tp_pct = pricing_entry.get("tp_pct", 0)
+                risk_pct = pricing_entry.get("calculated_risk_pct", RISK_PER_TRADE_PCT)
             else:
-                sl_pct = vol_decimal * SL_VOL_MULT * 100
-                tp_pct = vol_decimal * TP_VOL_MULT * 100
-                sl_price = round(price * (1 + vol_decimal * SL_VOL_MULT), 5)
-                tp_price = round(price * (1 - vol_decimal * TP_VOL_MULT), 5)
+                vol = data.get("volatility") or (opp.get("indicators", {}) or {}).get("volatility") or 2.0
+                vol_decimal = max(vol / 100.0, 0.005)
+                action = opp.get("action", "BUY")
+                if action == "BUY":
+                    sl_pct = vol_decimal * SL_VOL_MULT * 100
+                    tp_pct = vol_decimal * TP_VOL_MULT * 100
+                    sl_price = round(price * (1 - vol_decimal * SL_VOL_MULT), 5)
+                    tp_price = round(price * (1 + vol_decimal * TP_VOL_MULT), 5)
+                else:
+                    sl_pct = vol_decimal * SL_VOL_MULT * 100
+                    tp_pct = vol_decimal * TP_VOL_MULT * 100
+                    sl_price = round(price * (1 + vol_decimal * SL_VOL_MULT), 5)
+                    tp_price = round(price * (1 - vol_decimal * TP_VOL_MULT), 5)
+                entry_price = price
+                risk_pct = RISK_PER_TRADE_PCT
 
             if tp_pct < MIN_TP_PCT:
                 rejected.append({**opp, "execution_reasons": [f"TP too small: {tp_pct:.1f}% < {MIN_TP_PCT}%"]})
                 continue
 
-            risk_amount = load_portfolio().equity * (RISK_PER_TRADE_PCT / 100)
-            if sl_price and price:
-                risk_per_unit = abs(price - sl_price)
+            risk_amount = load_portfolio().equity * (risk_pct / 100)
+            if sl_price and entry_price:
+                risk_per_unit = abs(entry_price - sl_price)
                 if risk_per_unit > 0:
                     risk_capped_qty = risk_amount / risk_per_unit
                     if risk_capped_qty < qty:
                         qty = round(risk_capped_qty, 8)
 
+            action = opp.get("action", "BUY")
             plan_id = f"plan_{symbol}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S%f')}"
             rr = round(tp_pct / sl_pct, 2) if sl_pct > 0 else 0
             plan_entry = {
@@ -84,10 +98,10 @@ class ExecutionAgent(BaseAgent):
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "symbol": symbol,
                 "direction": action,
-                "entry_price": price,
+                "entry_price": entry_price,
                 "stop_loss": sl_price,
                 "take_profit": tp_price,
-                "position_size_usd": round(price * qty, 2),
+                "position_size_usd": round(entry_price * qty, 2),
                 "position_size_units": qty,
                 "confidence": opp.get("confidence", 0),
                 "strategy": (opp.get("strategies") or [None])[0] if opp.get("strategies") else "",
@@ -101,7 +115,8 @@ class ExecutionAgent(BaseAgent):
             executable.append({
                 **opp,
                 "qty": qty,
-                "price": price,
+                "price": entry_price,
+                "entry_price": entry_price,
                 "stop_loss": sl_price,
                 "take_profit": tp_price,
                 "tp_pct": round(tp_pct, 1),

@@ -56,9 +56,13 @@ STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "5"))
 DAILY_LOSS_LIMIT_PCT = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "3"))
 TRAILING_STOP_PCT = float(os.getenv("TRAILING_STOP_PCT", "3"))
 TRAILING_ACTIVATION_PCT = float(os.getenv("TRAILING_ACTIVATION_PCT", "4"))
+# DEPRECATED — replaced by PricingAgent's dynamic per-symbol sl_mult
 SL_VOL_MULT = float(os.getenv("SL_VOL_MULT", "2.0"))
+# DEPRECATED — replaced by PricingAgent's dynamic per-symbol tp_mult
 TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "6.0"))
+# DEPRECATED — replaced by PricingAgent's dynamic take_profit check
 MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "5.0"))
+# DEPRECATED — replaced by PricingAgent's per-opportunity calculated_risk_pct
 RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
 import zlib
 _LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))
