@@ -160,6 +160,52 @@ def get_optimized_params(symbol):
     return {"sl_mult": 2.0, "tp_mult": 6.0, "position_size_pct": 25, "confidence_threshold": 0.0}
 
 
+def test_single_param(param_name, current_value, increment, symbol=None, days=BACKTEST_DAYS):
+    """Test a single param with ±increment delta, return best value.
+
+    Uses WATCHED_SYMBOLS[0] if symbol not given.  Returns the value
+    (current, +increment, or -increment) that maximises the backtest score
+    together with the score dict.  Returns (current_value, None) on error.
+    """
+    from config import WATCHED_SYMBOLS
+    sym = symbol or (WATCHED_SYMBOLS[0] if WATCHED_SYMBOLS else "BTC/USD")
+    candidates = [current_value, current_value + increment, current_value - increment]
+
+    best_score = -1e9
+    best_val = current_value
+    best_result = None
+
+    for val in candidates:
+        # Build kwargs for _backtest_with_params from PARAM_GRID defaults,
+        # overriding the param under test.
+        kwargs = dict(
+            sl_mult=PARAM_GRID["sl_mult"][len(PARAM_GRID["sl_mult"]) // 2],
+            tp_mult=PARAM_GRID["tp_mult"][len(PARAM_GRID["tp_mult"]) // 2],
+            pos_size=PARAM_GRID["position_size_pct"][len(PARAM_GRID["position_size_pct"]) // 2],
+            conf_thresh=PARAM_GRID["confidence_threshold"][len(PARAM_GRID["confidence_threshold"]) // 2],
+        )
+        # Map param_name to the kwarg
+        kwarg_map = {
+            "SL_VOL_MULT": "sl_mult",
+            "TP_VOL_MULT": "tp_mult",
+            "POSITION_SIZE_PCT": "pos_size",
+            "MAX_POSITION_SIZE_PCT": "pos_size",
+            "RISK_PER_TRADE_PCT": "pos_size",  # approximated via position size
+            "STOP_LOSS_PCT": "sl_mult",         # approximated via sl_mult
+        }
+        target_kwarg = kwarg_map.get(param_name)
+        if target_kwarg:
+            kwargs[target_kwarg] = val
+
+        result = _backtest_with_params(sym, **kwargs, days=days)
+        if result and result["score"] > best_score:
+            best_score = result["score"]
+            best_val = val
+            best_result = result
+
+    return best_val, best_result
+
+
 def run_all_optimizations(symbols):
     results = []
     for sym in symbols:

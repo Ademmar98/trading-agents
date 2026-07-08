@@ -69,6 +69,16 @@ else:
 
 TRADING_INTERVAL_MINUTES = int(os.getenv("TRADING_INTERVAL_MINUTES", "60"))
 
+# Tunable parameters — each entry defines a range and step for the optimizer
+TUNABLE_PARAMS = {
+    "SL_VOL_MULT":       {"default": 2.0, "min": 0.5,  "max": 5.0, "increment": 0.5},
+    "TP_VOL_MULT":       {"default": 6.0, "min": 2.0,  "max": 12.0,"increment": 1.0},
+    "RISK_PER_TRADE_PCT":{"default": 1.0, "min": 0.25, "max": 3.0, "increment": 0.25},
+    "STOP_LOSS_PCT":     {"default": 5.0, "min": 1.0,  "max": 10.0,"increment": 1.0},
+    "POSITION_SIZE_PCT": {"default": 25,  "min": 5,    "max": 50,  "increment": 5},
+    "MAX_POSITION_SIZE_PCT": {"default": 25, "min": 5,  "max": 50,  "increment": 5},
+}
+
 WATCHED_SYMBOLS = os.getenv(
     "WATCHED_SYMBOLS",
     "BTC/USD,ETH/USD,SOL/USD,BNB/USD,XRP/USD,ADA/USD,DOGE/USD,DOT/USD,AVAX/USD,LINK/USD,UNI/USD,ATOM/USD,LTC/USD,BCH/USD,TRX/USD,AAVE/USD,MATIC/USD,APT/USD,ARB/USD,OP/USD"

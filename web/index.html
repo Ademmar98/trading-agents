@@ -407,7 +407,7 @@ function renderPnlChart(trades) {
   }
   pnlChart = new Chart(document.getElementById("pnl-chart"), {
     type: "bar",
-    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, borderRadius: 2 }] },
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, borderRadius: 0 }] },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: {

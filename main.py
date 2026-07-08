@@ -49,6 +49,7 @@ from agents.compliance_agent import ComplianceAgent
 from agents.execution_agent import ExecutionAgent
 from agents.trader import Trader
 from agents.auditor import Auditor
+from agents.optimizer_agent import OptimizerAgent
 from agents.health_monitor import HealthMonitor
 
 console = Console()
@@ -176,6 +177,7 @@ CYCLE_AGENTS = (
     ExecutionAgent,
     Trader,
     Auditor,
+    OptimizerAgent,
 )
 
 
@@ -510,7 +512,7 @@ def make_layout(portfolio) -> Layout:
         "Spot-only (no leverage)  |  "
         f"Broker: {BROKER_TYPE.upper()}  |  "
         f"Open: {pos_mgr.get_positions_summary()['count']}  |  "
-        "Agents: Orchestrator → Analyst → Sentiment → Regime → Risk → PositionSizer → PortfolioMgr → Compliance → Execution → Trader → Auditor[/dim]",
+        "Agents: Orchestrator → Analyst → Sentiment → Regime → Risk → PositionSizer → PortfolioMgr → Compliance → Execution → Trader → Auditor → Optimizer[/dim]",
         box=box.SIMPLE,
     ))
     return layout
