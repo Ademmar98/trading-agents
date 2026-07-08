@@ -523,6 +523,28 @@ def make_layout(portfolio) -> Layout:
 def main():
     global live_broker
 
+    # --reset MUST run first, before any module-level init touches DATA_DIR
+    if RESET:
+        import shutil
+        console.print("[bold yellow]--reset: wiping all data...[/bold yellow]")
+        db_file = DATA_DIR / "trading.db"
+        for ext in ("", "-wal", "-shm", "-journal"):
+            p = Path(str(db_file) + ext)
+            try:
+                if p.exists():
+                    p.unlink()
+            except PermissionError:
+                pass
+        try:
+            if DATA_DIR.exists():
+                shutil.rmtree(DATA_DIR)
+                console.print(f"[dim]Removed {DATA_DIR}[/dim]")
+        except PermissionError as e:
+            console.print(f"[bold red]Failed to remove {DATA_DIR}: {e}[/bold red]")
+            console.print("[yellow]Close any other programs using this directory and retry.[/yellow]")
+            sys.exit(1)
+        console.print("[bold green]Data reset complete. Starting fresh.[/bold green]")
+
     console.clear()
     console.print("[bold cyan]Trading Agent Firm[/bold cyan]")
 
@@ -539,14 +561,6 @@ def main():
                       "exiting to prevent duplicate trading.[/bold red]")
         memory.log("system", "Startup aborted: another instance is already running")
         sys.exit(1)
-
-    if RESET:
-        import shutil
-        console.print("[bold yellow]--reset: wiping data directory...[/bold yellow]")
-        if DATA_DIR.exists():
-            shutil.rmtree(DATA_DIR)
-            console.print(f"[dim]Removed {DATA_DIR}[/dim]")
-        console.print("[bold green]Data reset complete. Starting fresh.[/bold green]")
 
     init_db()
     console.print("[dim]Database initialized[/dim]")
