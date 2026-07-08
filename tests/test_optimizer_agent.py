@@ -1,148 +1,135 @@
-import os
-import sys
-import tempfile
 import time
-from pathlib import Path
+from unittest.mock import patch, MagicMock, PropertyMock
 
 import pytest
 
-import config as app_config
-from core.database import init_db, execute, set_meta
-from core.memory import SharedMemory
-from core.portfolio import Portfolio, save_portfolio
+from agents.optimizer_agent import OptimizerAgent
 
 
-@pytest.fixture(autouse=True)
-def sandbox_data_dir(monkeypatch):
-    tmp = Path(tempfile.mkdtemp(prefix="trading-test-"))
-    monkeypatch.setattr(app_config, "DATA_DIR", tmp)
-    monkeypatch.setenv("TRADING_DATA_DIR", str(tmp))
-    init_db()
-    yield
-    import shutil
-    shutil.rmtree(str(tmp), ignore_errors=True)
+@pytest.fixture
+def agent():
+    a = OptimizerAgent.__new__(OptimizerAgent)
+    a.memory = MagicMock()
+    a.log = MagicMock()
+    return a
 
 
-def seed_trades(count=15, win_rate=60):
-    for i in range(count):
-        pnl = 50.0 if i < int(count * win_rate / 100) else -30.0
-        execute(
-            "INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, strategy) "
-            "VALUES (?, 'TEST', 'BUY', 1.0, 100.0, 110.0, ?, 10.0, 'test', 'FVG')",
-            [i, pnl],
-        )
-
-
-def seed_audit(memory):
-    memory.write("reports", "audit", {
+def _audit(total_trades=15, win_rate=50, sharpe=1.0, profit_factor=1.5, total_pnl_pct=5.0, positions=0, exposure=0):
+    return {
         "summary": {
-            "total_trades": 15,
-            "win_rate": 60.0,
-            "total_pnl": 300.0,
-            "total_pnl_pct": 3.0,
-            "current_exposure": 20.0,
-            "positions": 1,
-            "analytics": {"sharpe": 1.2, "profit_factor": 1.5, "max_drawdown": 5.0, "expectancy": 20.0},
-        },
-        "suggestions": [],
-        "needs_rebalance": False,
-        "timestamp": time.time(),
-    })
+            "total_trades": total_trades,
+            "win_rate": win_rate,
+            "analytics": {"sharpe": sharpe, "profit_factor": profit_factor},
+            "total_pnl_pct": total_pnl_pct,
+            "positions": positions,
+            "current_exposure": exposure,
+        }
+    }
 
 
-class TestOptimizerAgentPickWeakest:
-    def test_skips_when_too_few_trades(self):
-        from agents.optimizer_agent import OptimizerAgent
-        memory = SharedMemory()
-        seed_audit(memory)
-        result = OptimizerAgent().run()
-        assert result is None  # skip: <10 trades
+class TestRun:
+    def test_skip_if_fewer_than_10_trades(self, agent):
+        agent.memory.read.return_value = {"summary": {"total_trades": 5}}
+        agent.run()
+        agent.log.assert_called_with("Skip: only 5 trades — need ≥10 for meaningful backtest")
+
+    def test_skip_if_no_stats(self, agent):
+        agent.memory.read.return_value = {"summary": {"total_trades": 15}}
+        with patch("agents.optimizer_agent.get_strategy_stats_list", return_value=[]):
+            agent.run()
+            agent.log.assert_called_with("Skip: no strategy stats yet")
+
+    def test_skip_if_recently_run(self, agent):
+        agent.memory.read.return_value = _audit()
+        with patch("agents.optimizer_agent.get_strategy_stats_list", return_value=[{"name": "test"}]):
+            with patch("agents.optimizer_agent.get_meta", return_value=str(time.time())):
+                with patch("agents.optimizer_agent.time.time", return_value=time.time()):
+                    agent.run()
+                    assert "Skip: last run was" in agent.log.call_args[0][0]
+
+    def test_skip_if_no_weak_param(self, agent):
+        agent.memory.read.return_value = _audit(win_rate=50, sharpe=1.5, profit_factor=2.0,
+                                                  total_pnl_pct=5.0, exposure=30)
+        with patch("agents.optimizer_agent.get_strategy_stats_list", return_value=[{"name": "test"}]):
+            with patch("agents.optimizer_agent.get_meta", return_value="0"):
+                with patch("agents.optimizer_agent.time.time", return_value=100000):
+                    agent.run()
+                    agent.log.assert_called_with("No weak param identified — all look acceptable")
+
+    def test_runs_optimization(self, agent):
+        agent.memory.read.return_value = _audit(win_rate=40)
+        calls = []
+        def mock_test_single_param(param, val, inc):
+            calls.append((param, val, inc))
+            if len(calls) == 1:
+                return (3.0, {"score": 15.0})
+            return (2.0, {"score": 10.0})
+        with patch("agents.optimizer_agent.get_strategy_stats_list", return_value=[{"name": "test"}]):
+            with patch("agents.optimizer_agent.get_meta", side_effect=lambda k, d=None: "0"):
+                with patch("agents.optimizer_agent.test_single_param", side_effect=mock_test_single_param):
+                    with patch("agents.optimizer_agent.set_meta"):
+                        with patch("agents.optimizer_agent.os.environ", {}):
+                            with patch("agents.optimizer_agent.sys.modules", {"config": MagicMock()}):
+                                agent.run()
+                                agent.log.assert_called()
+
+    def test_handles_backtest_exception(self, agent):
+        agent.memory.read.return_value = _audit(win_rate=40)
+        with patch("agents.optimizer_agent.get_strategy_stats_list", return_value=[{"name": "test"}]):
+            with patch("agents.optimizer_agent.get_meta", side_effect=lambda k, d=None: "0"):
+                with patch("agents.optimizer_agent.time.time", return_value=100000):
+                    with patch("agents.optimizer_agent.test_single_param", side_effect=Exception("fail")):
+                        agent.run()
+                        assert "Backtest failed" in agent.log.call_args[0][0]
+
+    def test_handles_no_result(self, agent):
+        agent.memory.read.return_value = _audit(win_rate=40)
+        with patch("agents.optimizer_agent.get_strategy_stats_list", return_value=[{"name": "test"}]):
+            with patch("agents.optimizer_agent.get_meta", side_effect=lambda k, d=None: "0"):
+                with patch("agents.optimizer_agent.time.time", return_value=100000):
+                    with patch("agents.optimizer_agent.test_single_param", return_value=(1.5, None)):
+                        agent.run()
+                        assert "Backtest returned no result" in agent.log.call_args[0][0]
 
 
-    def test_skips_when_too_recent(self):
-        from agents.optimizer_agent import OptimizerAgent
-        memory = SharedMemory()
-        seed_trades(15)
-        seed_audit(memory)
-        set_meta("optimizer_last_run", str(time.time()))
-        result = OptimizerAgent().run()
-        assert result is None  # skip: just ran
+class TestPickWeakestParam:
+    def test_win_rate_under_45(self):
+        a = OptimizerAgent.__new__(OptimizerAgent)
+        param, meta = a._pick_weakest_param({"win_rate": 40, "analytics": {}, "total_pnl_pct": 5}, [])
+        assert param == "STOP_LOSS_PCT"
 
+    def test_sharpe_under_08(self):
+        a = OptimizerAgent.__new__(OptimizerAgent)
+        param, meta = a._pick_weakest_param({"win_rate": 50, "analytics": {"sharpe": 0.5}, "total_pnl_pct": 5}, [])
+        assert param == "SL_VOL_MULT"
 
-class TestOptimizerAgent:
-    def test_picks_weak_param_low_win_rate(self):
-        from agents.optimizer_agent import OptimizerAgent
-        agent = OptimizerAgent()
-        summary = {"win_rate": 40, "total_trades": 15,
-                   "analytics": {"sharpe": 1.2, "profit_factor": 1.5},
-                   "total_pnl_pct": 3.0, "positions": 1, "current_exposure": 20}
-        stats = [{"strategy": "FVG", "trades": 10, "win_rate": 60, "pnl": 200}]
-        name, meta = agent._pick_weakest_param(summary, stats)
-        assert name == "STOP_LOSS_PCT"
+    def test_profit_factor_under_13(self):
+        a = OptimizerAgent.__new__(OptimizerAgent)
+        param, meta = a._pick_weakest_param({"win_rate": 50, "analytics": {"sharpe": 1.0, "profit_factor": 1.0}, "total_pnl_pct": 5}, [])
+        assert param == "TP_VOL_MULT"
 
-    def test_picks_weak_param_low_sharpe(self):
-        from agents.optimizer_agent import OptimizerAgent
-        agent = OptimizerAgent()
-        summary = {"win_rate": 55, "total_trades": 15,
-                   "analytics": {"sharpe": 0.5, "profit_factor": 1.5},
-                   "total_pnl_pct": 3.0, "positions": 1, "current_exposure": 20}
-        stats = [{"strategy": "FVG", "trades": 10, "win_rate": 60, "pnl": 200}]
-        name, meta = agent._pick_weakest_param(summary, stats)
-        assert name == "SL_VOL_MULT"
+    def test_negative_pnl(self):
+        a = OptimizerAgent.__new__(OptimizerAgent)
+        param, meta = a._pick_weakest_param({"win_rate": 50, "analytics": {"sharpe": 1.0, "profit_factor": 2.0}, "total_pnl_pct": -5}, [])
+        assert param == "RISK_PER_TRADE_PCT"
 
-    def test_picks_weak_param_low_pf(self):
-        from agents.optimizer_agent import OptimizerAgent
-        agent = OptimizerAgent()
-        summary = {"win_rate": 55, "total_trades": 15,
-                   "analytics": {"sharpe": 1.2, "profit_factor": 1.1},
-                   "total_pnl_pct": 3.0, "positions": 1, "current_exposure": 20}
-        stats = [{"strategy": "FVG", "trades": 10, "win_rate": 60, "pnl": 200}]
-        name, meta = agent._pick_weakest_param(summary, stats)
-        assert name == "TP_VOL_MULT"
-
-    def test_picks_weak_param_negative_pnl(self):
-        from agents.optimizer_agent import OptimizerAgent
-        agent = OptimizerAgent()
-        summary = {"win_rate": 55, "total_trades": 15,
-                   "analytics": {"sharpe": 1.2, "profit_factor": 1.5},
-                   "total_pnl_pct": -2.0, "positions": 1, "current_exposure": 20}
-        stats = [{"strategy": "FVG", "trades": 10, "win_rate": 60, "pnl": 200}]
-        name, meta = agent._pick_weakest_param(summary, stats)
-        assert name == "RISK_PER_TRADE_PCT"
-
-    def test_picks_weak_param_high_exposure(self):
-        from agents.optimizer_agent import OptimizerAgent
-        agent = OptimizerAgent()
-        summary = {"win_rate": 55, "total_trades": 15,
-                   "analytics": {"sharpe": 1.2, "profit_factor": 1.5},
-                   "total_pnl_pct": 3.0, "positions": 3, "current_exposure": 65}
-        stats = [{"strategy": "FVG", "trades": 10, "win_rate": 60, "pnl": 200}]
-        name, meta = agent._pick_weakest_param(summary, stats)
-        assert name == "MAX_POSITION_SIZE_PCT"
+    def test_high_exposure(self):
+        a = OptimizerAgent.__new__(OptimizerAgent)
+        param, meta = a._pick_weakest_param({"win_rate": 50, "analytics": {"sharpe": 1.0, "profit_factor": 2.0}, "total_pnl_pct": 5, "positions": 3, "current_exposure": 60}, [])
+        assert param == "MAX_POSITION_SIZE_PCT"
 
     def test_returns_none_when_all_ok(self):
-        from agents.optimizer_agent import OptimizerAgent
-        agent = OptimizerAgent()
-        summary = {"win_rate": 55, "total_trades": 15,
-                   "analytics": {"sharpe": 1.2, "profit_factor": 1.5},
-                   "total_pnl_pct": 3.0, "positions": 1, "current_exposure": 20}
-        stats = [{"strategy": "FVG", "trades": 10, "win_rate": 60, "pnl": 200}]
-        name, meta = agent._pick_weakest_param(summary, stats)
-        assert name is None
+        a = OptimizerAgent.__new__(OptimizerAgent)
+        result = a._pick_weakest_param({"win_rate": 50, "analytics": {"sharpe": 1.0, "profit_factor": 1.5}, "total_pnl_pct": 5}, [])
+        assert result == (None, None)
 
-
-class TestOptimizerIntegration:
-    def test_test_single_param_returns_value(self):
-        from core.optimizer import test_single_param
-        best_val, result = test_single_param("SL_VOL_MULT", 2.0, 0.5, symbol="BTC/USD", days=30)
-        assert isinstance(best_val, float)
-        assert best_val in (1.5, 2.0, 2.5)
-
-    def test_optimizer_agent_runs(self):
-        from agents.optimizer_agent import OptimizerAgent
-        memory = SharedMemory()
-        seed_trades(15)
-        seed_audit(memory)
-        set_meta("optimizer_last_run", "0")
-        result = OptimizerAgent().run()
-        assert result is None  # runs but backtest may fail without real data
+    def test_returns_none_when_meta_not_found(self):
+        a = OptimizerAgent.__new__(OptimizerAgent)
+        from config import TUNABLE_PARAMS
+        saved = dict(TUNABLE_PARAMS)
+        TUNABLE_PARAMS.clear()
+        try:
+            result = a._pick_weakest_param({"win_rate": 40, "analytics": {}, "total_pnl_pct": 5}, [])
+            assert result == (None, None)
+        finally:
+            TUNABLE_PARAMS.update(saved)

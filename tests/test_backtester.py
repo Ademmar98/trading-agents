@@ -94,3 +94,67 @@ def test_run_all_backtests_empty_symbols():
     with patch("core.backtester.backtest_symbol", return_value=None):
         results = run_all_backtests(symbols=[])
         assert results == []
+
+
+def test_run_all_backtests_with_results():
+    from core.backtester import run_all_backtests
+    mock_result = {
+        "symbol": "TEST/USD", "total_return": 5.0, "total_trades": 2,
+        "win_rate": 50.0, "profit_factor": 2.0, "max_drawdown": 3.0,
+        "sharpe_ratio": 1.5, "final_equity": 10500, "avg_win": 100,
+        "avg_loss": 50, "trades": [],
+    }
+    with patch("core.backtester.backtest_symbol", return_value=mock_result):
+        with patch("core.backtester._save_backtest") as mock_save:
+            results = run_all_backtests(symbols=["TEST/USD"])
+            assert len(results) == 1
+            mock_save.assert_called_once_with(mock_result)
+
+
+def test_backtest_symbol_short_data():
+    from core.backtester import backtest_symbol
+    with patch("core.backtester.fetch_klines", return_value=[]):
+        result = backtest_symbol("TEST/USD")
+        assert result is None
+
+
+def test_backtest_symbol_runs():
+    from core.backtester import backtest_symbol
+    ohlc = [{"high": 100 + i, "low": 99 + i, "close": 99.5 + i, "date": f"2024-01-{d:02d}"}
+            for i, d in enumerate(range(1, 101))]
+    with patch("core.backtester.fetch_klines", return_value=ohlc):
+        with patch("core.backtester.scan_symbol", return_value=[]):
+            result = backtest_symbol("TEST/USD", initial_capital=10000)
+            assert result is not None
+            assert result["symbol"] == "TEST/USD"
+            assert result["total_trades"] == 0
+
+
+def test_compute_metrics_empty_equity():
+    from core.backtester import _compute_metrics
+    result = _compute_metrics("TEST", [], [], 10000.0)
+    assert result["total_return"] == 0
+    assert result["final_equity"] == 10000.0
+    assert result["profit_factor"] is None
+
+
+def test_fetch_klines():
+    from core.backtester import fetch_klines
+    with patch("core.data_provider.fetch_ohlc", return_value=[{"close": 100}]):
+        result = fetch_klines("TEST/USD")
+        assert len(result) == 1
+
+
+def test_backtest_symbol_with_signals():
+    from core.backtester import backtest_symbol
+    ohlc = [{"high": 100 + i, "low": 99 + i, "close": 99.5 + i, "date": f"2024-01-{d:02d}"}
+            for i, d in enumerate(range(1, 101))]
+    signals = [{"action": "BUY", "confidence": 0.8, "strategies": ["test_strat"], "strategy": "test_strat"}]
+    with patch("core.backtester.fetch_klines", return_value=ohlc), \
+         patch("core.backtester.scan_symbol", return_value=signals), \
+         patch("core.backtester.MarketData") as MockMD:
+        md_instance = MockMD.return_value
+        md_instance.compute_indicators.return_value = {"volatility": 1.5, "atr": 0.5}
+        result = backtest_symbol("TEST/USD", initial_capital=10000)
+        assert result is not None
+        assert result["symbol"] == "TEST/USD"

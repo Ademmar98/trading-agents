@@ -102,3 +102,41 @@ class TestStartStop:
         with patch("core.price_stream._binance_stream"):
             ps.start([])
             ps.stop()
+
+    def test_start_idempotent(self):
+        import core.price_stream as ps
+        ps.stop()
+        with patch("core.price_stream._binance_stream"):
+            ps.start(["BTC/USD"])
+            ps.start(["BTC/USD"])
+            ps.stop()
+            assert ps._RUNNING is False
+
+
+class TestBinanceStream:
+    def test_no_websockets_import(self):
+        import core.price_stream as ps
+        import builtins as bltn
+        ps.stop()
+        real_import = bltn.__import__
+        def _mock_import(name, *args, **kwargs):
+            if name == "websockets":
+                raise ImportError
+            return real_import(name, *args, **kwargs)
+        with patch("builtins.__import__", side_effect=_mock_import):
+            ps._binance_stream(["BTC/USD"])
+
+    def test_too_many_symbols(self):
+        import core.price_stream as ps
+        ps.stop()
+        ps._binance_stream([f"SYM{i}/USD" for i in range(300)])
+
+    def test_start_stops_thread(self):
+        import core.price_stream as ps
+        ps.stop()
+        ps._RUNNING = False
+        with patch("core.price_stream._binance_stream"):
+            ps.start(["BTC/USD"])
+            assert ps._STREAM_THREAD is not None
+            ps.stop()
+            ps._STREAM_THREAD.join(timeout=2)

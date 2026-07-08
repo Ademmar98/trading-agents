@@ -52,7 +52,7 @@ class OptimizerAgent(BaseAgent):
 
         improvement = result["score"]
         old_score = 0
-        current_result, _ = test_single_param(param_name, current_value, increment)
+        _, current_result = test_single_param(param_name, current_value, increment)
         if current_result:
             old_score = current_result["score"]
 
