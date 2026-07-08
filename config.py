@@ -58,7 +58,12 @@ SL_VOL_MULT = float(os.getenv("SL_VOL_MULT", "2.0"))
 TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "6.0"))
 MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "5.0"))
 RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
-LOCK_PORT = int(os.getenv("TRADING_LOCK_PORT", "48620"))
+import zlib
+_LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))
+if _LOCK_PORT_OVERRIDE:
+    LOCK_PORT = _LOCK_PORT_OVERRIDE
+else:
+    LOCK_PORT = 48620 + (zlib.crc32(str(DATA_DIR).encode()) % 1000)
 
 TRADING_INTERVAL_MINUTES = int(os.getenv("TRADING_INTERVAL_MINUTES", "60"))
 

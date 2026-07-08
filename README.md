@@ -34,7 +34,7 @@ Orchestrator → ResearchAnalyst → HealthMonitor → SentimentAgent → Regime
 | **Real Sentiment** | Fetches Fear & Greed Index from alternative.me and blends it with price breadth |
 | **Risk Metrics** | VaR (95%), rolling max drawdown, trade duration stats, Sharpe, profit factor, Kelly sizing |
 | **Trade Plans** | Each potential trade is saved to SQLite with SL, TP, R:R ratio, strategy, regime, rationale |
-| **Multi-Broker** | Paper (default), Binance (testnet/live), MetaQuotes 5, Alpaca |
+| **Multi-Broker** | Paper (default), Binance (testnet/live), MetaQuotes 5, DXtrade |
 | **Web Dashboard** | Live dashboard on port 8000 with positions, trades, equity curve, risk, plans |
 | **Telegram** | Notifications for trades, SL/TP hits, errors, daily summaries |
 | **Backtester** | 90-day backtest per symbol using daily klines; stores results in DB |
@@ -53,13 +53,12 @@ Copy `.env.example` to `.env` and configure:
 
 | Variable | Default | Description |
 |---|---|---|
-| `BROKER_TYPE` | `binance` | `paper`, `binance`, `mt5`, `alpaca` |
+| `BROKER_TYPE` | `paper` | `paper`, `binance`, `mt5`, `dxtrade` |
 | `TRADING_CAPITAL` | `10000` | Initial paper balance |
 | `TRADING_INTERVAL_MINUTES` | `60` | Minutes between trading cycles |
 | `WATCHED_SYMBOLS` | 20 cryptos | Comma-separated symbol list |
 | `TELEGRAM_BOT_TOKEN` | — | Bot token for notifications |
 | `TELEGRAM_CHAT_ID` | — | Chat ID for notifications |
-| `DASHBOARD_PASSWORD` | — | HTTP basic auth for dashboard |
 
 ## Usage
 
@@ -67,7 +66,7 @@ Copy `.env.example` to `.env` and configure:
 # Start trading (with live dashboard)
 python main.py
 
-# Headless mode (server)
+# Headless mode (server — web dashboard still available)
 python main.py --headless
 
 # Reset all data and start fresh
@@ -79,13 +78,21 @@ $env:BROKER_TYPE = "paper"; python main.py
 
 Open `http://localhost:8000` for the web dashboard.
 
+## Docker
+
+```powershell
+docker-compose up --build
+```
+
+The web dashboard is available on the configured `PORT` (default 8000). The `.env` file is passed to the container automatically. The web server always starts — to disable it, set `PORT=0`.
+
 ## Tests
 
 ```powershell
 python -m pytest
 ```
 
-136 tests covering all agents, broker, portfolio, position manager, database, memory, strategies, analytics, backtester, and the full pipeline smoke test. All tests run offline against sandboxed data directories.
+162 tests covering all agents, broker, portfolio, position manager, database, memory, strategies, analytics, backtester, and the full pipeline smoke test. All tests run offline against sandboxed data directories.
 
 ### Test coverage
 

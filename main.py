@@ -206,10 +206,35 @@ def run_cycle():
             notifier.daily_summary(build_daily_summary(completed_day))
         if _cycle_count % 30 == 0:
             notifier.portfolio_snapshot(pos_mgr.get_positions_summary())
+        sync_position_stores()
     except Exception as e:
         memory.log("system", f"Cycle error: {e}")
         memory.log_error("cycle", str(e), traceback.format_exc())
         notifier.on_error(str(e))
+
+
+def sync_position_stores():
+    """Synchronize SQLite positions/trades into portfolio.json.
+
+    SQLite (pos_mgr) is the authoritative source for positions and trades.
+    portfolio.json keeps cash and initial_balance, which have no SQLite equivalent.
+    """
+    try:
+        from core.portfolio import Position, load_portfolio, save_portfolio
+        p = load_portfolio()
+        sql_positions = pos_mgr.get_open_positions()
+        p.positions = {}
+        for sp in sql_positions:
+            p.positions[sp["symbol"]] = Position(
+                symbol=sp["symbol"], entry_price=sp["entry_price"],
+                quantity=sp["quantity"], current_price=sp["current_price"],
+                pnl=sp["pnl"], pnl_pct=sp["pnl_pct"],
+            )
+        sql_trades = pos_mgr.get_recent_trades(50)
+        p.trades = sql_trades
+        save_portfolio(p)
+    except Exception as e:
+        memory.log("system", f"Position sync warning: {e}")
 
 
 def make_positions_panel() -> Panel:
@@ -518,9 +543,8 @@ def main():
     websocket_prices.start(testnet=ws_testnet)
     console.print("[dim]WebSocket price feed started[/dim]")
 
-    if not HEADLESS:
-        web_port = start_webserver()
-        console.print(f"[dim]Dashboard running on port {web_port}[/dim]")
+    web_port = start_webserver()
+    console.print(f"[dim]Dashboard running on port {web_port}[/dim]")
 
     if BROKER_TYPE == "mt5":
         live_broker = MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
@@ -604,27 +628,23 @@ def main():
         if HEADLESS:
             console.print("[dim]Headless mode: dashboard disabled, updates via Telegram and logs[/dim]")
             while True:
-                portfolio = load_portfolio()
                 prices = websocket_prices.get_all_prices()
                 if prices:
-                    portfolio.update_prices({s: p.get("price", 0) if isinstance(p, dict) else p
-                                             for s, p in prices.items()})
-                    save_portfolio(portfolio)
+                    pos_mgr.update_prices(prices)
+                    sync_position_stores()
                 time.sleep(30)
         with Live(make_layout(portfolio), refresh_per_second=2, screen=True) as live:
             while True:
-                portfolio = load_portfolio()
-                broker = PaperBroker()
                 prices = websocket_prices.get_all_prices()
                 if not prices:
                     analysis = memory.read("analyses", "market_scan")
                     if analysis:
                         prices = {s: {"price": d.get("price", 0)}
                                  for s, d in (analysis.get("all_analyses", {}) or {}).items()}
-                broker.portfolio = portfolio
-                broker.portfolio.update_prices({s: p.get("price", 0) if isinstance(p, dict) else p
-                                               for s, p in prices.items()})
-                save_portfolio(portfolio)
+                if prices:
+                    pos_mgr.update_prices(prices)
+                    sync_position_stores()
+                portfolio = load_portfolio()
                 live.update(make_layout(portfolio))
                 time.sleep(2)
     except KeyboardInterrupt:
