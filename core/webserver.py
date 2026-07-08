@@ -219,48 +219,49 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            if self.path == "/health":
+            path = self.path.split("?")[0]
+            if path == "/health":
                 self._send(200, "application/json", b'{"status":"ok"}')
-            elif self.path in ("/", "/index.html"):
+            elif path in ("/", "/index.html"):
                 page = (WEB_DIR / "index.html").read_bytes()
                 self._send(200, "text/html; charset=utf-8", page)
-            elif self.path == "/api/summary":
+            elif path == "/api/summary":
                 self._json(get_summary())
-            elif self.path == "/api/positions":
+            elif path == "/api/positions":
                 self._json(get_positions())
-            elif self.path == "/api/trades":
+            elif path == "/api/trades":
                 self._json(get_trades())
-            elif self.path == "/api/equity":
+            elif path == "/api/equity":
                 self._json(get_equity_curve())
-            elif self.path == "/api/activity":
+            elif path == "/api/activity":
                 self._json(get_activity())
-            elif self.path == "/api/errors":
+            elif path == "/api/errors":
                 self._json(get_errors())
-            elif self.path == "/api/plans":
+            elif path == "/api/plans":
                 self._json(get_plans())
-            elif self.path == "/api/market-prices":
+            elif path == "/api/market-prices":
                 self._json(get_market_prices())
-            elif self.path == "/api/strategy-stats":
+            elif path == "/api/strategy-stats":
                 self._json(get_strategy_stats_list())
-            elif self.path == "/api/trade-journal":
+            elif path == "/api/trade-journal":
                 self._json(get_trade_journal())
-            elif self.path == "/api/opportunities":
+            elif path == "/api/opportunities":
                 self._json(self.get_opportunities())
-            elif self.path == "/api/regime":
+            elif path == "/api/regime":
                 self._json(self.get_regime())
-            elif self.path == "/api/backtests":
+            elif path == "/api/backtests":
                 self._json(self.get_backtests())
-            elif self.path == "/api/optimizations":
+            elif path == "/api/optimizations":
                 self._json(self.get_optimizations())
-            elif self.path == "/api/risk":
+            elif path == "/api/risk":
                 self._json(self.get_risk())
-            elif self.path == "/api/health":
+            elif path == "/api/health":
                 self._json(self.get_health())
-            elif self.path == "/api/sentiment":
+            elif path == "/api/sentiment":
                 self._json(self.get_sentiment())
-            elif self.path == "/api/pricing":
+            elif path == "/api/pricing":
                 self._json(self.get_pricing())
-            elif self.path == "/api/config":
+            elif path == "/api/config":
                 self._json(self.get_config())
             else:
                 self._send(404, "text/plain", b"not found")
