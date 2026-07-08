@@ -1,9 +1,11 @@
-import base64
 import json
 import os
 import threading
 import traceback
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
+import uvicorn
 
 from config import BASE_DIR, BROKER_TYPE, BINANCE_USE_TESTNET, DATA_DIR
 from core.database import fetchall, fetchone, get_plans, get_strategy_stats_list, get_meta
@@ -20,7 +22,6 @@ def get_market_prices():
 
 
 def _live_pnl_stats():
-    """Aggregate closed-trade P&L directly from SQLite (no portfolio.json)."""
     row = fetchone("SELECT COUNT(*) AS cnt, SUM(pnl) AS total FROM trades")
     cnt = row["cnt"] if row else 0
     total = row["total"] if row and row["total"] else 0
@@ -30,7 +31,6 @@ def _live_pnl_stats():
 
 
 def _live_positions_summary():
-    """Return open position count, total value, and exposure from SQLite."""
     rows = fetchall(
         "SELECT quantity, entry_price, current_price FROM positions WHERE status='open'"
     )
@@ -40,10 +40,7 @@ def _live_positions_summary():
 
 
 def _live_cash():
-    """Return the latest known cash balance from equity_history (fallback 0)."""
-    row = fetchone(
-        "SELECT cash FROM equity_history ORDER BY id DESC LIMIT 1"
-    )
+    row = fetchone("SELECT cash FROM equity_history ORDER BY id DESC LIMIT 1")
     return row["cash"] if row else 0
 
 
@@ -150,132 +147,168 @@ def get_errors(n=50):
     return unique[:n]
 
 
-_CACHE_BUST = ("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+# -- FastAPI app --
+
+app = FastAPI()
 
 
-class DashboardHandler(BaseHTTPRequestHandler):
-    def log_message(self, fmt, *args):
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.get("/")
+@app.get("/index.html")
+def index():
+    page = WEB_DIR / "index.html"
+    if not page.exists():
+        raise HTTPException(404)
+    return FileResponse(str(page), headers={
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    })
+
+
+@app.get("/api/summary")
+def api_summary():
+    return get_summary()
+
+
+@app.get("/api/positions")
+def api_positions():
+    return get_positions()
+
+
+@app.get("/api/trades")
+def api_trades():
+    return get_trades()
+
+
+@app.get("/api/equity")
+def api_equity():
+    return get_equity_curve()
+
+
+@app.get("/api/activity")
+def api_activity():
+    return get_activity()
+
+
+@app.get("/api/errors")
+def api_errors():
+    return get_errors()
+
+
+@app.get("/api/plans")
+def api_plans():
+    return get_plans()
+
+
+@app.get("/api/market-prices")
+def api_market_prices():
+    return get_market_prices()
+
+
+@app.get("/api/strategy-stats")
+def api_strategy_stats():
+    return get_strategy_stats_list()
+
+
+@app.get("/api/trade-journal")
+def api_trade_journal():
+    return get_trade_journal()
+
+
+@app.get("/api/opportunities")
+def api_opportunities():
+    analysis = memory.read("analyses", "market_scan")
+    if not analysis:
+        return []
+    return analysis.get("opportunities", [])
+
+
+@app.get("/api/regime")
+def api_regime():
+    regime = memory.read("analyses", "regime_scan")
+    return regime or {}
+
+
+@app.get("/api/backtests")
+def api_backtests():
+    from core.backtester import get_backtest_results
+    return get_backtest_results()
+
+
+@app.get("/api/optimizations")
+def api_optimizations():
+    from core.optimizer import get_optimization_results
+    return get_optimization_results()
+
+
+@app.get("/api/risk")
+def api_risk():
+    risk = memory.read("decisions", "risk_assessment")
+    return risk or {}
+
+
+@app.get("/api/health")
+def api_health():
+    health_data = memory.read("reports", "health")
+    return health_data or {}
+
+
+@app.get("/api/sentiment")
+def api_sentiment():
+    sentiment = memory.read("analyses", "sentiment_scan")
+    return sentiment or {}
+
+
+@app.get("/api/pricing")
+def api_pricing():
+    pricing = memory.read("decisions", "pricing")
+    return pricing or {}
+
+
+@app.get("/api/config")
+def api_config():
+    from config import BROKER_TYPE, TRADING_INTERVAL_MINUTES, WATCHED_SYMBOLS, INITIAL_BALANCE, BINANCE_USE_TESTNET, DATA_DIR
+    return {
+        "broker": BROKER_TYPE,
+        "interval_minutes": TRADING_INTERVAL_MINUTES,
+        "watched_symbols": len(WATCHED_SYMBOLS),
+        "initial_capital": INITIAL_BALANCE,
+        "testnet": BINANCE_USE_TESTNET,
+        "data_dir": str(DATA_DIR),
+    }
+
+
+@app.exception_handler(Exception)
+def catch_all(request, exc):
+    try:
+        memory.log_error("webserver", f"{request.url.path}: {exc}", traceback.format_exc())
+    except Exception:
         pass
-
-    def _send(self, status, content_type, body):
-        self.send_response(status)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header(*_CACHE_BUST)
-        self.send_header("Pragma", "no-cache")
-        self.send_header("Expires", "0")
-        self.end_headers()
-        self.wfile.write(body)
-
-    def _json(self, data):
-        self._send(200, "application/json", json.dumps(data, default=str).encode())
-
-    def get_opportunities(self):
-        analysis = memory.read("analyses", "market_scan")
-        if not analysis:
-            return []
-        return analysis.get("opportunities", [])
-
-    def get_regime(self):
-        regime = memory.read("analyses", "regime_scan")
-        if not regime:
-            return {}
-        return regime
-
-    def get_backtests(self):
-        from core.backtester import get_backtest_results
-        return get_backtest_results()
-
-    def get_optimizations(self):
-        from core.optimizer import get_optimization_results
-        return get_optimization_results()
-
-    def get_risk(self):
-        risk = memory.read("decisions", "risk_assessment")
-        return risk or {}
-
-    def get_health(self):
-        health = memory.read("reports", "health")
-        return health or {}
-
-    def get_sentiment(self):
-        sentiment = memory.read("analyses", "sentiment_scan")
-        return sentiment or {}
-
-    def get_pricing(self):
-        pricing = memory.read("decisions", "pricing")
-        return pricing or {}
-
-    def get_config(self):
-        from config import BROKER_TYPE, TRADING_INTERVAL_MINUTES, WATCHED_SYMBOLS, INITIAL_BALANCE, BINANCE_USE_TESTNET, DATA_DIR
-        return {
-            "broker": BROKER_TYPE,
-            "interval_minutes": TRADING_INTERVAL_MINUTES,
-            "watched_symbols": len(WATCHED_SYMBOLS),
-            "initial_capital": INITIAL_BALANCE,
-            "testnet": BINANCE_USE_TESTNET,
-            "data_dir": str(DATA_DIR),
-        }
-
-    def do_GET(self):
-        try:
-            path = self.path.split("?")[0]
-            if path == "/health":
-                self._send(200, "application/json", b'{"status":"ok"}')
-            elif path in ("/", "/index.html"):
-                page = (WEB_DIR / "index.html").read_bytes()
-                self._send(200, "text/html; charset=utf-8", page)
-            elif path == "/api/summary":
-                self._json(get_summary())
-            elif path == "/api/positions":
-                self._json(get_positions())
-            elif path == "/api/trades":
-                self._json(get_trades())
-            elif path == "/api/equity":
-                self._json(get_equity_curve())
-            elif path == "/api/activity":
-                self._json(get_activity())
-            elif path == "/api/errors":
-                self._json(get_errors())
-            elif path == "/api/plans":
-                self._json(get_plans())
-            elif path == "/api/market-prices":
-                self._json(get_market_prices())
-            elif path == "/api/strategy-stats":
-                self._json(get_strategy_stats_list())
-            elif path == "/api/trade-journal":
-                self._json(get_trade_journal())
-            elif path == "/api/opportunities":
-                self._json(self.get_opportunities())
-            elif path == "/api/regime":
-                self._json(self.get_regime())
-            elif path == "/api/backtests":
-                self._json(self.get_backtests())
-            elif path == "/api/optimizations":
-                self._json(self.get_optimizations())
-            elif path == "/api/risk":
-                self._json(self.get_risk())
-            elif path == "/api/health":
-                self._json(self.get_health())
-            elif path == "/api/sentiment":
-                self._json(self.get_sentiment())
-            elif path == "/api/pricing":
-                self._json(self.get_pricing())
-            elif path == "/api/config":
-                self._json(self.get_config())
-            else:
-                self._send(404, "text/plain", b"not found")
-        except Exception as e:
-            try:
-                memory.log_error("webserver", f"{self.path}: {e}", traceback.format_exc())
-            except Exception:
-                pass
-            self._send(500, "application/json", json.dumps({"error": str(e)}).encode())
+    return JSONResponse(status_code=500, content={"error": str(exc)})
 
 
 def start_webserver():
     port = int(os.getenv("PORT", "8000"))
-    server = ThreadingHTTPServer(("0.0.0.0", port), DashboardHandler)
-    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    if port == 0:
+        return None
+    config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="warning")
+    server = uvicorn.Server(config)
+
+    ready = threading.Event()
+    orig_startup = server.startup
+
+    async def _on_startup(sockets=None):
+        await orig_startup(sockets)
+        if server.started:
+            ready.set()
+
+    server.startup = _on_startup
+    thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
-    return port
+    ready.wait(timeout=10)
+    return port if server.started else None

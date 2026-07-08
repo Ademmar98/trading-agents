@@ -19,6 +19,13 @@ data/reports/
 data/decisions/
 data/analyses/
 
+# Session notes
+SESSION.md
+
+# Coverage artifacts
+.coverage
+htmlcov/
+
 # Logs and temporary files
 *.log
 *.tmp

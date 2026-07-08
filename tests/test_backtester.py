@@ -1,3 +1,4 @@
+from unittest.mock import patch
 import pytest
 
 from core.backtester import _calc_sl_tp, _compute_metrics
@@ -55,3 +56,41 @@ def test_compute_metrics_winning_trades():
     result = _compute_metrics("TEST", trades, equity_curve, 10000.0)
     assert result["total_return"] == 3.5
     assert result["profit_factor"] is None
+
+
+def test_pos_value_buy():
+    from core.backtester import _pos_value
+    pos = {"side": "BUY", "qty": 1.0, "entry": 100}
+    assert _pos_value(pos, 110) == 110.0
+    assert _pos_value(pos, 90) == 90.0
+
+
+def test_pos_value_sell():
+    from core.backtester import _pos_value
+    pos = {"side": "SELL", "qty": 1.0, "entry": 100}
+    assert _pos_value(pos, 90) == 110.0
+    assert _pos_value(pos, 110) == 90.0
+
+
+def test_save_and_get_backtest_results():
+    from core.database import init_db, execute, fetchall
+    init_db()
+    execute("DELETE FROM backtest_results")
+
+    from core.backtester import _save_backtest, get_backtest_results
+    result = {
+        "symbol": "TEST/USD", "total_return": 5.0, "total_trades": 3,
+        "win_rate": 66.7, "profit_factor": 2.0, "max_drawdown": 3.0,
+        "sharpe_ratio": 1.5, "final_equity": 10500, "avg_win": 150.0,
+        "avg_loss": 50.0, "trades": [],
+    }
+    _save_backtest(result)
+    results = get_backtest_results()
+    assert any(r["symbol"] == "TEST/USD" for r in results)
+
+
+def test_run_all_backtests_empty_symbols():
+    from core.backtester import run_all_backtests
+    with patch("core.backtester.backtest_symbol", return_value=None):
+        results = run_all_backtests(symbols=[])
+        assert results == []

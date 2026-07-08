@@ -1,18 +1,7 @@
 import time
 
 from agents.base_agent import BaseAgent
-from config import RISK_PER_TRADE_PCT
-
-
-_REGIME_PRICING = {
-    "trending_up":   {"sl_mult": 2.5, "tp_mult": 4.0, "entry_slip": 0.003, "risk_mult": 1.10},
-    "trending_down": {"sl_mult": 2.5, "tp_mult": 4.0, "entry_slip": 0.003, "risk_mult": 1.10},
-    "trending":      {"sl_mult": 2.5, "tp_mult": 3.5, "entry_slip": 0.004, "risk_mult": 1.00},
-    "volatile":      {"sl_mult": 3.5, "tp_mult": 4.5, "entry_slip": 0.005, "risk_mult": 0.85},
-    "ranging":       {"sl_mult": 3.0, "tp_mult": 2.5, "entry_slip": 0.004, "risk_mult": 0.90},
-}
-
-_DEFAULT_PRICING = {"sl_mult": 3.0, "tp_mult": 3.5, "entry_slip": 0.003, "risk_mult": 0.90}
+from core.pricing import compute_pricing
 
 
 class PricingAgent(BaseAgent):
@@ -37,78 +26,15 @@ class PricingAgent(BaseAgent):
             if price <= 0:
                 continue
 
-            vol = data.get("volatility") or (opp.get("indicators", {}) or {}).get("volatility") or 2.0
-            vol_dec = max(vol / 100.0, 0.005)
-
-            atr_val = data.get("atr") or (opp.get("indicators", {}) or {}).get("atr") or 0
-            atr_pct = (atr_val / price * 100) if atr_val and price > 0 else vol_dec * 100
-            atr_dec = max(atr_pct / 100.0, 0.005)
-
             reg = regime_symbols.get(symbol, {})
-            regime = reg.get("regime", "unknown")
-            cfg = _REGIME_PRICING.get(regime, _DEFAULT_PRICING)
+            regime = reg.get("regime")
 
-            sl_mult = cfg["sl_mult"]
-            tp_mult = cfg["tp_mult"]
-            risk_mult = cfg["risk_mult"]
+            vol = data.get("volatility") or (opp.get("indicators", {}) or {}).get("volatility") or 2.0
+            atr_val = data.get("atr") or (opp.get("indicators", {}) or {}).get("atr") or 0
+            merged_data = {**data, "volatility": vol, "atr": atr_val}
 
-            bid = data.get("bid") or price
-            ask = data.get("ask") or price
-
-            sl_distance = max(atr_dec * sl_mult, vol_dec * sl_mult * 1.2)
-            tp_distance = max(atr_dec * tp_mult, vol_dec * tp_mult * 0.8)
-
-            sma_20 = data.get("sma_20") or 0
-            sma_50 = data.get("sma_50") or 0
-
-            if action == "BUY":
-                target = bid
-                if sma_20 > 0 and target > sma_20:
-                    pullback = max(sma_20, target * (1 - cfg["entry_slip"]))
-                    entry_price = round(pullback, 5)
-                elif sma_50 > 0 and target > sma_50:
-                    entry_price = round(max(sma_50, target * (1 - cfg["entry_slip"] * 0.7)), 5)
-                else:
-                    entry_price = round(target, 5)
-                sl_price = round(entry_price * (1 - sl_distance), 5)
-                tp_price = round(entry_price * (1 + tp_distance), 5)
-            else:
-                target = ask
-                if sma_20 > 0 and target < sma_20:
-                    pullback = min(sma_20, target * (1 + cfg["entry_slip"]))
-                    entry_price = round(pullback, 5)
-                elif sma_50 > 0 and target < sma_50:
-                    entry_price = round(min(sma_50, target * (1 + cfg["entry_slip"] * 0.7)), 5)
-                else:
-                    entry_price = round(target, 5)
-                sl_price = round(entry_price * (1 + sl_distance), 5)
-                tp_price = round(entry_price * (1 - tp_distance), 5)
-
-            sl_pct = abs(entry_price - sl_price) / entry_price * 100
-            tp_pct = abs(tp_price - entry_price) / entry_price * 100
-            base_risk = RISK_PER_TRADE_PCT
-            risk_pct = round(min(base_risk * risk_mult, base_risk * 1.5), 2)
-
-            pricing_map[symbol] = {
-                "symbol": symbol,
-                "action": action,
-                "regime": regime,
-                "entry_price": entry_price,
-                "stop_loss": sl_price,
-                "take_profit": tp_price,
-                "sl_pct": round(sl_pct, 1),
-                "tp_pct": round(tp_pct, 1),
-                "sl_mult": sl_mult,
-                "tp_mult": tp_mult,
-                "calculated_risk_pct": risk_pct,
-                "volatility_used": round(vol, 2),
-                "atr_pct": round(atr_pct, 2),
-                "risk_rationale": (
-                    f"{regime}: SL at {sl_mult}x vol ({sl_pct:.1f}%), "
-                    f"TP at {tp_mult}x vol ({tp_pct:.1f}%), "
-                    f"risk {risk_pct:.2f}%"
-                ),
-            }
+            pricing = compute_pricing(symbol, action, price, merged_data, regime, atr_val)
+            pricing_map[symbol] = pricing
 
         report = {
             "pricing_map": pricing_map,
