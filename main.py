@@ -21,7 +21,7 @@ from core.live_broker import MetaQuotesBroker
 from core.dxtrade_broker import DXTradeBroker
 from core.portfolio import load_portfolio, save_portfolio, Portfolio
 from core.memory import SharedMemory
-from core.database import init_db, fetchall
+from core.database import init_db, fetchall, set_meta
 from core.positions import PositionManager
 from core import websocket_prices
 from core.notifier import Notifier
@@ -641,6 +641,7 @@ def main():
         portfolio.cash = INITIAL_BALANCE
         save_portfolio(portfolio)
     init_cap = portfolio.initial_balance
+    set_meta("initial_balance", str(init_cap))
     console.print(f"[dim]Initial capital: ${init_cap:,.2f}[/dim]\n")
 
     if live_broker and live_broker.connected and hasattr(live_broker, "get_balances"):
