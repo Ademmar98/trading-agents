@@ -583,6 +583,10 @@ def main():
                 console.print(f"[dim]Backed up {db_file.name} → {backup.name}[/dim]")
             except Exception as e:
                 console.print(f"[dim]Backup skipped: {e}[/dim]")
+        # Force GC to release Windows SQLite file locks before deletion
+        import gc as _gc
+        _gc.collect()
+        time.sleep(0.5)
         for ext in ("", "-wal", "-shm", "-journal"):
             p = Path(str(db_file) + ext)
             try:
