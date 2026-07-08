@@ -1,4 +1,5 @@
 {
+  "$schema": "https://opencode.ai/config.json",
   "skills": {
     "agent-browser": {
       "path": ".github/.agents/skills/agent-browser",

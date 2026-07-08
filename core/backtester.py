@@ -1,12 +1,22 @@
 from statistics import stdev, mean
 
-from config import WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT
+from config import WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT, MAX_POSITION_SIZE_PCT
 from core.database import execute, fetchone, fetchall, get_unprofitable_strategies
 from core.strategies import ALL_STRATEGIES, scan_symbol
 from core.market import MarketData
 
 BACKTEST_DAYS = 90
-POSITION_SIZE_PCT = 25
+MAX_ACTIVE_POSITIONS = 3
+
+_REGIME_PRICING = {
+    "trending_up":   {"sl_mult": 2.5, "tp_mult": 4.0},
+    "trending_down": {"sl_mult": 2.5, "tp_mult": 4.0},
+    "trending":      {"sl_mult": 2.5, "tp_mult": 3.5},
+    "volatile":      {"sl_mult": 3.5, "tp_mult": 4.5},
+    "ranging":       {"sl_mult": 3.0, "tp_mult": 2.5},
+}
+
+_DEFAULT_PRICING = {"sl_mult": 3.0, "tp_mult": 3.0}
 
 
 def fetch_klines(symbol, interval="1d", limit=100):
@@ -14,22 +24,21 @@ def fetch_klines(symbol, interval="1d", limit=100):
     return fetch_ohlc(symbol, interval=interval, limit=limit)
 
 
-def _calc_sl_tp(price, side, volatility_pct, sl_mult=2.0, tp_mult=6.0):
+def _calc_sl_tp(entry_price, side, volatility_pct, atr_pct=0, sl_mult=2.5, tp_mult=3.5):
     vol_dec = (volatility_pct or 2) / 100.0
+    atr_dec = max(atr_pct / 100.0, 0.005) if atr_pct > 0 else vol_dec
+    sl_distance = max(atr_dec * sl_mult, vol_dec * sl_mult * 1.2)
+    tp_distance = max(atr_dec * tp_mult, vol_dec * tp_mult * 0.8)
     if side == "BUY":
-        sl = round(price * (1 - vol_dec * sl_mult), 5)
-        tp = round(price * (1 + vol_dec * tp_mult), 5)
+        sl = round(entry_price * (1 - sl_distance), 5)
+        tp = round(entry_price * (1 + tp_distance), 5)
     else:
-        sl = round(price * (1 + vol_dec * sl_mult), 5)
-        tp = round(price * (1 - vol_dec * tp_mult), 5)
+        sl = round(entry_price * (1 + sl_distance), 5)
+        tp = round(entry_price * (1 - tp_distance), 5)
     return sl, tp
 
 
-MAX_ACTIVE_POSITIONS = 3
-
-
 def _pos_value(pos, current_price):
-    """Calculate current value of a position."""
     if pos["side"] == "BUY":
         return pos["qty"] * current_price
     return pos["qty"] * (2 * pos["entry"] - current_price)
@@ -52,15 +61,26 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
         slice_data = ohlc[:i + 1]
         current = ohlc[i]
         high, low = current["high"], current["low"]
+        close = current["close"]
 
-        # Check all positions for SL/TP hits
         remaining = []
         for pos in positions:
             side, entry, qty, sl, tp = pos["side"], pos["entry"], pos["qty"], pos["sl"], pos["tp"]
-            hit_sl = (side == "BUY" and low <= sl) or (side == "SELL" and high >= sl)
-            hit_tp = (side == "BUY" and high >= tp) or (side == "SELL" and low <= tp)
             exit_price = None
             reason = None
+
+            # Breakeven: if price moved 1x initial SL distance in our favor, move SL to entry
+            sl_distance = abs(entry - sl)
+            if sl_distance > 0:
+                if side == "BUY" and high >= entry + sl_distance and sl < entry:
+                    sl = entry
+                    pos["sl"] = entry
+                elif side == "SELL" and low <= entry - sl_distance and sl > entry:
+                    sl = entry
+                    pos["sl"] = entry
+
+            hit_sl = (side == "BUY" and low <= sl) or (side == "SELL" and high >= sl)
+            hit_tp = (side == "BUY" and high >= tp) or (side == "SELL" and low <= tp)
             if hit_sl:
                 exit_price = sl
                 reason = "SL"
@@ -86,7 +106,6 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
                 remaining.append(pos)
         positions = remaining
 
-        # Open new position if capacity allows
         if len(positions) < MAX_ACTIVE_POSITIONS:
             signals = scan_symbol(slice_data, exclude_strategies=bad_strats)
             buy_signals = [s for s in signals if s["action"] == "BUY"]
@@ -94,25 +113,26 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
             if buy_signals or sell_signals:
                 ind = market.compute_indicators(slice_data[-30:])
                 vol = ind.get("volatility", 2)
+                atr_val = ind.get("atr", 0)
+                atr_pct = (atr_val / close * 100) if atr_val and close > 0 else 0
                 best = max(buy_signals + sell_signals, key=lambda s: s["confidence"])
                 side = best["action"]
-                qty = (cash * POSITION_SIZE_PCT / 100) / current["close"]
+                qty = (cash * MAX_POSITION_SIZE_PCT / 100) / close
                 if qty >= 0.001:
-                    sl, tp = _calc_sl_tp(current["close"], side, vol)
-                    cost = qty * current["close"]
+                    sl, tp = _calc_sl_tp(close, side, vol, atr_pct)
+                    cost = qty * close
                     entry_fee = cost * fee_ratio
                     total_cost = cost + entry_fee
                     if total_cost <= cash:
                         cash -= total_cost
                         positions.append({
-                            "side": side, "entry": current["close"], "qty": qty, "sl": sl, "tp": tp,
+                            "side": side, "entry": close, "qty": qty, "sl": sl, "tp": tp,
                             "strategy": best.get("strategies", [best.get("strategy", "unknown")])[0]
                         })
 
-        total_value = cash + sum(_pos_value(p, current["close"]) for p in positions)
+        total_value = cash + sum(_pos_value(p, close) for p in positions)
         equity_curve.append(total_value)
 
-    # Close remaining positions at last price
     for pos in positions:
         exit_price = ohlc[-1]["close"]
         if pos["side"] == "BUY":

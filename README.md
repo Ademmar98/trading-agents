@@ -103,8 +103,19 @@ python -m pytest
 
 ### Test coverage
 
-- `test_broker.py` — PaperBroker orders, fills, SL/TP, short selling, funds checking
+- `test_agents.py` — core agent tests
+- `test_agents_extended.py` — SentimentAgent, RegimeAgent, ExecutionAgent, ComplianceAgent, Auditor, strategy selector
 - `test_analytics.py` — compute_analytics, strategy breakdown, VaR, drawdown, duration stats
 - `test_backtester.py` — _calc_sl_tp, _compute_metrics, _to_binance_symbol
-- `test_agents_extended.py` — SentimentAgent, RegimeAgent, ExecutionAgent, ComplianceAgent, Auditor, strategy selector
+- `test_base_agent.py` — base agent lifecycle and error handling
+- `test_broker.py` — PaperBroker orders, fills, SL/TP, short selling, funds checking
+- `test_database.py` — SQLite init, migrations, CRUD operations
+- `test_fuzz.py` — fuzz testing across agents and parsers
+- `test_indicators.py` — technical indicator computations
+- `test_memory.py` — SharedMemory read/write, file-backed persistence
+- `test_optimizer_agent.py` — grid-search parameter optimization
 - `test_pipeline_smoke.py` — end-to-end pipeline against canned data (no network)
+- `test_portfolio.py` — portfolio load/save, equity, P&L tracking
+- `test_position_manager.py` — position open/close, SL/TP, price updates
+- `test_strategies.py` — all 25+ strategy signal generation
+- `test_webserver.py` — dashboard API endpoints and static file serving

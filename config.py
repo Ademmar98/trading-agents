@@ -49,8 +49,8 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 LEVERAGE_ENABLED = False  # spot-only, no margin
-MAX_POSITION_SIZE_PCT = float(os.getenv("MAX_POSITION_SIZE_PCT", "25"))
-MAX_PORTFOLIO_RISK_PCT = float(os.getenv("MAX_PORTFOLIO_RISK_PCT", "5"))
+MAX_POSITION_SIZE_PCT = float(os.getenv("MAX_POSITION_SIZE_PCT", "15"))
+MAX_PORTFOLIO_RISK_PCT = float(os.getenv("MAX_PORTFOLIO_RISK_PCT", "4"))
 TRADE_FEE_PCT = float(os.getenv("TRADE_FEE_PCT", "0.1"))
 MAX_CONSECUTIVE_LOSSES = int(os.getenv("MAX_CONSECUTIVE_LOSSES", "3"))
 STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "5"))
@@ -77,7 +77,7 @@ TUNABLE_PARAMS = {
     "TP_VOL_MULT":       {"default": 6.0, "min": 2.0,  "max": 12.0,"increment": 1.0},
     "RISK_PER_TRADE_PCT":{"default": 1.0, "min": 0.25, "max": 3.0, "increment": 0.25},
     "STOP_LOSS_PCT":     {"default": 5.0, "min": 1.0,  "max": 10.0,"increment": 1.0},
-    "MAX_POSITION_SIZE_PCT": {"default": 25, "min": 5,  "max": 50,  "increment": 5},
+    "MAX_POSITION_SIZE_PCT": {"default": 15, "min": 5,  "max": 40,  "increment": 5},
 }
 
 WATCHED_SYMBOLS = os.getenv(

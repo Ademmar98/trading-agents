@@ -72,6 +72,25 @@ class PositionManager:
                 WHERE id=? AND status='open'
             """, [price, round(pnl, 2), round(pnl_pct, 2), peak, pos["id"]])
 
+            # Breakeven: once price moves 1x initial SL distance in our favor,
+            # move stop_loss to entry_price to lock in a risk-free trade
+            if pos["stop_loss"] and pos["entry_price"]:
+                sl_distance = abs(pos["entry_price"] - pos["stop_loss"])
+                if pos["side"] == "BUY":
+                    if price >= pos["entry_price"] + sl_distance and pos["stop_loss"] < pos["entry_price"]:
+                        execute("""
+                            UPDATE positions SET stop_loss=?, updated_at=datetime('now')
+                            WHERE id=? AND status='open'
+                        """, [pos["entry_price"], pos["id"]])
+                        pos["stop_loss"] = pos["entry_price"]
+                else:
+                    if price <= pos["entry_price"] - sl_distance and pos["stop_loss"] > pos["entry_price"]:
+                        execute("""
+                            UPDATE positions SET stop_loss=?, updated_at=datetime('now')
+                            WHERE id=? AND status='open'
+                        """, [pos["entry_price"], pos["id"]])
+                        pos["stop_loss"] = pos["entry_price"]
+
             if pos["stop_loss"] and (
                 (pos["side"] == "BUY" and price <= pos["stop_loss"]) or
                 (pos["side"] == "SELL" and price >= pos["stop_loss"])

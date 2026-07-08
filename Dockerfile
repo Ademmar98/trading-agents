@@ -33,6 +33,6 @@ ENV PYTHONUNBUFFERED=1
 #   WATCHED_SYMBOLS           BTC/USD,ETH/USD,SOL/USD,...
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD python -c "import os, urllib.request; urllib.request.urlopen('http://localhost:' + os.environ.get('PORT', '8000') + '/health')"
+  CMD python -c "import os,sys,urllib.request; p=os.environ.get('PORT','8000').strip(); sys.exit(0) if p=='0' else urllib.request.urlopen('http://localhost:'+p+'/health')"
 
 CMD ["python", "prod_run.py"]

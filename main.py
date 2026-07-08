@@ -34,7 +34,7 @@ from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
 from agents.sentiment_agent import SentimentAgent
 from agents.regime_agent import RegimeAgent
-from agents.pricing_agent import PricingAgent
+
 from agents.risk_manager import RiskManager
 from agents.position_sizer import PositionSizer
 from agents.portfolio_manager import PortfolioManagerAgent
@@ -203,7 +203,6 @@ CYCLE_AGENTS = (
     HealthMonitor,
     SentimentAgent,
     RegimeAgent,
-    PricingAgent,
     RiskManager,
     PositionSizer,
     PortfolioManagerAgent,
@@ -577,10 +576,12 @@ def main():
         # Backup existing database before deletion
         if db_file.exists():
             from shutil import copy2
-            backup = DATA_DIR / f"trading.db.backup-{datetime.now():%Y%m%d_%H%M%S}"
+            backup_dir = DATA_DIR.parent / "data_backups"
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            backup = backup_dir / f"trading.db.backup-{datetime.now():%Y%m%d_%H%M%S}"
             try:
                 copy2(db_file, backup)
-                console.print(f"[dim]Backed up {db_file.name} → {backup.name}[/dim]")
+                console.print(f"[dim]Backed up {db_file.name} → {backup}[/dim]")
             except Exception as e:
                 console.print(f"[dim]Backup skipped: {e}[/dim]")
         # Force GC to release Windows SQLite file locks before deletion
