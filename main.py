@@ -542,6 +542,13 @@ def main():
     if RESET:
         import shutil
         console.print("[bold yellow]--reset: wiping all data...[/bold yellow]")
+        # Force-close any lingering SQLite connections
+        try:
+            from core.database import get_connection
+            with get_connection() as conn:
+                conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        except Exception:
+            pass
         db_file = DATA_DIR / "trading.db"
         for ext in ("", "-wal", "-shm", "-journal"):
             p = Path(str(db_file) + ext)
@@ -558,7 +565,14 @@ def main():
             console.print(f"[bold red]Failed to remove {DATA_DIR}: {e}[/bold red]")
             console.print("[yellow]Close any other programs using this directory and retry.[/yellow]")
             sys.exit(1)
-        console.print("[bold green]Data reset complete. Starting fresh.[/bold green]")
+        # Recreate subdirectories so subsequent SharedMemory writes don't crash
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        for sub in ("analyses", "decisions", "orders", "reports", "logs"):
+            (DATA_DIR / sub).mkdir(parents=True, exist_ok=True)
+        # Force $10 000 fresh portfolio regardless of env var overrides
+        from core.portfolio import Portfolio as _P, save_portfolio as _sp
+        _sp(_P(cash=10000.0, initial_balance=10000.0))
+        console.print("[bold green]Data reset complete. Fresh $10 000 capital initialized.[/bold green]")
 
     console.clear()
     console.print("[bold cyan]Trading Agent Firm[/bold cyan]")
@@ -640,7 +654,10 @@ def main():
         console.print(f"[yellow]Restored {existing['count']} open position(s)[/yellow]")
 
     if notifier._enabled:
-        notifier.send("[Trading Agent Firm started]")
+        if RESET:
+            notifier.send("[Trading Agent Firm - Fresh Test Initialized with $10,000 USD Capital]")
+        else:
+            notifier.send("[Trading Agent Firm started]")
 
     console.print("[dim]Running backtests on key symbols...[/dim]")
     try:
