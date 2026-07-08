@@ -662,8 +662,11 @@ def strategies_for_regime(regime):
     return [(n, fn) for n, fn in ALL_STRATEGIES if n in name_set]
 
 
-def scan_symbol(ohlc, regime=None):
+def scan_symbol(ohlc, regime=None, exclude_strategies=None):
     strategies = strategies_for_regime(regime) if regime else ALL_STRATEGIES
+    if exclude_strategies:
+        exclude = set(exclude_strategies)
+        strategies = [(n, fn) for n, fn in strategies if n not in exclude]
     signals = []
     for name, fn in strategies:
         try:

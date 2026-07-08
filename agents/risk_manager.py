@@ -51,10 +51,8 @@ class RiskManager(BaseAgent):
                 adjusted["risk_ok"] = False
                 risks.append(f"SKIPPED {sym}: would exceed max exposure")
             else:
-                max_cost = min(
-                    max_trade_size,
-                    portfolio.cash * ((MAX_POSITION_SIZE_PCT - current_exposure) / 100)
-                )
+                remaining_capacity = portfolio.equity * max(0, (MAX_POSITION_SIZE_PCT - current_exposure) / 100)
+                max_cost = min(max_trade_size, remaining_capacity)
                 adjusted["max_qty"] = round(max_cost / opp["price"], 6) if opp["price"] > 0 else 0
                 adjusted["risk_ok"] = True
             filtered.append(adjusted)

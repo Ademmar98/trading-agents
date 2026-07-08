@@ -259,6 +259,11 @@ def get_strategy_stats_list():
     return [dict(r) for r in rows]
 
 
+def get_unprofitable_strategies(min_trades=3, max_win_rate=40):
+    rows = fetchall("SELECT strategy FROM strategy_stats WHERE trades >= ? AND win_rate <= ?", [min_trades, max_win_rate])
+    return [r["strategy"] for r in rows]
+
+
 def get_plans(limit=50):
     rows = fetchall(
         "SELECT * FROM trade_plans ORDER BY timestamp DESC LIMIT ?", [limit]

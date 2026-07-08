@@ -6,6 +6,7 @@ from agents.base_agent import BaseAgent
 from core.market import MarketData
 from core.strategies import scan_symbol
 from core.multiframe import analyze_symbol_multiframe
+from core.database import get_unprofitable_strategies
 
 
 def _scrape_news_headlines(symbol: str) -> list:
@@ -61,7 +62,8 @@ class ResearchAnalyst(BaseAgent):
             news = _scrape_news_headlines(symbol)
 
             regime = symbol_regimes.get(symbol, {}).get("regime") if symbol_regimes else None
-            signals = scan_symbol(ohlc, regime=regime) if ohlc and len(ohlc) >= 30 else []
+            bad_strats = get_unprofitable_strategies()
+            signals = scan_symbol(ohlc, regime=regime, exclude_strategies=bad_strats) if ohlc and len(ohlc) >= 30 else []
             if news:
                 for sig in signals:
                     sig["reasons"].append(f"news:{len(news)} headlines")
