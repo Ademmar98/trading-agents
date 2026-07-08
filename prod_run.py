@@ -20,6 +20,13 @@ if _env_file.exists():
             _key, _, _value = _line.partition("=")
             os.environ.setdefault(_key.strip(), _value.strip())
 
+# ── RESET_ON_START: wipe everything and begin fresh ($10k) ──
+if os.getenv("RESET_ON_START", "").lower() in ("true", "1", "yes"):
+    sys.argv.append("--reset")
+    # Also force TRADING_CAPITAL so config.py's INITIAL_BALANCE defaults to 10k
+    os.environ["TRADING_CAPITAL"] = "10000"
+    print("  RESET_ON_START=true — will purge data and start fresh with $10,000", flush=True)
+
 # ── Diagnostics banner ──
 print("=" * 60, flush=True)
 print(f"  prod_run.py  |  host={platform.node()}  os={platform.system()}  py={platform.python_version()}", flush=True)

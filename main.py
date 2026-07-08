@@ -69,7 +69,9 @@ if HEADLESS:
     console = _Console()
 else:
     console = Console()
-memory = SharedMemory()
+
+# Lazy — initialized inside main() so --reset can run before any dirs are created
+memory = None
 
 
 def _thread_excepthook(args):
@@ -536,7 +538,9 @@ def make_layout(portfolio) -> Layout:
 
 
 def main():
-    global live_broker
+    global live_broker, memory
+    if memory is None:
+        memory = SharedMemory()
 
     # --reset MUST run first, before any module-level init touches DATA_DIR
     if RESET:
@@ -646,6 +650,7 @@ def main():
                           f"{len(recon['positions'])} tracked positions drift from exchange[/dim]")
 
     snapshot_equity()
+    sync_position_stores()
 
     for pos in pos_mgr.get_open_positions():
         memory.log("system", f"Restored position: {pos['side']} {pos['quantity']} {pos['symbol']} @ ${pos['entry_price']:.5f}")

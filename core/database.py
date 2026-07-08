@@ -1,4 +1,5 @@
-﻿import sqlite3
+import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 
 import config
@@ -8,11 +9,20 @@ def _db_path():
     return Path(config.DATA_DIR) / "trading.db"
 
 
+@contextmanager
 def get_connection():
+    """Context manager that creates, yields, and reliably closes a SQLite connection."""
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(_db_path())
+    conn = sqlite3.connect(str(_db_path()))
     conn.row_factory = sqlite3.Row
-    return conn
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 
 def execute(sql, params=None):
