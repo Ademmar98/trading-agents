@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "trading-dashboard",
+      "runtimeExecutable": "C:\\dev\\projects\\trading-agents\\.venv\\Scripts\\python.exe",
+      "runtimeArgs": ["C:\\dev\\projects\\trading-agents\\main.py", "--headless"],
+      "port": 8000
+    }
+  ]
+}

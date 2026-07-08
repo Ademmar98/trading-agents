@@ -586,6 +586,86 @@ def detect_mfi(ohlc, period=14):
     return None
 
 
+def _adx_single(ohlc, period=14):
+    """Return ADX value for the full series using Wilder's method."""
+    if len(ohlc) < period + 1:
+        return None
+    trs, plus_dm, minus_dm = [], [], []
+    for i in range(1, len(ohlc)):
+        tr = _true_range(ohlc[i])
+        trs.append(tr)
+        up_move = ohlc[i]["high"] - ohlc[i - 1]["high"]
+        down_move = ohlc[i - 1]["low"] - ohlc[i]["low"]
+        if up_move > down_move and up_move > 0:
+            plus_dm.append(up_move)
+        else:
+            plus_dm.append(0)
+        if down_move > up_move and down_move > 0:
+            minus_dm.append(down_move)
+        else:
+            minus_dm.append(0)
+    wilder = lambda vals: sum(vals[:period]) / period
+    atr = wilder(trs)
+    di_p = wilder(plus_dm) / atr * 100 if atr > 0 else 0
+    di_n = wilder(minus_dm) / atr * 100 if atr > 0 else 0
+    dx = abs(di_p - di_n) / (di_p + di_n) * 100 if (di_p + di_n) > 0 else 0
+    return dx
+
+
+def detect_adx(ohlc, period=14):
+    if len(ohlc) < period * 3:
+        return None
+    dx_vals = []
+    for i in range(period * 2, len(ohlc)):
+        dx = _adx_single(ohlc[:i + 1], period)
+        if dx is not None:
+            dx_vals.append(dx)
+    if len(dx_vals) < period:
+        return None
+    adx = sum(dx_vals[-period:]) / period
+    closes = [c["close"] for c in ohlc[-period:]]
+    trend_up = closes[-1] > closes[0] if len(closes) > 1 else False
+    if adx >= 25:
+        direction = "BUY" if trend_up else "SELL"
+        return {"action": direction, "confidence": 0.55, "reasons": [f"ADX strong trend ({adx:.0f})"]}
+    return None
+
+
+def detect_pivot_reversal(ohlc, window=5):
+    if len(ohlc) < window * 4:
+        return None
+    highs = _swing_highs(ohlc, window)
+    lows = _swing_lows(ohlc, window)
+    recent_highs = [h for h in highs if h[0] >= len(ohlc) - window * 2]
+    recent_lows = [l for l in lows if l[0] >= len(ohlc) - window * 2]
+    current = ohlc[-1]["close"]
+    if recent_highs:
+        pivot_high = max(recent_highs, key=lambda x: x[1])
+        if current < pivot_high[1] * 0.995:
+            return {"action": "SELL", "confidence": 0.55, "reasons": ["Pivot high rejection"]}
+    if recent_lows:
+        pivot_low = min(recent_lows, key=lambda x: x[1])
+        if current > pivot_low[1] * 1.005:
+            return {"action": "BUY", "confidence": 0.55, "reasons": ["Pivot low bounce"]}
+    return None
+
+
+def detect_volume_price_trend(ohlc):
+    if len(ohlc) < 30:
+        return None
+    vpt = [0.0]
+    for i in range(1, len(ohlc)):
+        change = (ohlc[i]["close"] - ohlc[i - 1]["close"]) / max(ohlc[i - 1]["close"], 1e-10)
+        vpt.append(vpt[-1] + change * ohlc[i]["volume"])
+    vpt_sma = sum(vpt[-14:]) / 14 if len(vpt) >= 14 else sum(vpt) / len(vpt)
+    cur = vpt[-1]
+    if cur > vpt_sma * 1.02:
+        return {"action": "BUY", "confidence": 0.5, "reasons": ["VPT bullish divergence"]}
+    if cur < vpt_sma * 0.98:
+        return {"action": "SELL", "confidence": 0.5, "reasons": ["VPT bearish divergence"]}
+    return None
+
+
 ALL_STRATEGIES = [
     ("ICT - FVG", detect_fvg),
     ("ICT - Order Block", detect_order_block),
@@ -612,6 +692,9 @@ ALL_STRATEGIES = [
     ("Classic - Donchian Channel", detect_donchian),
     ("PA - Heikin-Ashi", detect_heikin_ashi),
     ("Classic - MFI", detect_mfi),
+    ("Classic - ADX", detect_adx),
+    ("PA - Pivot Reversal", detect_pivot_reversal),
+    ("Classic - VPT", detect_volume_price_trend),
 ]
 
 REGIME_STRATEGIES = {
@@ -621,6 +704,7 @@ REGIME_STRATEGIES = {
         "Classic - MACD", "Classic - Ichimoku",
         "Classic - Donchian Channel", "PA - Heikin-Ashi",
         "ICT - Liquidity Sweep", "Classic - ATR Breakout",
+        "Classic - ADX",
     ],
     "trending_down": [
         "ICT - BOS/CHoCH", "ICT - Market Structure", "ICT - Order Block",
@@ -628,13 +712,15 @@ REGIME_STRATEGIES = {
         "Classic - MACD", "Classic - Ichimoku",
         "Classic - Donchian Channel", "PA - Heikin-Ashi",
         "ICT - Liquidity Sweep", "Classic - ATR Breakout",
+        "Classic - ADX",
     ],
     "trending": [
         "ICT - BOS/CHoCH", "ICT - Market Structure", "ICT - Order Block",
         "Classic - SMA Crossover", "Classic - EMA Cross 9/21",
         "Classic - MACD", "Classic - Ichimoku",
         "Classic - Donchian Channel", "PA - Heikin-Ashi",
-        "ICT - Liquidity Sweep",
+        "ICT - Liquidity Sweep", "Classic - ADX",
+        "Classic - VPT",
     ],
     "ranging": [
         "ICT - OTE", "ICT - FVG", "ICT - Order Block",
@@ -643,13 +729,15 @@ REGIME_STRATEGIES = {
         "PA - Inside Bar", "PA - Engulfing", "PA - Pin Bar",
         "PA - Double Top/Bot", "PA - S/R Levels",
         "Classic - VWAP", "Classic - MFI",
+        "PA - Pivot Reversal", "Classic - VPT",
     ],
     "volatile": [
         "ICT - FVG", "ICT - Liquidity Sweep",
         "Classic - ATR Breakout", "PA - Volume Breakout",
         "Classic - VWAP", "Classic - Bollinger",
         "PA - Double Top/Bot", "PA - Engulfing", "PA - Pin Bar",
-        "ICT - Order Block",
+        "ICT - Order Block", "PA - Pivot Reversal",
+        "Classic - VPT",
     ],
 }
 

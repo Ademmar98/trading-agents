@@ -309,7 +309,18 @@
   </section>
 
   <section>
-    <h2>Trade Plans <span class="idx">11</span></h2>
+    <h2>Parameter Optimization <span class="idx">11</span></h2>
+    <div class="table-scroll">
+      <table aria-label="Parameter optimization results">
+        <thead><tr><th>Symbol</th><th class="r">SL Mult</th><th class="r">TP Mult</th><th class="r">Pos Size %</th><th class="r">Conf Thresh</th><th class="r">Return</th><th class="r">Trades</th><th class="r">Win%</th><th class="r">PF</th><th class="r">Sharpe</th><th class="r">Score</th></tr></thead>
+        <tbody id="optim-body"></tbody>
+      </table>
+      <div class="empty" id="optim-empty" hidden>NO OPTIMIZATION DATA YET</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Trade Plans <span class="idx">12</span></h2>
     <div class="table-scroll">
       <table aria-label="Trade plans">
         <thead><tr><th>Time</th><th>Symbol</th><th>Dir</th><th class="r">Entry</th><th class="r">SL</th><th class="r">TP</th><th class="r">Size</th><th class="r">Conf</th><th class="r">RR</th><th>Status</th><th>Rationale</th></tr></thead>
@@ -320,7 +331,7 @@
   </section>
 
   <section>
-    <h2>Regime &amp; Market <span class="idx">12</span> <span class="idx" id="regime-summary"></span></h2>
+    <h2>Regime &amp; Market <span class="idx">13</span> <span class="idx" id="regime-summary"></span></h2>
     <div class="table-scroll">
       <table aria-label="Market regime per symbol">
         <thead><tr><th>Symbol</th><th>Regime</th><th class="r">Confidence</th><th class="r">Size</th><th>Favored</th><th>Notes</th></tr></thead>
@@ -616,6 +627,27 @@ function renderHealth(health) {
   dot.className = "status-dot " + (health.status === "halted" ? "halted" : health.status === "ok" ? "" : "warning");
 }
 
+function renderOptimizations(rows) {
+  document.getElementById("optim-empty").hidden = rows.length > 0;
+  document.getElementById("optim-body").innerHTML = rows.map((r) => {
+    const retCls = r.total_return >= 0 ? "up" : "down-c";
+    const wrCls = r.win_rate >= 50 ? "up" : "down-c";
+    return `<tr>
+      <td style="font-weight:600">${esc(r.symbol)}</td>
+      <td class="r num">${r.sl_mult != null ? r.sl_mult.toFixed(1) : "—"}</td>
+      <td class="r num">${r.tp_mult != null ? r.tp_mult.toFixed(1) : "—"}</td>
+      <td class="r num">${r.position_size_pct != null ? r.position_size_pct + "%" : "—"}</td>
+      <td class="r num">${r.confidence_threshold != null ? r.confidence_threshold.toFixed(2) : "—"}</td>
+      <td class="r num ${retCls}">${r.total_return != null ? (r.total_return >= 0 ? "+" : "") + r.total_return + "%" : "—"}</td>
+      <td class="r num">${r.total_trades != null ? r.total_trades : "—"}</td>
+      <td class="r num ${wrCls}">${r.win_rate != null ? r.win_rate + "%" : "—"}</td>
+      <td class="r num">${r.profit_factor != null ? r.profit_factor.toFixed(2) : "—"}</td>
+      <td class="r num">${r.sharpe_ratio != null ? r.sharpe_ratio.toFixed(2) : "—"}</td>
+      <td class="r num">${r.score != null ? r.score.toFixed(1) : "—"}</td>
+    </tr>`;
+  }).join("");
+}
+
 function renderPlans(plans) {
   const el = document.getElementById("plans-body");
   const empty = document.getElementById("plans-empty");
@@ -666,7 +698,7 @@ function renderRegime(regime) {
 let prevEquity = null;
 async function refresh() {
   try {
-    const [summary, positions, trades, equity, activity, errors, opportunities, risk, health, regime, plans, marketPrices, tradeJournal, stratStats] = await Promise.all([
+    const [summary, positions, trades, equity, activity, errors, opportunities, risk, health, regime, plans, marketPrices, tradeJournal, stratStats, optimizations] = await Promise.all([
       fetch("/api/summary").then((r) => r.json()),
       fetch("/api/positions").then((r) => r.json()),
       fetch("/api/trades").then((r) => r.json()),
@@ -681,6 +713,7 @@ async function refresh() {
       fetch("/api/market-prices").then((r) => r.json()),
       fetch("/api/trade-journal").then((r) => r.json()),
       fetch("/api/strategy-stats").then((r) => r.json()),
+      fetch("/api/optimizations").then((r) => r.json()),
     ]);
     renderSummary(summary);
     renderMarketPrices(marketPrices);
@@ -696,6 +729,7 @@ async function refresh() {
     renderHealth(health);
     renderRegime(regime);
     renderPlans(plans);
+    renderOptimizations(optimizations || []);
     document.getElementById("conn").textContent = "LIVE";
     const healthOk = !health || !health.status || health.status === "ok";
     document.getElementById("dot").className = "status-dot" + (healthOk ? "" : health.status === "halted" ? " halted" : " warning");

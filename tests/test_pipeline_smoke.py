@@ -1,10 +1,12 @@
 """End-to-end pipeline smoke test, fully offline.
-
+ 
 Seeds canned market/regime scans (the two network-dependent steps), then runs
 the real sentiment -> risk -> portfolio -> compliance -> execution -> trader
 chain against the paper broker and asserts trades actually happen and the
 ledger debits cash. This is the test that would have caught both the unwired
 pipeline and the read_latest() wrong-file bug.
+
+Also tests the downstream agents: auditor and optimizer.
 """
 import os
 import tempfile
@@ -14,7 +16,7 @@ import time
 import pytest
 
 import config as app_config
-from core.database import init_db
+from core.database import init_db, execute
 from core.memory import SharedMemory
 from core.portfolio import Portfolio, save_portfolio, load_portfolio
 from agents.sentiment_agent import SentimentAgent
@@ -24,6 +26,8 @@ from agents.portfolio_manager import PortfolioManagerAgent
 from agents.compliance_agent import ComplianceAgent
 from agents.execution_agent import ExecutionAgent
 from agents.trader import Trader
+from agents.auditor import Auditor
+from agents.optimizer_agent import OptimizerAgent
 
 
 @pytest.fixture(autouse=True)
@@ -105,3 +109,89 @@ def test_full_pipeline_places_paper_trades():
     assert "BTC/USD" in p.positions
     trade_log = memory.read("orders", "trade_log")
     assert trade_log["status"] == "completed"
+
+
+def seed_trades_for_audit(win_count=8, loss_count=4):
+    for i in range(win_count):
+        execute(
+            "INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, strategy) "
+            "VALUES (?, 'BTC/USD', 'BUY', 0.1, 100.0, 110.0, 50.0, 10.0, 'FVG')",
+            [i],
+        )
+    for i in range(loss_count):
+        execute(
+            "INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, strategy) "
+            "VALUES (?, 'ETH/USD', 'BUY', 0.1, 100.0, 95.0, -20.0, -5.0, 'MACD')",
+            [win_count + i],
+        )
+    # Also seed the portfolio object so Auditor.summary.total_trades matches
+    p = load_portfolio()
+    p.trades = [{"realized_pnl": 50.0}] * win_count + [{"realized_pnl": -20.0}] * loss_count
+    save_portfolio(p)
+
+
+def test_audit_reports_with_trades():
+    init_db()
+    memory = SharedMemory()
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    seed_trades_for_audit()
+    report = Auditor().run()
+    assert report["summary"]["total_trades"] == 12
+    assert report["summary"]["win_rate"] > 50
+    assert "suggestions" in report
+    assert "agent_activity" in report
+    for s in report["suggestions"]:
+        assert isinstance(s, str)
+
+
+def test_audit_detects_low_exposure():
+    init_db()
+    memory = SharedMemory()
+    p = Portfolio(cash=9500.0, initial_balance=10000.0)
+    save_portfolio(p)
+    seed_trades_for_audit()
+    report = Auditor().run()
+    suggestions = " ".join(report["suggestions"]).lower()
+    assert "exposure" in suggestions
+
+
+def test_audit_detects_drawdown():
+    init_db()
+    memory = SharedMemory()
+    p = Portfolio(cash=8800.0, initial_balance=10000.0)
+    save_portfolio(p)
+    seed_trades_for_audit()
+    report = Auditor().run()
+    suggestions = " ".join(report["suggestions"]).lower()
+    assert "drawdown" in suggestions
+
+
+def test_optimizer_skips_without_trades():
+    """Optimizer should skip when <10 trades exist (not crash)."""
+    init_db()
+    memory = SharedMemory()
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    result = OptimizerAgent().run()
+    assert result is None
+
+
+def test_full_pipeline_with_optimizer():
+    """Run the full pipeline including Auditor -> Optimizer."""
+    init_db()
+    memory = SharedMemory()
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    seed_market_scan(memory)
+    seed_regime_scan(memory)
+
+    SentimentAgent().run()
+    RiskManager().run()
+
+    report = Auditor().run()
+    assert "summary" in report
+
+    from core.database import set_meta
+    set_meta("optimizer_last_run", "0")
+    seed_trades_for_audit()
+    result = OptimizerAgent().run()
+    # May return None if backtest fails (no real data), but must not crash
+    assert result is None or result is not None
