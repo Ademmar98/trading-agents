@@ -9,10 +9,15 @@ memory = SharedMemory()
 
 # Init portfolio from MT5
 b = MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
-info = b.get_account_info()
-p = Portfolio(cash=info['balance'], initial_balance=info['balance'])
-save_portfolio(p)
-print(f"Portfolio: ${p.cash} cash, ${p.initial_balance} init")
+if not b.connected:
+    print("WARN: MT5 not connected — portfolio will be zero")
+    p = Portfolio()
+    save_portfolio(p)
+else:
+    info = b.get_account_info()
+    p = Portfolio(cash=info['balance'], initial_balance=info['balance'])
+    save_portfolio(p)
+    print(f"Portfolio: ${p.cash} cash, ${p.initial_balance} init")
 
 # Run all agents
 from agents.orchestrator import Orchestrator
@@ -53,5 +58,6 @@ audit = memory.read_latest("reports")
 if audit:
     print(f"  {audit.get('summary', 'none')}")
 
-b.shutdown()
+if b.connected:
+    b.shutdown()
 print("DONE")

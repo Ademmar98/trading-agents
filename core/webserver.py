@@ -182,7 +182,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         try:
-            if self.path in ("/", "/index.html"):
+            if self.path == "/health":
+                self._send(200, "application/json", b'{"status":"ok"}')
+            elif self.path in ("/", "/index.html"):
                 page = (WEB_DIR / "index.html").read_bytes()
                 self._send(200, "text/html; charset=utf-8", page)
             elif self.path == "/api/summary":

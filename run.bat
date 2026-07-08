@@ -5,5 +5,5 @@ if not exist .venv\Scripts\python.exe (
     python -m venv .venv
     .venv\Scripts\pip.exe install -r requirements.txt
 )
-.venv\Scripts\python.exe main.py
+.venv\Scripts\python.exe main.py %*
 pause

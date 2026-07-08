@@ -1,7 +1,6 @@
 import json
 import time
 import os
-from pathlib import Path
 from datetime import datetime, timezone
 
 from config import DATA_DIR, STOP_LOSS_PCT
