@@ -28,7 +28,8 @@ ALPACA_PAPER = os.getenv("ALPACA_PAPER", "true").lower() == "true"
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 
-MT5_LOGIN = int(os.getenv("MT5_LOGIN", "0"))
+_mt5_login_raw = os.getenv("MT5_LOGIN", "0")
+MT5_LOGIN = int(_mt5_login_raw) if _mt5_login_raw and _mt5_login_raw.strip() else 0
 MT5_PASSWORD = os.getenv("MT5_PASSWORD", "")
 MT5_SERVER = os.getenv("MT5_SERVER", "MetaQuotes-Demo")
 
@@ -37,7 +38,7 @@ DXTRADE_USERNAME = os.getenv("DXTRADE_USERNAME", "")
 DXTRADE_PASSWORD = os.getenv("DXTRADE_PASSWORD", "")
 DXTRADE_DOMAIN = os.getenv("DXTRADE_DOMAIN", "default")
 
-BROKER_TYPE = os.getenv("BROKER_TYPE", "binance")  # paper, binance, mt5, alpaca, dxtrade
+BROKER_TYPE = os.getenv("BROKER_TYPE", "paper")  # paper, binance, mt5, alpaca, dxtrade
 
 BINANCE_API_KEY = os.getenv("BINANCE_API_KEY", "")
 BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET", "")

@@ -25,7 +25,7 @@ from rich import box
 from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
-from core.mt5_broker import MetaQuotesBroker
+from core.live_broker import MetaQuotesBroker
 from core.dxtrade_broker import DXTradeBroker
 from core.portfolio import load_portfolio, save_portfolio, Portfolio
 from core.memory import SharedMemory
@@ -64,7 +64,7 @@ def _thread_excepthook(args):
 
 
 threading.excepthook = _thread_excepthook
-mt5_broker = None
+live_broker = None
 pos_mgr = PositionManager()
 notifier = Notifier(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
 
@@ -101,24 +101,34 @@ _BROKER_RETRY = {}
 
 
 def make_broker_with_retry():
-    """Return broker. Retry connection on failure with exponential backoff."""
+    """Return broker. Fall back to PaperBroker when the live broker is disconnected."""
     global _BROKER_RETRY
     now = time.time()
     last_attempt = _BROKER_RETRY.get("last", 0)
     attempt = _BROKER_RETRY.get("count", 0)
     backoff = min(60, 2 ** attempt)
     if now - last_attempt < backoff and BROKER_TYPE != "paper":
-        return _BROKER_RETRY.get("cached")
+        cached = _BROKER_RETRY.get("cached")
+        if cached and hasattr(cached, "connected") and not cached.connected:
+            return _paper_fallback_broker()
+        return cached or PaperBroker()
     b = make_broker()
     _BROKER_RETRY["last"] = now
     if BROKER_TYPE != "paper" and hasattr(b, "connected") and not b.connected:
         _BROKER_RETRY["count"] = attempt + 1
         _BROKER_RETRY["cached"] = b
-        memory.log("system", f"Broker {BROKER_TYPE} disconnected, retry in {backoff}s (attempt {attempt+1})")
-    else:
-        _BROKER_RETRY["count"] = 0
-        _BROKER_RETRY["cached"] = b
+        memory.log("system", f"Broker {BROKER_TYPE} disconnected, using paper fallback (retry attempt {attempt+1} in {backoff}s)")
+        return _paper_fallback_broker()
+    _BROKER_RETRY["count"] = 0
+    _BROKER_RETRY["cached"] = b
     return b
+
+
+def _paper_fallback_broker():
+    """Return a PaperBroker instance for fallback when live broker is down."""
+    pb = PaperBroker()
+    pb.connected = True
+    return pb
 
 
 def _rebalance_positions():
@@ -234,38 +244,21 @@ def make_positions_panel() -> Panel:
     return Panel(table, title=f"[bold cyan]Positions ({summary['count']})[/bold cyan]", box=box.ROUNDED)
 
 
-def make_portfolio_table(portfolio: Portfolio) -> Table:
-    table = Table(box=box.ROUNDED, title="Positions", title_style="bold cyan")
-    table.add_column("Symbol", style="yellow")
-    table.add_column("Qty", justify="right")
-    table.add_column("Entry", justify="right")
-    table.add_column("Price", justify="right")
-    table.add_column("P&L", justify="right")
-    table.add_column("P&L%", justify="right")
-
-    for sym, pos in sorted(portfolio.positions.items()):
-        color = "green" if pos.pnl >= 0 else "red"
-        table.add_row(
-            sym,
-            f"{pos.quantity:.4f}",
-            f"${pos.entry_price:.5f}",
-            f"${pos.current_price:.5f}",
-            f"[{color}]${pos.pnl:.2f}[/{color}]",
-            f"[{color}]{pos.pnl_pct:+.2f}%[/{color}]",
-        )
-    return table
-
-
 def make_status_panel(portfolio: Portfolio) -> Panel:
     live_balance = None
-    if BROKER_TYPE == "mt5" and mt5_broker and mt5_broker.connected:
+    if BROKER_TYPE == "mt5" and live_broker and live_broker.connected:
         try:
-            live_balance = mt5_broker.get_account_info()
+            live_balance = live_broker.get_account_info()
         except Exception:
             pass
-    elif BROKER_TYPE == "binance" and mt5_broker and mt5_broker.connected:
+    elif BROKER_TYPE == "binance" and live_broker and live_broker.connected:
         try:
-            live_balance = mt5_broker.get_account_info()
+            live_balance = live_broker.get_account_info()
+        except Exception:
+            pass
+    elif BROKER_TYPE == "dxtrade" and live_broker and live_broker.connected:
+        try:
+            live_balance = live_broker.get_account_info()
         except Exception:
             pass
 
@@ -492,22 +485,14 @@ def make_layout(portfolio) -> Layout:
         "Spot-only (no leverage)  |  "
         f"Broker: {BROKER_TYPE.upper()}  |  "
         f"Open: {pos_mgr.get_positions_summary()['count']}  |  "
-        "Agents: Orchestrator -> Analyst -> Risk Manager -> Trader -> Auditor[/dim]",
+        "Agents: Orchestrator → Analyst → Sentiment → Regime → Risk → PositionSizer → PortfolioMgr → Compliance → Execution → Trader → Auditor[/dim]",
         box=box.SIMPLE,
     ))
     return layout
 
 
 def main():
-    global mt5_broker
-
-    if RESET:
-        import shutil
-        console.print("[bold yellow]--reset: wiping data directory...[/bold yellow]")
-        if DATA_DIR.exists():
-            shutil.rmtree(DATA_DIR)
-            console.print(f"[dim]Removed {DATA_DIR}[/dim]")
-        console.print("[bold green]Data reset complete. Starting fresh.[/bold green]")
+    global live_broker
 
     console.clear()
     console.print("[bold cyan]Trading Agent Firm[/bold cyan]")
@@ -518,6 +503,14 @@ def main():
         memory.log("system", "Startup aborted: another instance is already running")
         sys.exit(1)
 
+    if RESET:
+        import shutil
+        console.print("[bold yellow]--reset: wiping data directory...[/bold yellow]")
+        if DATA_DIR.exists():
+            shutil.rmtree(DATA_DIR)
+            console.print(f"[dim]Removed {DATA_DIR}[/dim]")
+        console.print("[bold green]Data reset complete. Starting fresh.[/bold green]")
+
     init_db()
     console.print("[dim]Database initialized[/dim]")
 
@@ -525,13 +518,14 @@ def main():
     websocket_prices.start(testnet=ws_testnet)
     console.print("[dim]WebSocket price feed started[/dim]")
 
-    web_port = start_webserver()
-    console.print(f"[dim]Dashboard running on port {web_port}[/dim]")
+    if not HEADLESS:
+        web_port = start_webserver()
+        console.print(f"[dim]Dashboard running on port {web_port}[/dim]")
 
     if BROKER_TYPE == "mt5":
-        mt5_broker = MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
-        if mt5_broker.connected:
-            info = mt5_broker.get_account_info()
+        live_broker = MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
+        if live_broker.connected:
+            info = live_broker.get_account_info()
             memory.log("system", f"MT5 connected: {info['name']}, ${info['balance']} {info['currency']}")
             portfolio = load_portfolio()
             if portfolio.initial_balance == 0:
@@ -541,15 +535,15 @@ def main():
         else:
             memory.log("system", "MT5 not connected — using paper fallback")
     elif BROKER_TYPE == "binance":
-        mt5_broker = BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
-        if mt5_broker.connected:
+        live_broker = BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
+        if live_broker.connected:
             memory.log("system", "Binance testnet connected")
         else:
             memory.log("system", "Binance not connected — using paper fallback")
     elif BROKER_TYPE == "dxtrade":
-        mt5_broker = DXTradeBroker(DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN)
-        if mt5_broker.connected:
-            info = mt5_broker.get_account_info()
+        live_broker = DXTradeBroker(DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN)
+        if live_broker.connected:
+            info = live_broker.get_account_info()
             memory.log("system", f"DXtrade connected: account {info.get('account') or info.get('accountId', '?')}, balance ${info.get('balance', 0)}")
             portfolio = load_portfolio()
             if portfolio.initial_balance == 0:
@@ -566,8 +560,8 @@ def main():
     init_cap = portfolio.initial_balance
     console.print(f"[dim]Initial capital: ${init_cap:,.2f}[/dim]\n")
 
-    if mt5_broker and mt5_broker.connected and hasattr(mt5_broker, "get_balances"):
-        recon = reconcile_with_exchange(mt5_broker)
+    if live_broker and live_broker.connected and hasattr(live_broker, "get_balances"):
+        recon = reconcile_with_exchange(live_broker)
         if recon:
             console.print(f"[dim]Reconciliation: {recon['drifted_positions']} of "
                           f"{len(recon['positions'])} tracked positions drift from exchange[/dim]")
