@@ -43,7 +43,7 @@ def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, days=
         if not position and i % 5 == 0:
             signals = scan_symbol(slice_data)
             signals = [s for s in signals if s["confidence"] >= conf_thresh]
-            if signals:
+            if signals and current["close"] > 0:
                 best = max(signals, key=lambda s: s["confidence"])
                 qty = (cash * pos_size / 100) / current["close"]
                 if qty >= 0.001 and qty * current["close"] <= cash:

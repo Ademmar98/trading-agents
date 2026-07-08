@@ -1,4 +1,7 @@
 from math import isnan
+import logging
+
+_log = logging.getLogger("strategies")
 
 MIN_OHLC = 30
 
@@ -668,8 +671,8 @@ def scan_symbol(ohlc, regime=None):
             if sig:
                 sig["strategy"] = name
                 signals.append(sig)
-        except Exception:
-            pass
+        except Exception as e:
+            _log.warning("Strategy %s: %s", name, e)
     if not signals:
         return []
     combined = {}
