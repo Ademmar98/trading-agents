@@ -524,6 +524,14 @@ def main():
     console.clear()
     console.print("[bold cyan]Trading Agent Firm[/bold cyan]")
 
+    # Startup diagnostics
+    console.print(f"[dim]DATA_DIR: {DATA_DIR}[/dim]")
+    console.print(f"[dim]BROKER_TYPE: {BROKER_TYPE}[/dim]")
+    console.print(f"[dim]PLATFORM: {sys.platform}[/dim]")
+    if BROKER_TYPE == "mt5" and sys.platform != "win32":
+        console.print("[bold yellow]WARNING: MT5 requires Windows — broker will fall back to paper[/bold yellow]")
+    memory.log("system", f"startup: DATA_DIR={DATA_DIR} BROKER_TYPE={BROKER_TYPE} platform={sys.platform}")
+
     if not acquire_instance_lock():
         console.print(f"[bold red]Another instance already holds lock port {LOCK_PORT} — "
                       "exiting to prevent duplicate trading.[/bold red]")
