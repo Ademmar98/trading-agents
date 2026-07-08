@@ -5,9 +5,8 @@ import threading
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from config import BASE_DIR, BROKER_TYPE, BINANCE_USE_TESTNET
-from core.database import fetchall, get_plans, get_strategy_stats_list
-from core.portfolio import load_portfolio
+from config import BASE_DIR, BROKER_TYPE, BINANCE_USE_TESTNET, DATA_DIR
+from core.database import fetchall, fetchone, get_plans, get_strategy_stats_list, get_meta
 from core.memory import SharedMemory
 from core import websocket_prices
 
@@ -17,29 +16,57 @@ memory = SharedMemory()
 
 
 def get_market_prices():
-    prices = websocket_prices.get_all_prices()
-    return prices
+    return websocket_prices.get_all_prices()
+
+
+def _live_pnl_stats():
+    """Aggregate closed-trade P&L directly from SQLite (no portfolio.json)."""
+    row = fetchone("SELECT COUNT(*) AS cnt, SUM(pnl) AS total FROM trades")
+    cnt = row["cnt"] if row else 0
+    total = row["total"] if row and row["total"] else 0
+    wins = fetchone("SELECT COUNT(*) AS w FROM trades WHERE pnl > 0")
+    win_cnt = wins["w"] if wins else 0
+    return cnt, total, win_cnt
+
+
+def _live_positions_summary():
+    """Return open position count, total value, and exposure from SQLite."""
+    rows = fetchall(
+        "SELECT quantity, entry_price, current_price FROM positions WHERE status='open'"
+    )
+    count = len(rows)
+    pos_value = sum(r["current_price"] * r["quantity"] for r in rows) if rows else 0
+    return count, pos_value
+
+
+def _live_cash():
+    """Return the latest known cash balance from equity_history (fallback 0)."""
+    row = fetchone(
+        "SELECT cash FROM equity_history ORDER BY id DESC LIMIT 1"
+    )
+    return row["cash"] if row else 0
 
 
 def get_summary():
-    p = load_portfolio()
-    trades = fetchall("SELECT pnl FROM trades")
-    pnls = [r["pnl"] for r in trades]
-    total_trades = len(pnls)
-    wins = len([x for x in pnls if x > 0])
-    closed_pnl = sum(pnls)
+    trade_cnt, closed_pnl, win_cnt = _live_pnl_stats()
+    pos_cnt, pos_value = _live_positions_summary()
+    cash = _live_cash()
+    init_bal = float(get_meta("initial_balance", "0"))
+    equity = cash + pos_value
+    exposure = (pos_value / equity * 100) if equity > 0 else 0
+    total_pnl_pct = ((equity - init_bal) / init_bal * 100) if init_bal > 0 else 0
     return {
-        "equity": round(p.equity, 2),
-        "cash": round(p.cash, 2),
-        "initial_balance": p.initial_balance,
+        "equity": round(equity, 2),
+        "cash": round(cash, 2),
+        "initial_balance": init_bal,
         "total_pnl": round(closed_pnl, 2),
-        "total_pnl_pct": round((closed_pnl / p.initial_balance * 100) if p.initial_balance else 0, 2),
-        "portfolio_pnl": round(p.total_pnl, 2),
-        "portfolio_pnl_pct": round(p.total_pnl_pct, 2),
-        "exposure_pct": round(p.exposure_pct, 2),
-        "open_positions": len(p.positions),
-        "total_trades": total_trades,
-        "win_rate": (wins / total_trades * 100) if total_trades else 0,
+        "total_pnl_pct": round(total_pnl_pct, 2),
+        "portfolio_pnl": round(equity - init_bal, 2),
+        "portfolio_pnl_pct": round(total_pnl_pct, 2),
+        "exposure_pct": round(exposure, 2),
+        "open_positions": pos_cnt,
+        "total_trades": trade_cnt,
+        "win_rate": (win_cnt / trade_cnt * 100) if trade_cnt else 0,
         "broker": BROKER_TYPE,
         "testnet": BINANCE_USE_TESTNET,
     }
@@ -72,24 +99,24 @@ def get_trade_journal():
 
 
 def get_equity_curve():
-    p = load_portfolio()
-    # Prefer real per-cycle snapshots (they include open-position value);
-    # fall back to reconstructing from closed trades for older databases
+    init_bal = float(get_meta("initial_balance", "0"))
     snaps = fetchall(
         "SELECT equity, snapped_at FROM equity_history ORDER BY id ASC LIMIT 1000"
     )
     if snaps:
-        points = [{"t": "start", "equity": p.initial_balance}]
+        points = [{"t": "start", "equity": init_bal}]
         points += [{"t": r["snapped_at"], "equity": r["equity"]} for r in snaps]
-        points.append({"t": "now", "equity": round(p.equity, 2)})
+        cash = _live_cash()
+        pos_cnt, pos_value = _live_positions_summary()
+        points.append({"t": "now", "equity": round(cash + pos_value, 2)})
         return points
     rows = fetchall("SELECT closed_at, pnl FROM trades ORDER BY closed_at ASC")
-    points = [{"t": "start", "equity": p.initial_balance}]
-    cumulative = p.initial_balance
+    points = [{"t": "start", "equity": init_bal}]
+    cumulative = init_bal
     for r in rows:
         cumulative += r["pnl"]
         points.append({"t": r["closed_at"], "equity": round(cumulative, 2)})
-    points.append({"t": "now", "equity": round(p.equity, 2)})
+    points.append({"t": "now", "equity": round(cumulative, 2)})
     return points
 
 
@@ -123,6 +150,9 @@ def get_errors(n=50):
     return unique[:n]
 
 
+_CACHE_BUST = ("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+
+
 class DashboardHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
@@ -131,7 +161,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header(*_CACHE_BUST)
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
         self.end_headers()
         self.wfile.write(body)
 
@@ -170,14 +202,19 @@ class DashboardHandler(BaseHTTPRequestHandler):
         sentiment = memory.read("analyses", "sentiment_scan")
         return sentiment or {}
 
+    def get_pricing(self):
+        pricing = memory.read("decisions", "pricing")
+        return pricing or {}
+
     def get_config(self):
-        from config import BROKER_TYPE, TRADING_INTERVAL_MINUTES, WATCHED_SYMBOLS, INITIAL_BALANCE, BINANCE_USE_TESTNET
+        from config import BROKER_TYPE, TRADING_INTERVAL_MINUTES, WATCHED_SYMBOLS, INITIAL_BALANCE, BINANCE_USE_TESTNET, DATA_DIR
         return {
             "broker": BROKER_TYPE,
             "interval_minutes": TRADING_INTERVAL_MINUTES,
             "watched_symbols": len(WATCHED_SYMBOLS),
             "initial_capital": INITIAL_BALANCE,
             "testnet": BINANCE_USE_TESTNET,
+            "data_dir": str(DATA_DIR),
         }
 
     def do_GET(self):
@@ -221,6 +258,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._json(self.get_health())
             elif self.path == "/api/sentiment":
                 self._json(self.get_sentiment())
+            elif self.path == "/api/pricing":
+                self._json(self.get_pricing())
             elif self.path == "/api/config":
                 self._json(self.get_config())
             else:

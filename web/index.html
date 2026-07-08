@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Trading Agent Firm</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -341,9 +344,20 @@
     </div>
   </section>
 
+  <section>
+    <h2>Pricing Decisions <span class="idx">14</span></h2>
+    <div class="table-scroll">
+      <table aria-label="Dynamic SL/TP pricing per symbol">
+        <thead><tr><th>Symbol</th><th>Action</th><th>Regime</th><th class="r">Entry</th><th class="r">SL</th><th class="r">TP</th><th class="r">SL %</th><th class="r">TP %</th><th class="r">Risk %</th><th>Rationale</th></tr></thead>
+        <tbody id="pricing-body"></tbody>
+      </table>
+      <div class="empty" id="pricing-empty" hidden>NO PRICING DATA</div>
+    </div>
+  </section>
+
   <footer>
     <span>Spot only · No leverage · Refresh 5s</span>
-    <span id="updated">CONNECTING…</span>
+    <span id="updated">CONNECTING…</span> &middot; <span id="data-dir-info"></span>
   </footer>
 </div>
 
@@ -627,6 +641,29 @@ function renderHealth(health) {
   dot.className = "status-dot " + (health.status === "halted" ? "halted" : health.status === "ok" ? "" : "warning");
 }
 
+const _cb = () => "?_t=" + Date.now();
+
+function renderPricing(pricing) {
+  const map = (pricing && pricing.pricing_map) || {};
+  const rows = Object.values(map);
+  document.getElementById("pricing-empty").hidden = rows.length > 0;
+  document.getElementById("pricing-body").innerHTML = rows.map((p) => {
+    const actionCls = p.action === "BUY" ? "side-b" : "side-s";
+    return `<tr>
+      <td style="font-weight:600">${esc(p.symbol)}</td>
+      <td><span class="${actionCls}">${esc(p.action)}</span></td>
+      <td class="mono" style="font-size:12px">${esc((p.regime||"").replace("_"," "))}</td>
+      <td class="r num">${fmtPrice(p.entry_price)}</td>
+      <td class="r num" style="color:var(--red)">${fmtPrice(p.stop_loss)}</td>
+      <td class="r num" style="color:var(--green)">${fmtPrice(p.take_profit)}</td>
+      <td class="r num">${p.sl_pct != null ? p.sl_pct.toFixed(1) + "%" : "—"}</td>
+      <td class="r num">${p.tp_pct != null ? p.tp_pct.toFixed(1) + "%" : "—"}</td>
+      <td class="r num">${p.calculated_risk_pct != null ? p.calculated_risk_pct.toFixed(2) + "%" : "—"}</td>
+      <td style="font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.risk_rationale||"")}</td>
+    </tr>`;
+  }).join("");
+}
+
 function renderOptimizations(rows) {
   document.getElementById("optim-empty").hidden = rows.length > 0;
   document.getElementById("optim-body").innerHTML = rows.map((r) => {
@@ -698,22 +735,24 @@ function renderRegime(regime) {
 let prevEquity = null;
 async function refresh() {
   try {
-    const [summary, positions, trades, equity, activity, errors, opportunities, risk, health, regime, plans, marketPrices, tradeJournal, stratStats, optimizations] = await Promise.all([
-      fetch("/api/summary").then((r) => r.json()),
-      fetch("/api/positions").then((r) => r.json()),
-      fetch("/api/trades").then((r) => r.json()),
-      fetch("/api/equity").then((r) => r.json()),
-      fetch("/api/activity").then((r) => r.json()),
-      fetch("/api/errors").then((r) => r.json()),
-      fetch("/api/opportunities").then((r) => r.json()),
-      fetch("/api/risk").then((r) => r.json()),
-      fetch("/api/health").then((r) => r.json()),
-      fetch("/api/regime").then((r) => r.json()),
-      fetch("/api/plans").then((r) => r.json()),
-      fetch("/api/market-prices").then((r) => r.json()),
-      fetch("/api/trade-journal").then((r) => r.json()),
-      fetch("/api/strategy-stats").then((r) => r.json()),
-      fetch("/api/optimizations").then((r) => r.json()),
+    const [summary, positions, trades, equity, activity, errors, opportunities, risk, health, regime, plans, marketPrices, tradeJournal, stratStats, optimizations, pricing, config] = await Promise.all([
+      fetch("/api/summary" + _cb()).then((r) => r.json()),
+      fetch("/api/positions" + _cb()).then((r) => r.json()),
+      fetch("/api/trades" + _cb()).then((r) => r.json()),
+      fetch("/api/equity" + _cb()).then((r) => r.json()),
+      fetch("/api/activity" + _cb()).then((r) => r.json()),
+      fetch("/api/errors" + _cb()).then((r) => r.json()),
+      fetch("/api/opportunities" + _cb()).then((r) => r.json()),
+      fetch("/api/risk" + _cb()).then((r) => r.json()),
+      fetch("/api/health" + _cb()).then((r) => r.json()),
+      fetch("/api/regime" + _cb()).then((r) => r.json()),
+      fetch("/api/plans" + _cb()).then((r) => r.json()),
+      fetch("/api/market-prices" + _cb()).then((r) => r.json()),
+      fetch("/api/trade-journal" + _cb()).then((r) => r.json()),
+      fetch("/api/strategy-stats" + _cb()).then((r) => r.json()),
+      fetch("/api/optimizations" + _cb()).then((r) => r.json()),
+      fetch("/api/pricing" + _cb()).then((r) => r.json()),
+      fetch("/api/config" + _cb()).then((r) => r.json()).catch(() => null),
     ]);
     renderSummary(summary);
     renderMarketPrices(marketPrices);
@@ -730,6 +769,10 @@ async function refresh() {
     renderRegime(regime);
     renderPlans(plans);
     renderOptimizations(optimizations || []);
+    renderPricing(pricing || {});
+    if (config && config.data_dir) {
+      document.getElementById("data-dir-info").textContent = config.data_dir;
+    }
     document.getElementById("conn").textContent = "LIVE";
     const healthOk = !health || !health.status || health.status === "ok";
     document.getElementById("dot").className = "status-dot" + (healthOk ? "" : health.status === "halted" ? " halted" : " warning");
