@@ -14,14 +14,6 @@ HEADLESS = "--headless" in sys.argv or os.getenv("HEADLESS", "").lower() == "tru
 # Reset flag: delete all data and start fresh
 RESET = "--reset" in sys.argv
 
-from rich.console import Console
-from rich.layout import Layout
-from rich.live import Live
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
-from rich import box
-
 from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
@@ -53,7 +45,27 @@ from agents.auditor import Auditor
 from agents.optimizer_agent import OptimizerAgent
 from agents.health_monitor import HealthMonitor
 
-console = Console()
+# ── Console: Rich UI for TTY, plain print for headless/Docker ──
+if HEADLESS:
+    import re as _re, builtins as _builtins
+    class _Console:
+        _strip = _re.compile(r"\[/?[\w#]+(?: [^\]]+)?\]")
+        def print(self, *args, **kwargs):
+            text = " ".join(str(a) for a in args) if args else ""
+            plain = self._strip.sub("", text)
+            if plain.strip():
+                _builtins.print(plain, flush=True)
+        def clear(self): pass
+    console = _Console()
+else:
+    from rich.console import Console
+    from rich.layout import Layout
+    from rich.live import Live
+    from rich.panel import Panel
+    from rich.table import Table
+    from rich.text import Text
+    from rich import box
+    console = Console()
 memory = SharedMemory()
 
 
@@ -652,12 +664,12 @@ def main():
 
     try:
         if HEADLESS:
-            console.print("[dim]Headless mode: dashboard disabled, updates via Telegram and logs[/dim]")
             while True:
                 prices = websocket_prices.get_all_prices()
                 if prices:
                     pos_mgr.update_prices(prices)
-                    sync_position_stores()
+                sync_position_stores()
+                snapshot_equity()
                 time.sleep(30)
         with Live(make_layout(portfolio), refresh_per_second=2, screen=True) as live:
             while True:

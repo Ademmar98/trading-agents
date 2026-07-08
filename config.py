@@ -1,17 +1,18 @@
 import os
+import sys
+import zlib
 from pathlib import Path
 
 BASE_DIR = Path(__file__).parent
 # Overridable so tests can run against a throwaway data dir
 DATA_DIR = Path(os.getenv("TRADING_DATA_DIR", BASE_DIR / "data"))
 
-# Load variables from a local .env file if present (real env vars take priority)
-# WARNING: .env stores secrets in plaintext — never commit it, restrict file perms
+# ── Environment variable loading ──
+# Railway / production: inject secrets via the cloud dashboard (env vars).
+# Local dev: create a .env file beside this script (git-ignored) as a fallback.
+# System env vars ALWAYS take priority over .env (setdefault).
 _env_file = BASE_DIR / ".env"
 if _env_file.exists():
-    import sys
-    print("[WARNING] Loading secrets from .env — plaintext on disk. "
-          "Set env vars directly in production.", file=sys.stderr)
     for _line in _env_file.read_text(encoding="utf-8").splitlines():
         _line = _line.strip()
         if _line and not _line.startswith("#") and "=" in _line:
@@ -64,7 +65,6 @@ TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "6.0"))
 MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "5.0"))
 # DEPRECATED — replaced by PricingAgent's per-opportunity calculated_risk_pct
 RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
-import zlib
 _LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))
 if _LOCK_PORT_OVERRIDE:
     LOCK_PORT = _LOCK_PORT_OVERRIDE
