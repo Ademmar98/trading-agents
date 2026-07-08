@@ -1,43 +1,43 @@
 {
   "skills": {
     "agent-browser": {
-      "path": ".agents/skills/agent-browser",
+      "path": ".github/.agents/skills/agent-browser",
       "description": "Web browsing and automation skill for agents"
     },
     "find-skills": {
-      "path": ".agents/skills/find-skills",
+      "path": ".github/.agents/skills/find-skills",
       "description": "Search and discover skills for agents"
     },
     "trading-signal": {
-      "path": ".agents/skills/trading-signal",
+      "path": ".github/.agents/skills/trading-signal",
       "description": "Binance trading signals and market analysis"
     },
     "tradingview-quantitative": {
-      "path": ".agents/skills/tradingview-quantitative",
+      "path": ".github/.agents/skills/tradingview-quantitative",
       "description": "TradingView quantitative analysis strategies"
     },
     "finance-expert": {
-      "path": ".agents/skills/finance-expert",
+      "path": ".github/.agents/skills/finance-expert",
       "description": "Financial expertise for market analysis and planning"
     },
     "fix-errors": {
-      "path": ".agents/skills/fix-errors",
+      "path": ".github/.agents/skills/fix-errors",
       "description": "Common error fixing patterns for code troubleshooting"
     },
     "capture-api-response-test-fixture": {
-      "path": ".agents/skills/capture-api-response-test-fixture",
+      "path": ".github/.agents/skills/capture-api-response-test-fixture",
       "description": "Capture API responses as test fixtures for AI SDK testing"
     },
     "risk-management": {
-      "path": ".agents/skills/risk-management",
+      "path": ".github/.agents/skills/risk-management",
       "description": "Portfolio risk metrics, position evaluation, and rebalancing strategies"
     },
     "portfolio-manager": {
-      "path": ".agents/skills/portfolio-manager",
+      "path": ".github/.agents/skills/portfolio-manager",
       "description": "Asset allocation, diversification, and target allocation management"
     },
     "llm-trading-agent-security": {
-      "path": ".agents/skills/llm-trading-agent-security",
+      "path": ".github/.agents/skills/llm-trading-agent-security",
       "description": "Security best practices for LLM-powered trading agents"
     }
   }
