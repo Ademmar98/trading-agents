@@ -1,7 +1,7 @@
 import time
 
 from agents.base_agent import BaseAgent
-from config import SL_VOL_MULT, TP_VOL_MULT, RISK_PER_TRADE_PCT
+from config import RISK_PER_TRADE_PCT
 
 
 _REGIME_PRICING = {

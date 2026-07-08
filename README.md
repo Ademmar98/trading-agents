@@ -8,8 +8,8 @@ Agents run sequentially each cycle in a defined pipeline, sharing state through 
 
 ```
 Orchestrator → ResearchAnalyst → HealthMonitor → SentimentAgent → RegimeAgent
-→ RiskManager → PositionSizer → PortfolioManagerAgent → ComplianceAgent
-→ ExecutionAgent → Trader → Auditor
+→ PricingAgent → RiskManager → PositionSizer → PortfolioManagerAgent
+→ ComplianceAgent → ExecutionAgent → Trader → Auditor → OptimizerAgent
 ```
 
 - **Orchestrator** — coordinates the cycle; writes start/end markers to shared memory
@@ -17,6 +17,7 @@ Orchestrator → ResearchAnalyst → HealthMonitor → SentimentAgent → Regime
 - **HealthMonitor** — checks broker connectivity, data freshness, error rates
 - **SentimentAgent** — scores market mood from price breadth and Fear & Greed Index
 - **RegimeAgent** — detects regime (trending/ranging/volatile) per symbol via ADX, BB width, ATR
+- **PricingAgent** — computes per-symbol SL, TP, risk %, and entry price from regime-aware multipliers
 - **RiskManager** — sets portfolio-level risk limits (per-symbol, volatility, correlation)
 - **PositionSizer** — computes Kelly-optimal position sizes based on historical trade stats
 - **PortfolioManagerAgent** — allocates capital across opportunities with strategy-weighted scoring
@@ -24,6 +25,7 @@ Orchestrator → ResearchAnalyst → HealthMonitor → SentimentAgent → Regime
 - **ExecutionAgent** — builds formal trade plans with SL/TP/RR, checks spread before approval
 - **Trader** — executes orders through the selected broker; checks stop-losses on every cycle
 - **Auditor** — reviews performance, generates suggestions, tracks agent health
+- **OptimizerAgent** — grid-searches parameter ranges to improve weak strategy metrics
 
 ## Features
 
@@ -59,6 +61,7 @@ Copy `.env.example` to `.env` and configure:
 | `WATCHED_SYMBOLS` | 20 cryptos | Comma-separated symbol list |
 | `TELEGRAM_BOT_TOKEN` | — | Bot token for notifications |
 | `TELEGRAM_CHAT_ID` | — | Chat ID for notifications |
+| `RESET_ON_START` | — | `true` to wipe all data on next restart (⚠ removes trading history) |
 
 ## Usage
 
@@ -71,6 +74,10 @@ python main.py --headless
 
 # Reset all data and start fresh
 python main.py --reset
+
+# Wipe on every restart (Railway/Docker — use once then remove)
+# WARNING: leaving this true wipes trading history on every crash-restart
+# RESET_ON_START=true
 
 # Override broker
 $env:BROKER_TYPE = "paper"; python main.py
@@ -92,7 +99,7 @@ The web dashboard is available on the configured `PORT` (default 8000). The `.en
 python -m pytest
 ```
 
-162 tests covering all agents, broker, portfolio, position manager, database, memory, strategies, analytics, backtester, and the full pipeline smoke test. All tests run offline against sandboxed data directories.
+195 tests covering all agents, broker, portfolio, position manager, database, memory, strategies, analytics, backtester, and the full pipeline smoke test. All tests run offline against sandboxed data directories.
 
 ### Test coverage
 

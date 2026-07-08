@@ -27,6 +27,18 @@
     "capture-api-response-test-fixture": {
       "path": ".agents/skills/capture-api-response-test-fixture",
       "description": "Capture API responses as test fixtures for AI SDK testing"
+    },
+    "risk-management": {
+      "path": ".agents/skills/risk-management",
+      "description": "Portfolio risk metrics, position evaluation, and rebalancing strategies"
+    },
+    "portfolio-manager": {
+      "path": ".agents/skills/portfolio-manager",
+      "description": "Asset allocation, diversification, and target allocation management"
+    },
+    "llm-trading-agent-security": {
+      "path": ".agents/skills/llm-trading-agent-security",
+      "description": "Security best practices for LLM-powered trading agents"
     }
   }
 }

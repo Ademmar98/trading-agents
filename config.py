@@ -50,20 +50,18 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 LEVERAGE_ENABLED = False  # spot-only, no margin
 MAX_POSITION_SIZE_PCT = float(os.getenv("MAX_POSITION_SIZE_PCT", "25"))
-MAX_PORTFOLIO_RISK_PCT = float(os.getenv("MAX_PORTFOLIO_RISK_PCT", "10"))
+MAX_PORTFOLIO_RISK_PCT = float(os.getenv("MAX_PORTFOLIO_RISK_PCT", "5"))
 TRADE_FEE_PCT = float(os.getenv("TRADE_FEE_PCT", "0.1"))
 MAX_CONSECUTIVE_LOSSES = int(os.getenv("MAX_CONSECUTIVE_LOSSES", "3"))
 STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "5"))
 DAILY_LOSS_LIMIT_PCT = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "3"))
 TRAILING_STOP_PCT = float(os.getenv("TRAILING_STOP_PCT", "3"))
 TRAILING_ACTIVATION_PCT = float(os.getenv("TRAILING_ACTIVATION_PCT", "4"))
-# DEPRECATED — replaced by PricingAgent's dynamic per-symbol sl_mult
+# Fallback SL/TP multipliers — used by ExecutionAgent when PricingAgent data is absent
 SL_VOL_MULT = float(os.getenv("SL_VOL_MULT", "2.0"))
-# DEPRECATED — replaced by PricingAgent's dynamic per-symbol tp_mult
 TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "6.0"))
-# DEPRECATED — replaced by PricingAgent's dynamic take_profit check
 MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "5.0"))
-# DEPRECATED — replaced by PricingAgent's per-opportunity calculated_risk_pct
+# Base risk percentage fed to PricingAgent's per-opportunity calculated_risk_pct
 RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
 _LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))
 if _LOCK_PORT_OVERRIDE:
@@ -79,7 +77,6 @@ TUNABLE_PARAMS = {
     "TP_VOL_MULT":       {"default": 6.0, "min": 2.0,  "max": 12.0,"increment": 1.0},
     "RISK_PER_TRADE_PCT":{"default": 1.0, "min": 0.25, "max": 3.0, "increment": 0.25},
     "STOP_LOSS_PCT":     {"default": 5.0, "min": 1.0,  "max": 10.0,"increment": 1.0},
-    "POSITION_SIZE_PCT": {"default": 25,  "min": 5,    "max": 50,  "increment": 5},
     "MAX_POSITION_SIZE_PCT": {"default": 25, "min": 5,  "max": 50,  "increment": 5},
 }
 

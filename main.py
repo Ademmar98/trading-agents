@@ -151,7 +151,22 @@ def _paper_fallback_broker():
 
 
 def _rebalance_positions():
-    """Close worst underwater position if better opportunities exist."""
+    """Close worst underwater position if better opportunities exist.
+
+    NOTE — Intentional gate-free exception: this path calls
+    broker.place_order() directly without routing through RiskManager,
+    ComplianceAgent, or ExecutionAgent.  The bypass is deliberate because
+    this only *closes* an existing losing position — it never opens a new
+    entry.  The new-entry gate chain (RiskManager → PositionSizer →
+    PortfolioManager → Compliance → Execution) is designed for vetting
+    opening orders, not for cutting losses.  Protection layered here:
+      - Triggered only by Auditor's needs_rebalance flag (Auditor runs
+        after all other gates in the pipeline).
+      - Position must be >5 % underwater.
+      - Only fires when a >75 % confidence opportunity exists to deploy
+        the freed capital.
+      - Only the single worst position is closed per invocation.
+    """
     try:
         audit = memory.read("reports", "audit") or {}
         if not audit.get("needs_rebalance"):
@@ -531,7 +546,7 @@ def make_layout(portfolio) -> Layout:
         "Spot-only (no leverage)  |  "
         f"Broker: {BROKER_TYPE.upper()}  |  "
         f"Open: {pos_mgr.get_positions_summary()['count']}  |  "
-        "Agents: Orchestrator → Analyst → Sentiment → Regime → Pricing → Risk → PositionSizer → PortfolioMgr → Compliance → Execution → Trader → Auditor → Optimizer[/dim]",
+        "Agents: Orchestrator → Analyst → HealthMonitor → Sentiment → Regime → Pricing → Risk → PositionSizer → PortfolioMgr → Compliance → Execution → Trader → Auditor → Optimizer[/dim]",
         box=box.SIMPLE,
     ))
     return layout
@@ -539,10 +554,15 @@ def make_layout(portfolio) -> Layout:
 
 def main():
     global live_broker, memory
-    if memory is None:
-        memory = SharedMemory()
 
-    # --reset MUST run first, before any module-level init touches DATA_DIR
+    # Lock check before --reset so we don't delete a live DB out from under another instance
+    if not acquire_instance_lock():
+        console.print(f"[bold red]Another instance already holds lock port {LOCK_PORT} — "
+                      "exiting to prevent duplicate trading.[/bold red]")
+        if memory:
+            memory.log("system", "Startup aborted: another instance is already running")
+        sys.exit(1)
+
     if RESET:
         import shutil
         console.print("[bold yellow]--reset: wiping all data...[/bold yellow]")
@@ -554,6 +574,15 @@ def main():
         except Exception:
             pass
         db_file = DATA_DIR / "trading.db"
+        # Backup existing database before deletion
+        if db_file.exists():
+            from shutil import copy2
+            backup = DATA_DIR / f"trading.db.backup-{datetime.now():%Y%m%d_%H%M%S}"
+            try:
+                copy2(db_file, backup)
+                console.print(f"[dim]Backed up {db_file.name} → {backup.name}[/dim]")
+            except Exception as e:
+                console.print(f"[dim]Backup skipped: {e}[/dim]")
         for ext in ("", "-wal", "-shm", "-journal"):
             p = Path(str(db_file) + ext)
             try:
@@ -573,10 +602,14 @@ def main():
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         for sub in ("analyses", "decisions", "orders", "reports", "logs"):
             (DATA_DIR / sub).mkdir(parents=True, exist_ok=True)
-        # Force $10 000 fresh portfolio regardless of env var overrides
+        # Fresh portfolio from INITIAL_BALANCE
         from core.portfolio import Portfolio as _P, save_portfolio as _sp
-        _sp(_P(cash=10000.0, initial_balance=10000.0))
-        console.print("[bold green]Data reset complete. Fresh $10 000 capital initialized.[/bold green]")
+        _sp(_P(cash=INITIAL_BALANCE, initial_balance=INITIAL_BALANCE))
+        console.print(f"[bold green]Data reset complete. Fresh ${INITIAL_BALANCE:,.0f} capital initialized.[/bold green]")
+
+    # Lazy — initialized inside main() so --reset can run before any dirs are created
+    if memory is None:
+        memory = SharedMemory()
 
     console.clear()
     console.print("[bold cyan]Trading Agent Firm[/bold cyan]")
@@ -588,12 +621,6 @@ def main():
     if BROKER_TYPE == "mt5" and sys.platform != "win32":
         console.print("[bold yellow]WARNING: MT5 requires Windows — broker will fall back to paper[/bold yellow]")
     memory.log("system", f"startup: DATA_DIR={DATA_DIR} BROKER_TYPE={BROKER_TYPE} platform={sys.platform}")
-
-    if not acquire_instance_lock():
-        console.print(f"[bold red]Another instance already holds lock port {LOCK_PORT} — "
-                      "exiting to prevent duplicate trading.[/bold red]")
-        memory.log("system", "Startup aborted: another instance is already running")
-        sys.exit(1)
 
     init_db()
     console.print("[dim]Database initialized[/dim]")
@@ -661,7 +688,7 @@ def main():
 
     if notifier._enabled:
         if RESET:
-            notifier.send("[Trading Agent Firm - Fresh Test Initialized with $10,000 USD Capital]")
+            notifier.send(f"[Trading Agent Firm - Fresh Test Initialized with ${INITIAL_BALANCE:,.0f} USD Capital]")
         else:
             notifier.send("[Trading Agent Firm started]")
 
