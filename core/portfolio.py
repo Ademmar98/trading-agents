@@ -64,26 +64,33 @@ class Portfolio:
         return (self.positions_value / self.equity) * 100
 
 
-def apply_fill(p: Portfolio, symbol: str, side: str, quantity: float, price: float):
+def apply_fill(p: Portfolio, symbol: str, side: str, quantity: float, price: float, fee_pct: float = 0.0):
     """Apply an externally executed (live broker) fill to the local ledger.
 
     Spot semantics only: BUY debits cash and adds to the position, SELL
     credits cash for at most the locally held quantity. Without this mirror
     the ledger's cash never moves when the live broker fills an order.
+    fee_pct is subtracted from cash on both entry and exit (e.g. 0.1 for 0.1%).
     """
+    from config import TRADE_FEE_PCT
+    if fee_pct == 0.0:
+        fee_pct = TRADE_FEE_PCT
+    fee_ratio = fee_pct / 100.0
     side = side.upper()
     if side == "BUY":
         pos = p.positions.get(symbol)
         if pos and pos.quantity < 0:
             # Covering a legacy short: never flip it into a long
             cover_qty = min(quantity, -pos.quantity)
-            p.cash -= cover_qty * price
+            fee = cover_qty * price * fee_ratio
+            p.cash -= cover_qty * price + fee
             pos.quantity += cover_qty
             if pos.quantity >= -1e-12:
                 del p.positions[symbol]
             return
         cost = quantity * price
-        p.cash -= cost
+        fee = cost * fee_ratio
+        p.cash -= cost + fee
         if pos and pos.quantity > 0:
             total_cost = pos.entry_price * pos.quantity + cost
             pos.quantity += quantity
@@ -99,7 +106,8 @@ def apply_fill(p: Portfolio, symbol: str, side: str, quantity: float, price: flo
         if not pos or pos.quantity <= 0:
             return
         sell_qty = min(quantity, pos.quantity)
-        p.cash += sell_qty * price
+        fee = sell_qty * price * fee_ratio
+        p.cash += sell_qty * price - fee
         pos.quantity -= sell_qty
         if pos.quantity <= 1e-12:
             del p.positions[symbol]

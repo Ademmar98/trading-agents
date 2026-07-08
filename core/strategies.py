@@ -683,6 +683,5 @@ def scan_symbol(ohlc, regime=None):
         combined[action]["reasons"].extend(s["reasons"])
         combined[action]["strategies"].append(s["strategy"])
     for a in combined:
-        n = len(combined[a]["strategies"])
-        combined[a]["confidence"] = min(combined[a]["confidence"] + n * 0.05, 0.95)
+        combined[a]["confidence"] = min(combined[a]["confidence"], 0.95)
     return list(combined.values())

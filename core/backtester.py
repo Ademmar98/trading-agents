@@ -4,7 +4,7 @@ from statistics import stdev, mean
 
 import requests
 
-from config import WATCHED_SYMBOLS, INITIAL_BALANCE
+from config import WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT
 from core.database import execute, fetchone, fetchall
 from core.strategies import ALL_STRATEGIES, scan_symbol
 from core.market import MarketData
@@ -58,6 +58,7 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
     if len(ohlc) < 50:
         return None
 
+    fee_ratio = TRADE_FEE_PCT / 100.0
     cash = initial_capital
     position = None
     trades = []
@@ -86,18 +87,19 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
                     pnl = (exit_price - entry) * qty
                 else:
                     pnl = (entry - exit_price) * qty
-                cash += qty * exit_price
+                exit_fee = qty * exit_price * fee_ratio
+                cash += qty * exit_price - exit_fee
                 pnl_pct = (pnl / (entry * qty)) * 100 if entry * qty else 0
                 trades.append({
                     "symbol": symbol, "side": side, "qty": qty,
                     "entry": entry, "exit": exit_price,
-                    "pnl": round(pnl, 2), "pnl_pct": round(pnl_pct, 2),
+                    "pnl": round(pnl - exit_fee, 2), "pnl_pct": round(pnl_pct, 2),
                     "reason": reason, "bar": i,
                     "date": current["date"][:10],
                 })
                 position = None
 
-        if not position and i % 5 == 0:
+        if not position:
             signals = scan_symbol(slice_data)
             buy_signals = [s for s in signals if s["action"] == "BUY"]
             sell_signals = [s for s in signals if s["action"] == "SELL"]
@@ -113,8 +115,10 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
                 if qty > 0:
                     sl, tp = _calc_sl_tp(current["close"], side, vol)
                     cost = qty * current["close"]
-                    if cost <= cash:
-                        cash -= cost
+                    entry_fee = cost * fee_ratio
+                    total_cost = cost + entry_fee
+                    if total_cost <= cash:
+                        cash -= total_cost
                         position = {"side": side, "entry": current["close"], "qty": qty, "sl": sl, "tp": tp}
                         position["strategy"] = best.get("strategies", [best.get("strategy", "unknown")])[0]
 
@@ -130,11 +134,12 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
             pnl = (exit_price - position["entry"]) * position["qty"]
         else:
             pnl = (position["entry"] - exit_price) * position["qty"]
-        cash += position["qty"] * exit_price
+        exit_fee = position["qty"] * exit_price * fee_ratio
+        cash += position["qty"] * exit_price - exit_fee
         trades.append({
             "symbol": symbol, "side": position["side"], "qty": position["qty"],
             "entry": position["entry"], "exit": exit_price,
-            "pnl": round(pnl, 2), "pnl_pct": round((pnl / (position["entry"] * position["qty"])) * 100, 2),
+            "pnl": round(pnl - exit_fee, 2), "pnl_pct": round((pnl / (position["entry"] * position["qty"])) * 100, 2),
             "reason": "open", "bar": len(ohlc),
         })
         position = None

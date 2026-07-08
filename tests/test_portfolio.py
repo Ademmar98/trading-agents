@@ -102,7 +102,7 @@ class TestApplyFill:
     def test_buy_fill(self):
         p = Portfolio(cash=10000, initial_balance=10000)
         apply_fill(p, "BTC/USD", "BUY", 0.1, 50000)
-        assert p.cash == 5000.0
+        assert p.cash == 4995.0
         assert "BTC/USD" in p.positions
         assert p.positions["BTC/USD"].quantity == 0.1
 
@@ -112,7 +112,7 @@ class TestApplyFill:
             symbol="BTC/USD", entry_price=50000, quantity=0.1, current_price=50000
         )
         apply_fill(p, "BTC/USD", "SELL", 0.05, 55000)
-        assert p.cash == 7750.0
+        assert p.cash == 7747.25
         assert p.positions["BTC/USD"].quantity == 0.05
 
     def test_sell_full_close(self):
@@ -121,7 +121,7 @@ class TestApplyFill:
             symbol="BTC/USD", entry_price=50000, quantity=0.1, current_price=50000
         )
         apply_fill(p, "BTC/USD", "SELL", 0.1, 55000)
-        assert p.cash == 10500.0
+        assert p.cash == 10494.5
         assert "BTC/USD" not in p.positions
 
     def test_sell_without_position_noop(self):
