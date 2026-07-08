@@ -45,7 +45,17 @@ from agents.auditor import Auditor
 from agents.optimizer_agent import OptimizerAgent
 from agents.health_monitor import HealthMonitor
 
-# ── Console: Rich UI for TTY, plain print for headless/Docker ──
+# Rich types are always imported — they're needed for function-level
+# type annotations (e.g. "-> Panel") that Python evaluates eagerly.
+from rich.console import Console
+from rich.layout import Layout
+from rich.live import Live
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+from rich import box
+
+# ── Console instance: Rich UI for TTY, plain print for headless/Docker ──
 if HEADLESS:
     import re as _re, builtins as _builtins
     class _Console:
@@ -58,13 +68,6 @@ if HEADLESS:
         def clear(self): pass
     console = _Console()
 else:
-    from rich.console import Console
-    from rich.layout import Layout
-    from rich.live import Live
-    from rich.panel import Panel
-    from rich.table import Table
-    from rich.text import Text
-    from rich import box
     console = Console()
 memory = SharedMemory()
 
