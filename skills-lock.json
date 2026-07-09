@@ -84,6 +84,12 @@
       "skillPath": ".agents/skills/fix-errors/SKILL.md",
       "computedHash": "3e674209191285cb0698b746dfc7bf470e742bce0838b2d3dca76674233db034"
     },
+    "hermes-agent": {
+      "source": "wihy/hermes-agent-skill",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "52fc80a9fae02c632be5fda88db08ea7811cc3fc3980fe3912476074c4caa852"
+    },
     "huashu-design": {
       "source": "alchaincyf/huashu-design",
       "sourceType": "github",
