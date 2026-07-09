@@ -30,13 +30,15 @@ class OptimizerAgent(BaseAgent):
             self.log(f"Skip: last run was {(time.time() - last_run) / 60:.0f}m ago")
             return
 
-        from config import TUNABLE_PARAMS
+        from config import TUNABLE_PARAMS, RISK_TUNABLE_PARAMS
         param_name, meta = self._pick_weakest_param(summary, stats)
         if not param_name:
             self.log("No weak param identified — all look acceptable")
             return
 
         current_value = getattr(sys.modules.get("config"), param_name, meta["default"])
+        if not isinstance(current_value, (int, float)):
+            current_value = meta["default"]
         increment = meta["increment"]
         self.log(f"Testing {param_name} (current={current_value}, ±{increment})")
 
@@ -57,6 +59,17 @@ class OptimizerAgent(BaseAgent):
             old_score = current_result["score"]
 
         if improvement > old_score * 1.01:
+            change_log = f"Proposal: {param_name} {current_value} -> {best_val} (score {old_score:.1f} -> {improvement:.1f})"
+            self.log(change_log)
+
+            # Risk guard: never auto-apply a change that widens a risk limit
+            if param_name in RISK_TUNABLE_PARAMS and float(best_val) > float(current_value):
+                self.notifier.on_agent_action("optimizer",
+                    f"BLOCKED auto-widen of {param_name}: {current_value} -> {best_val} would increase risk")
+                self.log(f"BLOCKED: {param_name}={best_val} would widen risk limit (kept {current_value})")
+                set_meta("optimizer_last_run", str(time.time()))
+                return
+
             set_meta(f"opt_{param_name}", str(best_val))
             set_meta(f"opt_{param_name}_score", str(improvement))
             set_meta(f"opt_{param_name}_at", str(time.time()))
@@ -65,6 +78,8 @@ class OptimizerAgent(BaseAgent):
             cfg = sys.modules.get("config")
             if cfg:
                 setattr(cfg, param_name, type(getattr(cfg, param_name, best_val))(best_val))
+            self.notifier.on_agent_action("optimizer",
+                f"Applied {param_name}={best_val} (was {current_value}, score {old_score:.1f}->{improvement:.1f})")
             self.log(f"Applied {param_name}={best_val} (score {improvement:.1f}, was {old_score:.1f})")
         else:
             set_meta("optimizer_last_run", str(time.time()))
@@ -88,8 +103,6 @@ class OptimizerAgent(BaseAgent):
             candidates.append(("TP_VOL_MULT", "adjust TP multiplier"))
         if total_pnl_pct < 0:
             candidates.append(("RISK_PER_TRADE_PCT", "reduce risk"))
-        if summary.get("positions", 0) > 0 and summary.get("current_exposure", 0) > 50:
-            candidates.append(("MAX_POSITION_SIZE_PCT", "reduce max position size"))
 
         if not candidates:
             return None, None

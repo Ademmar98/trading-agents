@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from config import TRAILING_STOP_PCT, TRAILING_ACTIVATION_PCT
+from config import TRAILING_STOP_PCT, TRAILING_ACTIVATION_PCT, BREAKEVEN_ENABLED, BREAKEVEN_ACTIVATION_PCT
 from core.database import execute, fetchone, fetchall, init_db
 
 
@@ -72,19 +72,24 @@ class PositionManager:
                 WHERE id=? AND status='open'
             """, [price, round(pnl, 2), round(pnl_pct, 2), peak, pos["id"]])
 
-            # Breakeven: once price moves 1x initial SL distance in our favor,
-            # move stop_loss to entry_price to lock in a risk-free trade
-            if pos["stop_loss"] and pos["entry_price"]:
-                sl_distance = abs(pos["entry_price"] - pos["stop_loss"])
+            # Breakeven: move stop_loss to entry_price to lock in a risk-free trade.
+            # Activates at the lesser of:
+            #   - BREAKEVEN_ACTIVATION_PCT% of the TP distance from entry
+            #   - 1x the initial SL distance (safeguard floor)
+            if BREAKEVEN_ENABLED and pos["stop_loss"] and pos["entry_price"]:
+                sl_dist = abs(pos["entry_price"] - pos["stop_loss"])
+                tp_dist = abs(pos["take_profit"] - pos["entry_price"]) if pos.get("take_profit") else 0
+                tp_activation = tp_dist * (BREAKEVEN_ACTIVATION_PCT / 100) if tp_dist > 0 else float("inf")
+                activation_dist = min(tp_activation, sl_dist)
                 if pos["side"] == "BUY":
-                    if price >= pos["entry_price"] + sl_distance and pos["stop_loss"] < pos["entry_price"]:
+                    if price >= pos["entry_price"] + activation_dist and pos["stop_loss"] < pos["entry_price"]:
                         execute("""
                             UPDATE positions SET stop_loss=?, updated_at=datetime('now')
                             WHERE id=? AND status='open'
                         """, [pos["entry_price"], pos["id"]])
                         pos["stop_loss"] = pos["entry_price"]
                 else:
-                    if price <= pos["entry_price"] - sl_distance and pos["stop_loss"] > pos["entry_price"]:
+                    if price <= pos["entry_price"] - activation_dist and pos["stop_loss"] > pos["entry_price"]:
                         execute("""
                             UPDATE positions SET stop_loss=?, updated_at=datetime('now')
                             WHERE id=? AND status='open'

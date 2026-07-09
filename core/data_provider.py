@@ -1,16 +1,16 @@
 import time
 from datetime import datetime, timezone
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 
 from config import (
-    WATCHED_SYMBOLS, BINANCE_API_KEY, BINANCE_API_SECRET,
-    ALPACA_API_KEY, ALPACA_SECRET_KEY, ALPACA_PAPER,
+    WATCHED_SYMBOLS,
+    ALPACA_API_KEY, ALPACA_SECRET_KEY,
     BROKER_TYPE,
 )
 
 BINANCE_BASE = "https://api.binance.com"
+BINANCE_TESTNET = "https://testnet.binance.vision"
 BINANCE_INTERVALS = {"1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"}
 ALPACA_AVAILABLE = bool(ALPACA_API_KEY and ALPACA_SECRET_KEY)
 
@@ -44,6 +44,21 @@ def _from_binance_symbol(bsym):
     if sym.endswith("/USD"):
         return sym
     return bsym
+
+
+def fetch_binance_usdt_pairs(testnet=True):
+    url = f"{BINANCE_TESTNET if testnet else BINANCE_BASE}/api/v3/exchangeInfo"
+    try:
+        r = requests.get(url, timeout=15)
+        data = r.json()
+        symbols = data.get("symbols", [])
+        usdt = []
+        for s in symbols:
+            if s.get("quoteAsset") == "USDT" and s.get("status") == "TRADING":
+                usdt.append(_from_binance_symbol(s["symbol"]))
+        return sorted(usdt)
+    except Exception:
+        return []
 
 
 def _is_crypto(symbol):
@@ -158,14 +173,10 @@ def fetch_alpaca_bars(symbol, interval="1d", limit=100):
 
 def fetch_ohlc(symbol, interval="1d", limit=100):
     if _is_crypto(symbol):
-        if BROKER_TYPE == "binance":
-            return fetch_binance_klines(symbol, interval, limit)
         alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
         if alpaca_result:
             return alpaca_result
-        if interval == "1d":
-            return fetch_binance_klines(symbol, interval, limit)
-        return None
+        return fetch_binance_klines(symbol, interval, limit)
     if _is_stock(symbol):
         alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
         if alpaca_result:

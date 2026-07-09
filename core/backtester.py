@@ -1,22 +1,22 @@
 from statistics import stdev, mean
 
-from config import WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT, MAX_POSITION_SIZE_PCT
+from config import WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT, MAX_POSITION_SIZE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME
 from core.database import execute, fetchone, fetchall, get_unprofitable_strategies
 from core.strategies import ALL_STRATEGIES, scan_symbol
 from core.market import MarketData
 
-BACKTEST_DAYS = 90
+
 MAX_ACTIVE_POSITIONS = 3
 
 _REGIME_PRICING = {
-    "trending_up":   {"sl_mult": 2.5, "tp_mult": 4.0},
-    "trending_down": {"sl_mult": 2.5, "tp_mult": 4.0},
-    "trending":      {"sl_mult": 2.5, "tp_mult": 3.5},
-    "volatile":      {"sl_mult": 3.5, "tp_mult": 4.5},
-    "ranging":       {"sl_mult": 3.0, "tp_mult": 2.5},
+    "trending_up":   {"sl_mult": 1.5, "tp_mult": 2.5},
+    "trending_down": {"sl_mult": 1.5, "tp_mult": 2.5},
+    "trending":      {"sl_mult": 1.5, "tp_mult": 2.0},
+    "volatile":      {"sl_mult": 2.0, "tp_mult": 2.5},
+    "ranging":       {"sl_mult": 1.5, "tp_mult": 1.5},
 }
 
-_DEFAULT_PRICING = {"sl_mult": 3.0, "tp_mult": 3.0}
+_DEFAULT_PRICING = {"sl_mult": 1.5, "tp_mult": 2.0}
 
 
 def fetch_klines(symbol, interval="1d", limit=100):
@@ -44,9 +44,9 @@ def _pos_value(pos, current_price):
     return pos["qty"] * (2 * pos["entry"] - current_price)
 
 
-def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE):
-    ohlc = fetch_klines(symbol, interval="1d", limit=days + 50)
-    if len(ohlc) < 50:
+def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE):
+    ohlc = fetch_klines(symbol, interval=TRADING_TIMEFRAME, limit=bars + 200) or []
+    if len(ohlc) < 200:
         return None
 
     fee_ratio = TRADE_FEE_PCT / 100.0
@@ -57,7 +57,7 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
     market = MarketData()
     bad_strats = get_unprofitable_strategies()
 
-    for i in range(50, len(ohlc)):
+    for i in range(200, len(ohlc)):
         slice_data = ohlc[:i + 1]
         current = ohlc[i]
         high, low = current["high"], current["low"]
@@ -145,7 +145,7 @@ def backtest_symbol(symbol, days=BACKTEST_DAYS, initial_capital=INITIAL_BALANCE)
             "symbol": symbol, "side": pos["side"], "qty": pos["qty"],
             "entry": pos["entry"], "exit": exit_price,
             "pnl": round(pnl - exit_fee, 2), "pnl_pct": round((pnl / (pos["entry"] * pos["qty"])) * 100, 2),
-            "reason": "open", "bar": len(ohlc),
+            "reason": "close", "bar": len(ohlc),
         })
 
     return _compute_metrics(symbol, trades, equity_curve, initial_capital)

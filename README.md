@@ -7,17 +7,16 @@ Multi-agent crypto trading bot with paper/live broker support, 25+ strategies, r
 Agents run sequentially each cycle in a defined pipeline, sharing state through JSON files in `data/reports/`:
 
 ```
-Orchestrator → ResearchAnalyst → HealthMonitor → SentimentAgent → RegimeAgent
-→ PricingAgent → RiskManager → PositionSizer → PortfolioManagerAgent
-→ ComplianceAgent → ExecutionAgent → Trader → Auditor → OptimizerAgent
+Orchestrator → HealthMonitor → SentimentAgent → RegimeAgent → ResearchAnalyst
+→ RiskManager → PositionSizer → PortfolioManagerAgent
+→ ComplianceAgent → ExecutionAgent → Trader → Auditor
 ```
 
 - **Orchestrator** — coordinates the cycle; writes start/end markers to shared memory
-- **ResearchAnalyst** — fetches OHLC data, runs 25+ strategies per symbol, produces opportunities
 - **HealthMonitor** — checks broker connectivity, data freshness, error rates
 - **SentimentAgent** — scores market mood from price breadth and Fear & Greed Index
 - **RegimeAgent** — detects regime (trending/ranging/volatile) per symbol via ADX, BB width, ATR
-- **PricingAgent** — computes per-symbol SL, TP, risk %, and entry price from regime-aware multipliers
+- **ResearchAnalyst** — fetches OHLC data, runs 25+ strategies per symbol, produces opportunities, and computes per-symbol SL/TP/risk % via regime-aware pricing
 - **RiskManager** — sets portfolio-level risk limits (per-symbol, volatility, correlation)
 - **PositionSizer** — computes Kelly-optimal position sizes based on historical trade stats
 - **PortfolioManagerAgent** — allocates capital across opportunities with strategy-weighted scoring
@@ -25,7 +24,7 @@ Orchestrator → ResearchAnalyst → HealthMonitor → SentimentAgent → Regime
 - **ExecutionAgent** — builds formal trade plans with SL/TP/RR, checks spread before approval
 - **Trader** — executes orders through the selected broker; checks stop-losses on every cycle
 - **Auditor** — reviews performance, generates suggestions, tracks agent health
-- **OptimizerAgent** — grid-searches parameter ranges to improve weak strategy metrics
+- **OptimizerAgent** — grid-searches parameter ranges to improve weak strategy metrics (runs in background thread, not in cycle)
 
 ## Features
 
@@ -59,6 +58,7 @@ Copy `.env.example` to `.env` and configure:
 | `TRADING_CAPITAL` | `10000` | Initial paper balance |
 | `TRADING_INTERVAL_MINUTES` | `60` | Minutes between trading cycles |
 | `WATCHED_SYMBOLS` | 20 cryptos | Comma-separated symbol list |
+| `BINANCE_ALL_SYMBOLS` | — | `true` fetches all USDT pairs from Binance at startup (uses testnet if `BINANCE_USE_TESTNET=true`) |
 | `TELEGRAM_BOT_TOKEN` | — | Bot token for notifications |
 | `TELEGRAM_CHAT_ID` | — | Chat ID for notifications |
 | `RESET_ON_START` | — | `true` to wipe all data on next restart (⚠ removes trading history) |
@@ -99,7 +99,7 @@ The web dashboard is available on the configured `PORT` (default 8000). The `.en
 python -m pytest
 ```
 
-195 tests covering all agents, broker, portfolio, position manager, database, memory, strategies, analytics, backtester, and the full pipeline smoke test. All tests run offline against sandboxed data directories.
+353 tests covering all agents, broker, portfolio, position manager, database, memory, strategies, analytics, backtester, and the full pipeline smoke test. All tests run offline against sandboxed data directories.
 
 ### Test coverage
 

@@ -113,10 +113,10 @@ class TestPickWeakestParam:
         param, meta = a._pick_weakest_param({"win_rate": 50, "analytics": {"sharpe": 1.0, "profit_factor": 2.0}, "total_pnl_pct": -5}, [])
         assert param == "RISK_PER_TRADE_PCT"
 
-    def test_high_exposure(self):
+    def test_high_exposure_no_longer_tunable(self):
         a = OptimizerAgent.__new__(OptimizerAgent)
         param, meta = a._pick_weakest_param({"win_rate": 50, "analytics": {"sharpe": 1.0, "profit_factor": 2.0}, "total_pnl_pct": 5, "positions": 3, "current_exposure": 60}, [])
-        assert param == "MAX_POSITION_SIZE_PCT"
+        assert param is None
 
     def test_returns_none_when_all_ok(self):
         a = OptimizerAgent.__new__(OptimizerAgent)

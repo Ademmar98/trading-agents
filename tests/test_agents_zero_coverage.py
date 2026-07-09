@@ -240,20 +240,21 @@ class TestResearchAnalyst:
             MockMarket.return_value = market
 
             with patch("agents.analyst.analyze_symbol_multiframe", return_value=None):
-                with patch("agents.analyst.scan_symbol", return_value=[
-                    {"action": "BUY", "confidence": 0.8, "reasons": ["trend"], "strategies": ["FVG"],
-                     "symbol": "BTC/USD"}
-                ]):
-                    with patch("agents.analyst.get_unprofitable_strategies", return_value=[]):
+                with patch("agents.analyst.analyze_symbol_mtf", return_value={"action": "HOLD", "confidence": 0, "mtf_details": {}}):
+                    with patch("agents.analyst.scan_symbol", return_value=[
+                        {"action": "BUY", "confidence": 0.8, "reasons": ["trend"], "strategies": ["FVG"],
+                         "symbol": "BTC/USD"}
+                    ]):
+                            with patch("agents.analyst.get_unprofitable_strategies", return_value=[]):
 
-                        from agents.analyst import ResearchAnalyst
-                        agent = ResearchAnalyst()
-                        agent.memory = mock_memory
-                        result = agent.run()
+                                from agents.analyst import ResearchAnalyst
+                                agent = ResearchAnalyst()
+                                agent.memory = mock_memory
+                                result = agent.run()
 
-                        assert result is not None
-                        assert "BTC/USD" in result
-                        assert result["BTC/USD"]["price"] == 50000
+                                assert result is not None
+                                assert "BTC/USD" in result
+                                assert result["BTC/USD"]["price"] == 50000
 
     def test_logs_summary(self, mock_memory):
         prices = {"BTC/USD": {"price": 50000, "change_24h": 2.5, "volume_24h": 1e9, "bid": 49990, "ask": 50010}}
@@ -268,13 +269,14 @@ class TestResearchAnalyst:
             MockMarket.return_value = market
 
             with patch("agents.analyst.analyze_symbol_multiframe", return_value=None):
-                with patch("agents.analyst.scan_symbol", return_value=[]):
-                    with patch("agents.analyst.get_unprofitable_strategies", return_value=[]):
+                with patch("agents.analyst.analyze_symbol_mtf", return_value={"action": "HOLD", "confidence": 0, "mtf_details": {}}):
+                        with patch("agents.analyst.scan_symbol", return_value=[]):
+                            with patch("agents.analyst.get_unprofitable_strategies", return_value=[]):
 
-                        from agents.analyst import ResearchAnalyst
-                        agent = ResearchAnalyst()
-                        agent.memory = mock_memory
-                        agent.run()
+                                from agents.analyst import ResearchAnalyst
+                                agent = ResearchAnalyst()
+                                agent.memory = mock_memory
+                                agent.run()
 
-                        logged = [c for c in mock_memory.log.call_args_list if "0 opportunities" in str(c)]
-                        assert logged
+                                logged = [c for c in mock_memory.log.call_args_list if "0 opportunities" in str(c)]
+                                assert logged

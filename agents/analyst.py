@@ -1,10 +1,12 @@
 import time
+import concurrent.futures
 
-from config import WATCHED_SYMBOLS
+from config import WATCHED_SYMBOLS, TRADING_TIMEFRAME, BACKTEST_BARS
 from agents.base_agent import BaseAgent
 from core.market import MarketData
 from core.strategies import scan_symbol
 from core.multiframe import analyze_symbol_multiframe
+from core.scalping_signals import analyze_symbol_mtf
 from core.database import get_unprofitable_strategies
 from core.pricing import compute_pricing
 
@@ -27,79 +29,111 @@ class ResearchAnalyst(BaseAgent):
             self.log("WARNING: No market data received")
             return
 
-        analyses = {}
-        opportunities = []
+        symbols = list(prices.keys())
         regime_scan = self.memory.read("analyses", "regime_scan") or {}
         symbol_regimes = regime_scan.get("symbols", {})
-        for symbol, data in prices.items():
-            ohlc = self.market.get_ohlc(symbol, days=100)
-            hist = self.market.get_historical(symbol)
-            indicators = self.market.compute_indicators(hist)
+        bad_strats = get_unprofitable_strategies()
 
-            mtf_signal = analyze_symbol_multiframe(symbol)
+        analyses = {}
+        opportunities = []
 
-            regime = symbol_regimes.get(symbol, {}).get("regime") if symbol_regimes else None
-            bad_strats = get_unprofitable_strategies()
-            signals = scan_symbol(ohlc, regime=regime, exclude_strategies=bad_strats) if ohlc and len(ohlc) >= 30 else []
-
-            analyses[symbol] = {
-                "price": data["price"],
-                "change_24h": data["change_24h"],
-                "volume_24h": data["volume_24h"],
-                "type": data.get("type", "unknown"),
-                "bid": data.get("bid"),
-                "ask": data.get("ask"),
-                **indicators,
-                "signals": signals,
-                "mtf_signal": mtf_signal,
-            }
-            seen_actions = set()
-            for sig in signals:
-                action = sig["action"]
-                if action in seen_actions:
-                    continue
-                seen_actions.add(action)
-                confidence = sig["confidence"]
-                reasons = list(sig["reasons"])
-                if mtf_signal and mtf_signal.get("action") == action:
-                    confidence = max(confidence, mtf_signal["confidence"])
-                    reasons = mtf_signal["reasons"] + reasons
-
-                opp = {
-                    "symbol": symbol,
-                    "action": action,
-                    "confidence": min(confidence, 0.95),
+        def analyze_symbol(symbol):
+            data = prices[symbol]
+            try:
+                ohlc = self.market.get_ohlc(symbol, days=BACKTEST_BARS, interval=TRADING_TIMEFRAME)
+                hist = self.market.get_historical(symbol)
+                indicators = self.market.compute_indicators(hist)
+                mtf_signal = analyze_symbol_multiframe(symbol)
+                scalping_signal = analyze_symbol_mtf(symbol)
+                regime = symbol_regimes.get(symbol, {}).get("regime") if symbol_regimes else None
+                signals = scan_symbol(ohlc, regime=regime, exclude_strategies=bad_strats) if ohlc and len(ohlc) >= 30 else []
+                return symbol, {
                     "price": data["price"],
-                    "reasons": reasons[:5],
-                    "strategies": sig["strategies"],
-                    "regime": regime,
-                    "multi_timeframe": mtf_signal is not None,
-                    "indicators": {
-                        "trend": indicators.get("trend", "neutral"),
-                        "rsi": indicators.get("rsi_14", 50),
-                        "volatility": indicators.get("volatility", 0),
-                        "atr": indicators.get("atr", 0),
-                    }
-                }
+                    "change_24h": data["change_24h"],
+                    "volume_24h": data["volume_24h"],
+                    "type": data.get("type", "unknown"),
+                    "bid": data.get("bid"),
+                    "ask": data.get("ask"),
+                    **indicators,
+                    "signals": signals,
+                    "mtf_signal": mtf_signal,
+                    "scalping_signal": scalping_signal,
+                }, signals, mtf_signal, scalping_signal, regime, indicators
+            except Exception as e:
+                self.log(f"Error analyzing {symbol}: {e}")
+                return symbol, None, [], None, None, None, {}
 
-                pricing = compute_pricing(symbol, action, data["price"], {**data, **indicators}, regime, indicators.get("atr", 0))
-                opp.update(pricing)
-                opportunities.append(opp)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(analyze_symbol, sym): sym for sym in symbols}
+            for future in concurrent.futures.as_completed(futures):
+                result = future.result()
+                sym, analysis, signals, mtf_signal, scalping_signal, regime, indicators = result
+                if analysis is None:
+                    continue
+                analyses[sym] = analysis
+                seen_actions = set()
+                for sig in signals:
+                    action = sig["action"]
+                    if action in seen_actions:
+                        continue
+                    seen_actions.add(action)
+                    confidence = sig["confidence"]
+                    reasons = list(sig["reasons"])
+                    if mtf_signal and mtf_signal.get("action") == action:
+                        confidence = max(confidence, mtf_signal["confidence"])
+                        reasons = mtf_signal["reasons"] + reasons
+                    opp = {
+                        "symbol": sym, "action": action,
+                        "confidence": min(confidence, 0.95),
+                        "price": prices[sym]["price"], "reasons": reasons[:5],
+                        "strategies": sig["strategies"],
+                        "regime": regime, "multi_timeframe": mtf_signal is not None,
+                        "indicators": {
+                            "trend": indicators.get("trend", "neutral"),
+                            "rsi": indicators.get("rsi_14", 50),
+                            "volatility": indicators.get("volatility", 0),
+                            "atr": indicators.get("atr", 0),
+                        }
+                    }
+                    pricing = compute_pricing(sym, action, prices[sym]["price"],
+                                              {**prices[sym], **indicators}, regime, indicators.get("atr", 0))
+                    opp.update(pricing)
+                    opportunities.append(opp)
+                if scalping_signal and scalping_signal["action"] != "HOLD":
+                    action = scalping_signal["action"]
+                    if action not in seen_actions:
+                        seen_actions.add(action)
+                        opp = {
+                            "symbol": sym, "action": action,
+                            "confidence": scalping_signal["confidence"],
+                            "price": prices[sym]["price"],
+                            "reasons": [f"scalping_mtf:{action}"] + [
+                                f"{tf}:{d['action']}({d['confidence']:.2f})"
+                                for tf, d in scalping_signal.get("mtf_details", {}).items()
+                            ],
+                            "strategies": ["scalping_mtf"],
+                            "regime": regime, "multi_timeframe": True,
+                            "indicators": {
+                                "trend": indicators.get("trend", "neutral"),
+                                "rsi": indicators.get("rsi_14", 50),
+                                "volatility": indicators.get("volatility", 0),
+                                "atr": indicators.get("atr", 0),
+                            }
+                        }
+                        pricing = compute_pricing(sym, action, prices[sym]["price"],
+                                                  {**prices[sym], **indicators}, regime, indicators.get("atr", 0))
+                        opp.update(pricing)
+                        opportunities.append(opp)
 
         opportunities.sort(key=lambda o: o["confidence"], reverse=True)
         summary = f"Analyzed {len(analyses)} symbols, found {len(opportunities)} opportunities"
-
         pricing_map = {o["symbol"]: o for o in opportunities}
-
         self.memory.write("analyses", "market_scan", {
-            "summary": summary,
-            "opportunities": opportunities,
-            "all_analyses": analyses,
-            "timestamp": time.time(),
+            "summary": summary, "opportunities": opportunities,
+            "all_analyses": analyses, "timestamp": time.time(),
         })
         self.memory.write("decisions", "pricing", {
-            "pricing_map": pricing_map,
-            "timestamp": time.time(),
+            "pricing_map": pricing_map, "timestamp": time.time(),
         })
         self.log(summary)
         if opportunities:

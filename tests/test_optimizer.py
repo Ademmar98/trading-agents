@@ -117,7 +117,7 @@ class TestGetOptimizationResults:
             assert result[0]["symbol"] == "BTC/USD"
 
 
-def _make_ohlc(count=100, base_close=100, volatility=2):
+def _make_ohlc(count=220, base_close=100, volatility=2):
     import math
     ohlc = []
     for i in range(count):
@@ -153,7 +153,7 @@ class TestBacktestWithParamsFull:
             assert result is not None
 
     def test_sell_hits_sl(self):
-        ohlc = _make_ohlc(count=100, base_close=100, volatility=3)
+        ohlc = _make_ohlc(count=220, base_close=100, volatility=3)
         signals = [{"action": "SELL", "confidence": 0.9}]
         with patch("core.optimizer.fetch_klines", return_value=ohlc), \
              patch("core.optimizer.scan_symbol", return_value=signals):

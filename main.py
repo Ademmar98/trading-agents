@@ -193,10 +193,10 @@ def _rebalance_positions():
 # chain runs: analysis -> sentiment/regime -> risk -> portfolio -> compliance -> execution
 CYCLE_AGENTS = (
     Orchestrator,
-    ResearchAnalyst,
     HealthMonitor,
     SentimentAgent,
     RegimeAgent,
+    ResearchAnalyst,
     RiskManager,
     PositionSizer,
     PortfolioManagerAgent,
@@ -204,7 +204,6 @@ CYCLE_AGENTS = (
     ExecutionAgent,
     Trader,
     Auditor,
-    OptimizerAgent,
 )
 
 
@@ -417,10 +416,10 @@ def main():
 
     console.print("[dim]Running backtests on key symbols...[/dim]")
     try:
-        bt_symbols = [s for s in WATCHED_SYMBOLS if "/" in s][:5]
+        bt_symbols = [s for s in WATCHED_SYMBOLS if "/" in s][:10]
         bt_results = run_all_backtests(bt_symbols)
         console.print(f"[dim]Backtested {len(bt_results)} symbols[/dim]")
-        for r in bt_results[:3]:
+        for r in bt_results[:10]:
             c = "green" if r["total_return"] >= 0 else "red"
             console.print(f"  {r['symbol']:8s}  [{c}]{r['total_return']:+.1f}%[/{c}]  "
                           f"{r['total_trades']}t  WR:{r['win_rate']:.0f}%  "
@@ -437,6 +436,18 @@ def main():
 
     thread = threading.Thread(target=cycle_loop, daemon=True)
     thread.start()
+
+    def optimizer_loop():
+        from agents.optimizer_agent import OptimizerAgent
+        while True:
+            try:
+                OptimizerAgent().run()
+            except Exception as e:
+                memory.log_error("optimizer", str(e))
+            time.sleep(7200)  # every 2 hours
+
+    opt_thread = threading.Thread(target=optimizer_loop, daemon=True)
+    opt_thread.start()
 
     try:
         if HEADLESS:

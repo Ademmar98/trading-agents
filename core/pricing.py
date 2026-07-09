@@ -2,14 +2,14 @@ from config import RISK_PER_TRADE_PCT
 
 
 REGIME_PRICING = {
-    "trending_up":   {"sl_mult": 2.5, "tp_mult": 4.0, "entry_slip": 0.003, "risk_mult": 1.10},
-    "trending_down": {"sl_mult": 2.5, "tp_mult": 4.0, "entry_slip": 0.003, "risk_mult": 1.10},
-    "trending":      {"sl_mult": 2.5, "tp_mult": 3.5, "entry_slip": 0.004, "risk_mult": 1.00},
-    "volatile":      {"sl_mult": 3.5, "tp_mult": 4.5, "entry_slip": 0.005, "risk_mult": 0.85},
-    "ranging":       {"sl_mult": 3.0, "tp_mult": 2.5, "entry_slip": 0.004, "risk_mult": 0.90},
+    "trending_up":   {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.10},
+    "trending_down": {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.10},
+    "trending":      {"sl_mult": 1.5, "tp_mult": 2.0, "entry_slip": 0.002, "risk_mult": 1.00},
+    "volatile":      {"sl_mult": 2.0, "tp_mult": 2.5, "entry_slip": 0.003, "risk_mult": 0.85},
+    "ranging":       {"sl_mult": 1.5, "tp_mult": 1.5, "entry_slip": 0.002, "risk_mult": 0.90},
 }
 
-DEFAULT_PRICING = {"sl_mult": 3.0, "tp_mult": 3.5, "entry_slip": 0.003, "risk_mult": 0.90}
+DEFAULT_PRICING = {"sl_mult": 1.5, "tp_mult": 2.0, "entry_slip": 0.002, "risk_mult": 0.90}
 
 
 def compute_pricing(symbol, action, price, data, regime=None, atr_val=0):

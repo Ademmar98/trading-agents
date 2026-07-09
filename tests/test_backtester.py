@@ -121,7 +121,7 @@ def test_backtest_symbol_short_data():
 def test_backtest_symbol_runs():
     from core.backtester import backtest_symbol
     ohlc = [{"high": 100 + i, "low": 99 + i, "close": 99.5 + i, "date": f"2024-01-{d:02d}"}
-            for i, d in enumerate(range(1, 101))]
+            for i, d in enumerate(range(1, 301))]
     with patch("core.backtester.fetch_klines", return_value=ohlc):
         with patch("core.backtester.scan_symbol", return_value=[]):
             result = backtest_symbol("TEST/USD", initial_capital=10000)
@@ -148,7 +148,7 @@ def test_fetch_klines():
 def test_backtest_symbol_with_signals():
     from core.backtester import backtest_symbol
     ohlc = [{"high": 100 + i, "low": 99 + i, "close": 99.5 + i, "date": f"2024-01-{d:02d}"}
-            for i, d in enumerate(range(1, 101))]
+            for i, d in enumerate(range(1, 301))]
     signals = [{"action": "BUY", "confidence": 0.8, "strategies": ["test_strat"], "strategy": "test_strat"}]
     with patch("core.backtester.fetch_klines", return_value=ohlc), \
          patch("core.backtester.scan_symbol", return_value=signals), \

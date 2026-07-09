@@ -1,10 +1,11 @@
 ﻿import time
 
-from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT
+from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT, MAX_CONSECUTIVE_LOSSES
 from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
 from core.positions import PositionManager
 from core.equity import daily_loss_pct
+from core.database import fetchall
 
 MIN_CONFIDENCE = 0.55
 MAX_TRADES_PER_CYCLE = 3
@@ -44,6 +45,17 @@ class ComplianceAgent(BaseAgent):
         if day_pnl < -DAILY_LOSS_LIMIT_PCT:
             halted = True
             blockers.append(f"Daily loss {day_pnl:.2f}% breached the {DAILY_LOSS_LIMIT_PCT}% circuit breaker — no new trades today")
+        recent = fetchall("SELECT pnl FROM trades ORDER BY closed_at DESC LIMIT ?", [MAX_CONSECUTIVE_LOSSES])
+        consecutive_losses = 0
+        for row in recent:
+            if row["pnl"] < 0:
+                consecutive_losses += 1
+            else:
+                break
+        if consecutive_losses >= MAX_CONSECUTIVE_LOSSES:
+            halted = True
+            blockers.append(f"{consecutive_losses} consecutive losses hit the {MAX_CONSECUTIVE_LOSSES} limit — trading halted")
+
         if BROKER_TYPE not in {"paper", "binance", "mt5", "alpaca", "dxtrade"}:
             halted = True
             blockers.append(f"Unknown broker type: {BROKER_TYPE}")

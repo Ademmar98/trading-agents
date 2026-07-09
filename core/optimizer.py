@@ -1,21 +1,19 @@
 from core.backtester import backtest_symbol, fetch_klines
 from core.database import execute, fetchall, fetchone
 from core.strategies import scan_symbol
-from config import INITIAL_BALANCE
+from config import INITIAL_BALANCE, TRADE_FEE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME
+
+FEE_RATIO = TRADE_FEE_PCT / 100.0
 
 PARAM_GRID = {
-    "sl_mult": [1.5, 2.0, 2.5, 3.0],
-    "tp_mult": [4.0, 5.0, 6.0, 8.0],
-    "position_size_pct": [15, 20, 25],
-    "confidence_threshold": [0.4, 0.5, 0.6],
+    "sl_mult": [0.3, 0.5, 0.8, 1.2, 1.5],
+    "tp_mult": [0.6, 1.0, 1.5, 2.0, 2.5],
+    "position_size_pct": [25, 35, 45],
+    "confidence_threshold": [0.3, 0.4, 0.5],
 }
-
-BACKTEST_DAYS = 90
-
-
-def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, days=BACKTEST_DAYS):
-    ohlc = fetch_klines(symbol, interval="1d", limit=days + 50)
-    if len(ohlc) < 50:
+def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, bars=BACKTEST_BARS):
+    ohlc = fetch_klines(symbol, interval=TRADING_TIMEFRAME, limit=bars + 200) or []
+    if len(ohlc) < 200:
         return None
 
     cash = INITIAL_BALANCE
@@ -23,7 +21,7 @@ def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, days=
     trades = []
     equity_curve = []
 
-    for i in range(50, len(ohlc)):
+    for i in range(200, len(ohlc)):
         slice_data = ohlc[:i + 1]
         current = ohlc[i]
 
@@ -36,19 +34,23 @@ def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, days=
                 exit_price = sl if hit_sl else tp
                 reason = "SL" if hit_sl else "TP"
                 pnl = (exit_price - entry) * qty if side == "BUY" else (entry - exit_price) * qty
-                cash += qty * exit_price
+                exit_fee = qty * exit_price * FEE_RATIO
+                cash += qty * exit_price - exit_fee
                 trades.append({"pnl": round(pnl, 2)})
                 position = None
 
-        if not position and i % 5 == 0:
+        if not position:
             signals = scan_symbol(slice_data)
             signals = [s for s in signals if s["confidence"] >= conf_thresh]
             if signals and current["close"] > 0:
                 best = max(signals, key=lambda s: s["confidence"])
                 qty = (cash * pos_size / 100) / current["close"]
-                if qty >= 0.001 and qty * current["close"] <= cash:
+                if qty >= 0.001:
                     cost = qty * current["close"]
-                    cash -= cost
+                    entry_fee = cost * FEE_RATIO
+                    total_cost = cost + entry_fee
+                    if total_cost <= cash:
+                        cash -= total_cost
                     sl_p = round(current["close"] * (1 - (1 / 100) * sl_mult)) if best["action"] == "BUY" else round(current["close"] * (1 + (1 / 100) * sl_mult))
                     tp_p = round(current["close"] * (1 + (1 / 100) * tp_mult)) if best["action"] == "BUY" else round(current["close"] * (1 - (1 / 100) * tp_mult))
                     # Use volatility for SL/TP
@@ -160,7 +162,7 @@ def get_optimized_params(symbol):
     return {"sl_mult": 2.0, "tp_mult": 6.0, "position_size_pct": 25, "confidence_threshold": 0.0}
 
 
-def test_single_param(param_name, current_value, increment, symbol=None, days=BACKTEST_DAYS):
+def test_single_param(param_name, current_value, increment, symbol=None, bars=BACKTEST_BARS):
     """Test a single param with ±increment delta, return best value.
 
     Uses WATCHED_SYMBOLS[0] if symbol not given.  Returns the value
@@ -197,7 +199,7 @@ def test_single_param(param_name, current_value, increment, symbol=None, days=BA
         if target_kwarg:
             kwargs[target_kwarg] = val
 
-        result = _backtest_with_params(sym, **kwargs, days=days)
+        result = _backtest_with_params(sym, **kwargs, bars=bars)
         if result and result["score"] > best_score:
             best_score = result["score"]
             best_val = val
