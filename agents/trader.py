@@ -82,12 +82,20 @@ class Trader(BaseAgent):
                 self.log(f"Skipping {symbol}: market {drift_pct:.2f}% away from planned entry")
                 continue
 
-            order = self.broker.place_order(symbol, action, qty, market_price, sl=sl_price, tp=tp_price)
+            # Real fills cross the spread: pay the ask on BUY, hit the bid on
+            # SELL. Filling at mid overstates results by half the spread per leg.
+            quote = all_analyses.get(symbol, {}) if isinstance(all_analyses.get(symbol), dict) else {}
+            if action == "BUY":
+                fill_ref = quote.get("ask") or market_price
+            else:
+                fill_ref = quote.get("bid") or market_price
+
+            order = self.broker.place_order(symbol, action, qty, fill_ref, sl=sl_price, tp=tp_price)
             orders_executed.append(order)
             plan_id = planned.get("plan_id")
             strategies = planned.get("strategies") or []
             strategy = strategies[0] if strategies else ""
-            fill_price = order.get("price") or market_price
+            fill_price = order.get("price") or fill_ref
             fill_qty = order.get("quantity") or qty
             if order.get("status") == "filled":
                 if plan_id:

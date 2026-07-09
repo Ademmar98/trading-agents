@@ -182,6 +182,34 @@ def test_trader_fills_at_market_price():
     assert p.cash == pytest.approx(10000.0 - 0.05 * 50000.0 * (1 + fee))
 
 
+def test_trader_fills_cross_the_spread():
+    """BUY must fill at the ask, not the mid — half the spread is a real cost."""
+    from agents.trader import Trader
+
+    init_db()
+    memory = SharedMemory()
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    memory.write("analyses", "market_scan", {
+        "all_analyses": {"BTC/USD": {"price": 50000.0, "bid": 49990.0, "ask": 50010.0}},
+        "timestamp": time.time(),
+    })
+    memory.write("orders", "execution_plan", {
+        "status": "ready",
+        "orders": [{
+            "symbol": "BTC/USD", "action": "BUY", "qty": 0.05,
+            "price": 50000.0, "stop_loss": 48000.0, "take_profit": 56000.0,
+            "execution_ok": True, "strategies": ["test"], "plan_id": None,
+        }],
+        "timestamp": time.time(),
+    })
+
+    trader = Trader()
+    executed = trader.run()
+    filled = [o for o in executed if o.get("status") == "filled"]
+    assert filled and filled[0]["price"] == 50010.0  # ask, not mid
+    assert trader.pos_mgr.get_open_positions()[0]["entry_price"] == 50010.0
+
+
 def test_trader_skips_on_price_drift():
     """Market 4.5% past the planned entry: SL/TP geometry is stale, skip."""
     from agents.trader import Trader

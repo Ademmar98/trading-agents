@@ -11,17 +11,33 @@ PARAM_GRID = {
     "position_size_pct": [25, 35, 45],
     "confidence_threshold": [0.3, 0.4, 0.5],
 }
-def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, bars=BACKTEST_BARS):
-    ohlc = fetch_klines(symbol, interval=TRADING_TIMEFRAME, limit=bars + 200) or []
+# Walk-forward split: parameters are searched on the first fraction of the
+# history and only adopted if they hold up on the unseen remainder. Scoring
+# the search and the verdict on the same candles is how overfit params win.
+TRAIN_FRACTION = 0.7
+
+
+def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, bars=BACKTEST_BARS,
+                          ohlc=None, bar_range=None):
+    if ohlc is None:
+        ohlc = fetch_klines(symbol, interval=TRADING_TIMEFRAME, limit=bars + 200) or []
     if len(ohlc) < 200:
         return None
+    start, end = 200, len(ohlc)
+    if bar_range:
+        # Fractions of the full history; indicators still warm up on all
+        # candles before `start`, which is past data — no leakage.
+        start = max(200, int(len(ohlc) * bar_range[0]))
+        end = min(len(ohlc), int(len(ohlc) * bar_range[1]))
+        if end - start < 50:
+            return None
 
     cash = INITIAL_BALANCE
     position = None
     trades = []
     equity_curve = []
 
-    for i in range(200, len(ohlc)):
+    for i in range(start, end):
         slice_data = ohlc[:i + 1]
         current = ohlc[i]
 
@@ -111,6 +127,8 @@ def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, bars=
 
 
 def optimize_symbol(symbol, verbose=True):
+    # Fetch once — every grid combo replays the same candles.
+    ohlc = fetch_klines(symbol, interval=TRADING_TIMEFRAME, limit=BACKTEST_BARS + 200) or None
     best = None
     best_params = None
     total = 1
@@ -125,7 +143,8 @@ def optimize_symbol(symbol, verbose=True):
             for ps in PARAM_GRID["position_size_pct"]:
                 for ct in PARAM_GRID["confidence_threshold"]:
                     count += 1
-                    result = _backtest_with_params(symbol, sm, tm, ps, ct)
+                    result = _backtest_with_params(symbol, sm, tm, ps, ct,
+                                                   ohlc=ohlc, bar_range=(0.0, TRAIN_FRACTION))
                     if result and (best is None or result["score"] > best["score"]):
                         best = result
                         best_params = {"sl_mult": sm, "tp_mult": tm, "position_size_pct": ps, "confidence_threshold": ct}
@@ -133,10 +152,26 @@ def optimize_symbol(symbol, verbose=True):
                         print(f"    {symbol}: {count}/{total} combos...", end="\r")
     if verbose:
         print(f"    {symbol}: done ({count} combos)")
-    if best and best_params:
-        _save_optimization(symbol, best, best_params)
-        return {"symbol": symbol, "params": best_params, "result": best}
-    return None
+    if not (best and best_params):
+        return None
+    # Walk-forward gate: the winning params must survive candles the grid
+    # search never saw, or they are noise fit to the training window.
+    validation = _backtest_with_params(
+        symbol, best_params["sl_mult"], best_params["tp_mult"],
+        best_params["position_size_pct"], best_params["confidence_threshold"],
+        ohlc=ohlc, bar_range=(TRAIN_FRACTION, 1.0))
+    pf = (validation or {}).get("profit_factor")
+    adopted = bool(validation and validation["total_return"] > 0
+                   and (pf is None or pf >= 1.0))
+    if not adopted:
+        if verbose:
+            print(f"    {symbol}: best in-sample params failed out-of-sample validation — not adopted")
+        return {"symbol": symbol, "params": best_params, "result": best,
+                "validation": validation, "adopted": False}
+    # Persist the out-of-sample metrics — those are the honest numbers.
+    _save_optimization(symbol, validation, best_params)
+    return {"symbol": symbol, "params": best_params, "result": validation,
+            "validation": validation, "adopted": True}
 
 
 def _save_optimization(symbol, result, params):
@@ -173,9 +208,11 @@ def test_single_param(param_name, current_value, increment, symbol=None, bars=BA
     sym = symbol or (WATCHED_SYMBOLS[0] if WATCHED_SYMBOLS else "BTC/USD")
     candidates = [current_value, current_value + increment, current_value - increment]
 
+    ohlc = fetch_klines(sym, interval=TRADING_TIMEFRAME, limit=bars + 200) or None
     best_score = -1e9
     best_val = current_value
     best_result = None
+    best_kwargs = None
 
     for val in candidates:
         # Build kwargs for _backtest_with_params from PARAM_GRID defaults,
@@ -199,11 +236,22 @@ def test_single_param(param_name, current_value, increment, symbol=None, bars=BA
         if target_kwarg:
             kwargs[target_kwarg] = val
 
-        result = _backtest_with_params(sym, **kwargs, bars=bars)
+        result = _backtest_with_params(sym, **kwargs, bars=bars,
+                                       ohlc=ohlc, bar_range=(0.0, TRAIN_FRACTION))
         if result and result["score"] > best_score:
             best_score = result["score"]
             best_val = val
             best_result = result
+            best_kwargs = kwargs
+
+    # A proposed change (not the incumbent value) must also hold up on the
+    # unseen validation window before the agent gets to suggest it.
+    if best_val != current_value and best_kwargs:
+        validation = _backtest_with_params(sym, **best_kwargs, bars=bars,
+                                           ohlc=ohlc, bar_range=(TRAIN_FRACTION, 1.0))
+        pf = (validation or {}).get("profit_factor")
+        if not validation or validation["total_return"] <= 0 or (pf is not None and pf < 1.0):
+            return current_value, None
 
     return best_val, best_result
 

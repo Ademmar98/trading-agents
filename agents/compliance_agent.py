@@ -1,12 +1,28 @@
 ﻿import time
 
-from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT, MAX_CONSECUTIVE_LOSSES, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR
+from config import (
+    BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT,
+    MAX_CONSECUTIVE_LOSSES, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR,
+    MAX_OPEN_RISK_PCT, MAX_POSITIONS_PER_CLUSTER,
+)
 from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
 from core.positions import PositionManager
 from core.equity import daily_loss_pct
 from core.database import fetchall, fetchone
-from core.market import is_market_open
+from core.market import is_market_open, classify_symbol
+
+
+def _position_open_risk(p):
+    """Dollar risk a position still carries: distance to its stop x quantity.
+    A stop at/past entry (breakeven runner) carries zero risk; a position
+    without a stop is assumed to risk its full initial 1R distance."""
+    sl = p.get("stop_loss") or 0
+    if not sl:
+        return (p.get("initial_risk") or 0) * p["quantity"]
+    if p["side"] == "BUY":
+        return max(0.0, p["entry_price"] - sl) * p["quantity"]
+    return max(0.0, sl - p["entry_price"]) * p["quantity"]
 
 MIN_CONFIDENCE = 0.55
 MAX_TRADES_PER_CYCLE = 3
@@ -80,6 +96,21 @@ class ComplianceAgent(BaseAgent):
                     f"Hourly pacing cap reached ({opened_hour}/{MAX_TRADES_PER_HOUR}) — resumes within the hour")
             entries_left = hour_left if entries_left is None else min(entries_left, hour_left)
 
+        # Portfolio heat + cluster concentration, computed once per cycle.
+        # New approvals this cycle aren't re-counted (MAX_TRADES_PER_CYCLE
+        # bounds the overshoot to a couple of positions).
+        open_positions = self._pos_mgr.get_open_positions()
+        equity = portfolio.equity or 1
+        heat_pct = sum(_position_open_risk(p) for p in open_positions) / equity * 100
+        heat_full = MAX_OPEN_RISK_PCT > 0 and heat_pct >= MAX_OPEN_RISK_PCT
+        if heat_full:
+            warnings.append(
+                f"Portfolio heat {heat_pct:.1f}% >= {MAX_OPEN_RISK_PCT}% cap — new entries paused until risk unwinds")
+        cluster_counts = {}
+        for p in open_positions:
+            k = classify_symbol(p["symbol"])
+            cluster_counts[k] = cluster_counts.get(k, 0) + 1
+
         approved = []
         rejected = []
         for opp in candidates:
@@ -96,6 +127,13 @@ class ComplianceAgent(BaseAgent):
                 reasons.append("Confidence below compliance threshold")
             if not is_market_open(opp.get("symbol", "")):
                 reasons.append("Market closed for this symbol")
+            if heat_full:
+                reasons.append(f"Portfolio heat {heat_pct:.1f}% at cap")
+            if MAX_POSITIONS_PER_CLUSTER > 0:
+                cluster = classify_symbol(opp.get("symbol", ""))
+                if cluster_counts.get(cluster, 0) >= MAX_POSITIONS_PER_CLUSTER:
+                    reasons.append(
+                        f"Cluster '{cluster}' already holds {cluster_counts[cluster]} positions (cap {MAX_POSITIONS_PER_CLUSTER})")
             if opp.get("price", 0) <= 0 or opp.get("max_qty", 0) <= 0:
                 reasons.append("Invalid price or quantity")
             if self._pos_mgr.has_position(opp.get("symbol", "")):

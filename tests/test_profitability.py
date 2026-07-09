@@ -176,6 +176,60 @@ def test_daily_trade_cap_allows_entries_under_cap():
     assert len(report["approved_opportunities"]) == 1
 
 
+def test_position_open_risk_math():
+    from agents.compliance_agent import _position_open_risk
+    # Breakeven'd runner (stop past entry) carries zero risk
+    assert _position_open_risk({"side": "BUY", "entry_price": 100.0, "stop_loss": 100.3, "quantity": 1.0}) == 0.0
+    assert _position_open_risk({"side": "BUY", "entry_price": 100.0, "stop_loss": 95.0, "quantity": 2.0}) == 10.0
+    assert _position_open_risk({"side": "SELL", "entry_price": 100.0, "stop_loss": 105.0, "quantity": 1.0}) == 5.0
+
+
+def test_portfolio_heat_cap_blocks_entries(monkeypatch):
+    import agents.compliance_agent as ca
+    from core.positions import PositionManager
+
+    monkeypatch.setattr(ca, "MAX_OPEN_RISK_PCT", 2.0)
+    memory = SharedMemory()
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    # Open risk = (50000-45000) * 0.05 = $250 = 2.5% of $10k equity -> over the 2% cap
+    PositionManager().open_position("BTC/USD", "BUY", 0.05, 50000.0, sl=45000.0)
+    memory.write("decisions", "portfolio_plan", {
+        "approved_opportunities": [{
+            "symbol": "SOL/USD", "action": "BUY", "confidence": 0.9,
+            "price": 150.0, "max_qty": 1.0, "risk_ok": True,
+            "reasons": [], "strategies": ["test"],
+        }],
+        "timestamp": time.time(),
+    })
+
+    report = ca.ComplianceAgent().run()
+    assert report["approved_opportunities"] == []
+    assert any("Portfolio heat" in w for w in report["warnings"])
+
+
+def test_cluster_cap_blocks_same_cluster(monkeypatch):
+    import agents.compliance_agent as ca
+    from core.positions import PositionManager
+
+    monkeypatch.setattr(ca, "MAX_POSITIONS_PER_CLUSTER", 1)
+    memory = SharedMemory()
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    PositionManager().open_position("BTC/USD", "BUY", 0.01, 50000.0)  # no SL -> zero heat
+    memory.write("decisions", "portfolio_plan", {
+        "approved_opportunities": [{
+            "symbol": "SOL/USD", "action": "BUY", "confidence": 0.9,
+            "price": 150.0, "max_qty": 1.0, "risk_ok": True,
+            "reasons": [], "strategies": ["test"],
+        }],
+        "timestamp": time.time(),
+    })
+
+    report = ca.ComplianceAgent().run()
+    assert report["approved_opportunities"] == []
+    rejected = report["rejected_opportunities"][0]
+    assert any("Cluster 'crypto'" in r for r in rejected["compliance_reasons"])
+
+
 def test_unprofitable_strategies_include_negative_pnl():
     """A losing strategy with a decent win rate must still be excluded."""
     execute("INSERT INTO strategy_stats (strategy, trades, win_rate, pnl) VALUES ('BadRR', 10, 55.0, -120.0)")

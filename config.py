@@ -91,6 +91,13 @@ MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "0.5"))
 # loses, but the caps also idle the bot once hit, so they are opt-in.
 MAX_TRADES_PER_DAY = int(os.getenv("MAX_TRADES_PER_DAY", "0"))
 MAX_TRADES_PER_HOUR = int(os.getenv("MAX_TRADES_PER_HOUR", "0"))
+# Portfolio heat: total open risk (distance to stop x qty, summed over open
+# positions) as % of equity. Blocks new entries only while above the cap —
+# exits always run. 0 = off. Breakeven'd runners contribute zero risk.
+MAX_OPEN_RISK_PCT = float(os.getenv("MAX_OPEN_RISK_PCT", "10"))
+# Concurrent positions per asset cluster (crypto / stock / forex+metals):
+# 15 crypto longs are one BTC-beta bet, not 15 independent trades. 0 = off.
+MAX_POSITIONS_PER_CLUSTER = int(os.getenv("MAX_POSITIONS_PER_CLUSTER", "8"))
 # Base risk percentage fed to PricingAgent's per-opportunity calculated_risk_pct
 RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
 _LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))
