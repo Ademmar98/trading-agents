@@ -74,11 +74,18 @@ def _is_forex(symbol):
     return "/" not in symbol and symbol.isalpha() and len(symbol) == 6
 
 
+# Yahoo no longer serves spot metals as XAUUSD=X; COMEX front-month futures
+# are the standard free proxy and track spot closely.
+_METALS_YAHOO = {"XAUUSD": "GC=F", "XAGUSD": "SI=F"}
+
+
 def _yahoo_symbol(symbol):
+    if symbol in _METALS_YAHOO:
+        return _METALS_YAHOO[symbol]
     if _is_crypto(symbol):
         return symbol.replace("/", "-")
     if _is_forex(symbol):
-        return f"{symbol}=X"  # Yahoo quotes spot forex/metals with the =X suffix
+        return f"{symbol}=X"  # Yahoo quotes spot forex pairs with the =X suffix
     return symbol
 
 
@@ -216,10 +223,12 @@ def fetch_current_price(symbol):
             return r.json().get(cg_id, {}).get("usd", 0)
         except Exception:
             pass
-    elif _is_stock(symbol):
+    elif _is_stock(symbol) or _is_forex(symbol):
+        # Stocks quote directly; metals/forex go through the same _yahoo_symbol
+        # mapping as OHLC (GC=F / SI=F / EURUSD=X) instead of falling to 0.
         try:
             r = requests.get(
-                f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+                f"https://query1.finance.yahoo.com/v8/finance/chart/{_yahoo_symbol(symbol)}",
                 params={"range": "1d", "interval": "1d"},
                 headers={"User-Agent": "Mozilla/5.0"},
                 timeout=10,

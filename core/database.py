@@ -190,6 +190,8 @@ def _migrate(conn):
     })
     _ensure_columns(conn, "positions", {
         "peak_price": "REAL DEFAULT 0",
+        "partial_taken": "INTEGER DEFAULT 0",
+        "initial_risk": "REAL DEFAULT 0",
     })
     _ensure_columns(conn, "optimization_results", {
         "sl_mult": "REAL",

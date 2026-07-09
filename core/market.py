@@ -132,12 +132,13 @@ class MarketData:
                         }
                 except Exception:
                     pass
-        # fallback to Yahoo Finance with =X suffix
+        # fallback to Yahoo Finance (metals map to futures proxies, forex to =X)
+        from core.data_provider import _yahoo_symbol
         for sym in symbols:
             if sym not in result:
                 try:
                     r = requests.get(
-                        f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}=X",
+                        f"https://query1.finance.yahoo.com/v8/finance/chart/{_yahoo_symbol(sym)}",
                         params={"range": "1d", "interval": "1d"},
                         headers={"User-Agent": "Mozilla/5.0"},
                         timeout=10
@@ -302,9 +303,8 @@ class MarketData:
             except Exception:
                 pass
         try:
-            yahoo_sym = symbol.replace("/", "-")
-            if symbol.isalpha() and len(symbol) == 6:
-                yahoo_sym = f"{symbol}=X"
+            from core.data_provider import _yahoo_symbol
+            yahoo_sym = _yahoo_symbol(symbol)
             r = requests.get(
                 f"https://query1.finance.yahoo.com/v8/finance/chart/{yahoo_sym}",
                 params={"range": f"{days}d", "interval": "1d"},

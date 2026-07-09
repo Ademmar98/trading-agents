@@ -17,7 +17,13 @@ class Auditor(BaseAgent):
         logs = self.memory.get_recent_logs(50)
         analytics = compute_analytics()
 
-        trade_rows = fetchall("SELECT COALESCE(NULLIF(strategy, ''), 'unknown') AS strategy, pnl FROM trades")
+        # One logical trade per position: scaled exits write several rows
+        # (partial_tp + runner) whose split would otherwise skew win rates
+        # and get profitable strategies auto-disabled.
+        trade_rows = fetchall("""
+            SELECT MAX(COALESCE(NULLIF(strategy, ''), 'unknown')) AS strategy, SUM(pnl) AS pnl
+            FROM trades GROUP BY COALESCE(position_id, id)
+        """)
         strat_stats = {}
         for r in trade_rows:
             s = strat_stats.setdefault(r["strategy"], {"pnls": [], "wins": 0, "total": 0})

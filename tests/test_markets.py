@@ -34,8 +34,10 @@ def sandbox_data_dir(monkeypatch):
 
 def test_yahoo_symbol_mapping():
     assert _yahoo_symbol("BTC/USD") == "BTC-USD"
-    assert _yahoo_symbol("XAUUSD") == "XAUUSD=X"
-    assert _yahoo_symbol("XAGUSD") == "XAGUSD=X"
+    # Metals map to COMEX futures proxies (Yahoo dropped XAUUSD=X spot)
+    assert _yahoo_symbol("XAUUSD") == "GC=F"
+    assert _yahoo_symbol("XAGUSD") == "SI=F"
+    assert _yahoo_symbol("EURUSD") == "EURUSD=X"
     assert _yahoo_symbol("AAPL") == "AAPL"
     assert _yahoo_symbol("GOOGL") == "GOOGL"
 

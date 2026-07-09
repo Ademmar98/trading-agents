@@ -4,11 +4,19 @@ from core.database import fetchall, execute
 
 
 def compute_analytics():
+    # Group by position so a scaled exit (partial_tp row + runner row) counts
+    # as one trade with its net pnl — split rows would skew win rate,
+    # expectancy, and the per-strategy stats.
     trades = fetchall("""
-        SELECT t.*, p.side, p.entry_price, p.quantity
+        SELECT MAX(t.symbol) AS symbol, MAX(t.strategy) AS strategy,
+               MAX(t.reason) AS reason, SUM(t.pnl) AS pnl, SUM(t.qty) AS qty,
+               MIN(t.opened_at) AS opened_at, MAX(t.closed_at) AS closed_at,
+               MAX(p.side) AS side, MAX(p.entry_price) AS entry_price,
+               MAX(p.quantity) AS quantity
         FROM trades t
         LEFT JOIN positions p ON t.position_id = p.id
-        ORDER BY t.closed_at DESC
+        GROUP BY COALESCE(t.position_id, t.id)
+        ORDER BY MAX(t.closed_at) DESC
     """)
     trades = [dict(r) for r in trades]
 

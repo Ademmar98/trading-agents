@@ -22,11 +22,15 @@ def get_market_prices():
 
 
 def _live_pnl_stats():
-    row = fetchone("SELECT COUNT(*) AS cnt, SUM(pnl) AS total FROM trades")
+    # One logical trade per position (scaled exits write partial + runner rows)
+    row = fetchone("""
+        SELECT COUNT(*) AS cnt, SUM(pnl) AS total,
+               SUM(CASE WHEN pnl > 0 THEN 1 ELSE 0 END) AS w
+        FROM (SELECT SUM(pnl) AS pnl FROM trades GROUP BY COALESCE(position_id, id))
+    """)
     cnt = row["cnt"] if row else 0
     total = row["total"] if row and row["total"] else 0
-    wins = fetchone("SELECT COUNT(*) AS w FROM trades WHERE pnl > 0")
-    win_cnt = wins["w"] if wins else 0
+    win_cnt = row["w"] if row and row["w"] else 0
     return cnt, total, win_cnt
 
 

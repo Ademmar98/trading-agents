@@ -59,6 +59,15 @@ STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "5"))
 DAILY_LOSS_LIMIT_PCT = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "3"))
 TRAILING_STOP_PCT = float(os.getenv("TRAILING_STOP_PCT", "0.5"))
 TRAILING_ACTIVATION_PCT = float(os.getenv("TRAILING_ACTIVATION_PCT", "0.8"))
+# Scaled exits: bank part of a winner at a multiple of initial risk (R), move
+# the stop to breakeven, and let the remainder trail. R-based trailing replaces
+# the percent-of-price trail, which clipped winners at a fraction of what a
+# full stop-loss costs.
+PARTIAL_TP_ENABLED = os.getenv("PARTIAL_TP_ENABLED", "true").lower() == "true"
+PARTIAL_TP_R = float(os.getenv("PARTIAL_TP_R", "1.5"))
+PARTIAL_TP_FRACTION = float(os.getenv("PARTIAL_TP_FRACTION", "0.5"))
+TRAILING_ACTIVATION_R = float(os.getenv("TRAILING_ACTIVATION_R", "1.0"))
+TRAILING_STOP_R = float(os.getenv("TRAILING_STOP_R", "0.5"))
 BREAKEVEN_ENABLED = os.getenv("BREAKEVEN_ENABLED", "true").lower() == "true"
 BREAKEVEN_ACTIVATION_PCT = float(os.getenv("BREAKEVEN_ACTIVATION_PCT", "50"))
 # Fallback SL/TP multipliers — used by ExecutionAgent when pricing data is absent

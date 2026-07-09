@@ -60,6 +60,12 @@
       "skillPath": ".claude/skills/entry-signals/SKILL.md",
       "computedHash": "cf787db058d4e16fe4c8cee443e3d4683185f99604b09adad376d95a0e2b9a56"
     },
+    "exit-strategies": {
+      "source": "agiprolabs/claude-trading-skills",
+      "sourceType": "github",
+      "skillPath": "skills/exit-strategies/SKILL.md",
+      "computedHash": "ff86674962585a9b124a2f988f4dda70c048415a2f66b8649841c2416dbc8671"
+    },
     "finance-expert": {
       "source": "personamanagmentlayer/pcl",
       "sourceType": "github",
@@ -90,6 +96,12 @@
       "skillPath": "skills/llm-trading-agent-security/SKILL.md",
       "computedHash": "603585631eeb0e3f7eeda29afb7a5228fa1e5e36497b0387e7ba3c73cec27061"
     },
+    "macro-regime-detector": {
+      "source": "tradermonty/claude-trading-skills",
+      "sourceType": "github",
+      "skillPath": "skills/macro-regime-detector/SKILL.md",
+      "computedHash": "d4c486ab69a7f1b1096aab30218312a1ab39b54bd29a0edeb9ae3a1af07be47e"
+    },
     "market-regimes": {
       "source": "0xhubed/agent-trading-arena",
       "sourceType": "github",
@@ -107,6 +119,12 @@
       "sourceType": "github",
       "skillPath": "skills/portfolio-manager/SKILL.md",
       "computedHash": "5a7f954f1add7f8efbd662cce29c5d984f5f87187e9be4e328dc627e579773e1"
+    },
+    "position-sizer": {
+      "source": "tradermonty/claude-trading-skills",
+      "sourceType": "github",
+      "skillPath": "skills/position-sizer/SKILL.md",
+      "computedHash": "1f71bedd1676e16405494c0f9ef5489b80d2e09f29d3598a491cdb394b485a2f"
     },
     "python-logging-strategist": {
       "source": "jorgealves/agent_skills",

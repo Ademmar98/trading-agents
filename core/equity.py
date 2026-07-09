@@ -50,7 +50,11 @@ def daily_loss_pct():
 def build_daily_summary(date_str):
     """Stats for the Telegram report covering one completed UTC day."""
     p = load_portfolio()
-    rows = fetchall("SELECT pnl FROM trades WHERE date(closed_at) = ?", [date_str])
+    # Net per position within the day (scaled exits write partial + runner rows)
+    rows = fetchall("""
+        SELECT SUM(pnl) AS pnl FROM trades WHERE date(closed_at) = ?
+        GROUP BY COALESCE(position_id, id)
+    """, [date_str])
     pnls = [r["pnl"] for r in rows]
     wins = len([x for x in pnls if x > 0])
     start = day_start_equity(date_str)
