@@ -1,11 +1,11 @@
 ﻿import time
 
-from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT, MAX_CONSECUTIVE_LOSSES
+from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT, MAX_CONSECUTIVE_LOSSES, MAX_TRADES_PER_DAY
 from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
 from core.positions import PositionManager
 from core.equity import daily_loss_pct
-from core.database import fetchall
+from core.database import fetchall, fetchone
 
 MIN_CONFIDENCE = 0.55
 MAX_TRADES_PER_CYCLE = 3
@@ -60,6 +60,18 @@ class ComplianceAgent(BaseAgent):
             halted = True
             blockers.append(f"Unknown broker type: {BROKER_TYPE}")
 
+        # Trade-frequency cap: overtrading is a consistent loss pattern, and
+        # every extra round trip costs fees. Exits are unaffected — this only
+        # gates new entries.
+        opened_today = fetchone(
+            "SELECT COUNT(*) AS c FROM positions WHERE opened_at >= date('now')"
+        )
+        opened_today = opened_today["c"] if opened_today else 0
+        entries_left_today = max(0, MAX_TRADES_PER_DAY - opened_today)
+        if entries_left_today == 0:
+            warnings.append(
+                f"Daily trade cap reached ({opened_today}/{MAX_TRADES_PER_DAY}) — no new entries until tomorrow")
+
         approved = []
         rejected = []
         for opp in candidates:
@@ -83,7 +95,7 @@ class ComplianceAgent(BaseAgent):
             else:
                 approved.append({**opp, "compliance_ok": True})
 
-        approved = approved[:MAX_TRADES_PER_CYCLE]
+        approved = approved[:min(MAX_TRADES_PER_CYCLE, entries_left_today)]
         report = {
             "halted": halted,
             "blockers": blockers,

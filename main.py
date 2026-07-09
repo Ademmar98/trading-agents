@@ -208,6 +208,29 @@ CYCLE_AGENTS = (
 
 
 _cycle_count = 0
+_trigger_lock = threading.Lock()
+
+
+def process_price_triggers(prices):
+    """Check SL/TP/trailing triggers and close each one through the broker.
+
+    Every caller of pos_mgr.update_prices() must go through here: update_prices()
+    closes the SQLite position, and without the matching broker order the sale
+    proceeds are never credited back to cash — the position's full value would
+    silently vanish from equity. The lock keeps the cycle thread and the
+    monitor loop from racing on the same trigger.
+    """
+    with _trigger_lock:
+        triggered = pos_mgr.update_prices(prices)
+        if not triggered:
+            return []
+        broker = make_broker_with_retry()
+        for tr in triggered:
+            close_side = "SELL" if tr["side"] == "BUY" else "BUY"
+            order = broker.place_order(tr["symbol"], close_side, tr["qty"], tr["exit_price"])
+            memory.log("system", f"{tr['reason']}: {tr['symbol']} ${tr['pnl']:+.2f} (exit {order.get('status', '?')})")
+            notifier.on_sl_tp(tr)
+        return triggered
 
 
 def run_cycle():
@@ -219,13 +242,7 @@ def run_cycle():
 
         prices = websocket_prices.get_all_prices()
         if prices:
-            triggered = pos_mgr.update_prices(prices)
-            broker = make_broker_with_retry() if triggered else None
-            for tr in triggered:
-                close_side = "SELL" if tr["side"] == "BUY" else "BUY"
-                order = broker.place_order(tr["symbol"], close_side, tr["qty"], tr["exit_price"])
-                memory.log("system", f"{tr['reason']}: {tr['symbol']} ${tr['pnl']:+.2f} (exit {order.get('status', '?')})")
-                notifier.on_sl_tp(tr)
+            process_price_triggers(prices)
 
         _rebalance_positions()
         snapshot_equity()
@@ -454,7 +471,7 @@ def main():
             while True:
                 prices = websocket_prices.get_all_prices()
                 if prices:
-                    pos_mgr.update_prices(prices)
+                    process_price_triggers(prices)
                 sync_position_stores()
                 snapshot_equity()
                 time.sleep(30)
@@ -467,7 +484,7 @@ def main():
                         prices = {s: {"price": d.get("price", 0)}
                                  for s, d in (analysis.get("all_analyses", {}) or {}).items()}
                 if prices:
-                    pos_mgr.update_prices(prices)
+                    process_price_triggers(prices)
                     sync_position_stores()
                 portfolio = load_portfolio()
                 live.update(make_layout(portfolio, pos_mgr, memory, live_broker))

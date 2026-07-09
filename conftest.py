@@ -8,5 +8,9 @@ import tempfile
 os.environ["TRADING_DATA_DIR"] = tempfile.mkdtemp(prefix="trading-agents-test-")
 os.environ["BROKER_TYPE"] = "paper"
 os.environ.setdefault("TRADING_CAPITAL", "10000")
+# Blank these before config.py falls back to .env, or the Notifier goes live
+# and every agent run in the suite sends real Telegram messages.
+os.environ["TELEGRAM_BOT_TOKEN"] = ""
+os.environ["TELEGRAM_CHAT_ID"] = ""
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

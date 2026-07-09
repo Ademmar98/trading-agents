@@ -61,10 +61,15 @@ TRAILING_STOP_PCT = float(os.getenv("TRAILING_STOP_PCT", "0.5"))
 TRAILING_ACTIVATION_PCT = float(os.getenv("TRAILING_ACTIVATION_PCT", "0.8"))
 BREAKEVEN_ENABLED = os.getenv("BREAKEVEN_ENABLED", "true").lower() == "true"
 BREAKEVEN_ACTIVATION_PCT = float(os.getenv("BREAKEVEN_ACTIVATION_PCT", "50"))
-# Fallback SL/TP multipliers — used by ExecutionAgent when PricingAgent data is absent
+# Fallback SL/TP multipliers — used by ExecutionAgent when pricing data is absent
 SL_VOL_MULT = float(os.getenv("SL_VOL_MULT", "2.0"))
 TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "6.0"))
-MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "0.15"))
+# Must clear the round-trip fee (2 x TRADE_FEE_PCT = 0.2%) with real margin,
+# or trades that hit minimum TP still lose money after costs.
+MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "0.5"))
+# Trade-frequency cap per UTC day. Learned risk patterns show high trade
+# frequency strongly correlates with losses; entries beyond this are rejected.
+MAX_TRADES_PER_DAY = int(os.getenv("MAX_TRADES_PER_DAY", "15"))
 # Base risk percentage fed to PricingAgent's per-opportunity calculated_risk_pct
 RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
 _LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))

@@ -26,7 +26,10 @@ class TestPositionManager:
 
         result = pos_mgr.close_position(pos_id, 55000, reason="TP")
         assert result is not None
-        assert result["pnl"] == 500.0
+        # 500 gross minus round-trip fees on both legs
+        from config import TRADE_FEE_PCT
+        fees = (50000 + 55000) * 0.1 * (TRADE_FEE_PCT / 100.0)
+        assert result["pnl"] == pytest.approx(round(500.0 - fees, 2))
 
     def test_has_position(self, pos_mgr):
         pos_mgr.open_position("BTC/USD", "BUY", 0.1, 50000)

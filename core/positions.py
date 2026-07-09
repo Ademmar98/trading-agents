@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from config import TRAILING_STOP_PCT, TRAILING_ACTIVATION_PCT, BREAKEVEN_ENABLED, BREAKEVEN_ACTIVATION_PCT
+from config import TRAILING_STOP_PCT, TRAILING_ACTIVATION_PCT, BREAKEVEN_ENABLED, BREAKEVEN_ACTIVATION_PCT, TRADE_FEE_PCT
 from core.database import execute, fetchone, fetchall, init_db
 
 
@@ -32,6 +32,10 @@ class PositionManager:
             pnl = (exit_price - pos["entry_price"]) * pos["quantity"]
         else:
             pnl = (pos["entry_price"] - exit_price) * pos["quantity"]
+        # Net out round-trip fees: this pnl feeds strategy_stats and the
+        # unprofitable-strategy filter, which must not count fee-losing
+        # trades as wins.
+        pnl -= (pos["entry_price"] + exit_price) * pos["quantity"] * (TRADE_FEE_PCT / 100.0)
         pnl_pct = (pnl / (pos["entry_price"] * pos["quantity"])) * 100 if pos["entry_price"] * pos["quantity"] else 0
         now = datetime.now(timezone.utc).isoformat()
         execute("""

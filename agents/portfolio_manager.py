@@ -93,15 +93,17 @@ class PortfolioManagerAgent(BaseAgent):
         if not rows:
             return {}
         stats = [dict(r) for r in rows]
-        best_pnl = stats[0]["pnl"] or 0.01
+        best_pnl = stats[0]["pnl"] or 0
         weights = {}
         for s in stats:
-            ratio = max(s["pnl"] / best_pnl, -0.5)
-            wr = s.get("win_rate", 50) / 100.0
             if s["trades"] < 3:
                 weights[s["strategy"]] = 1.0
-            elif ratio < 0:
+            elif s["pnl"] < 0:
+                # Always penalize losers — dividing by a negative best_pnl
+                # would rank the worst strategy highest.
                 weights[s["strategy"]] = 0.50
+            elif best_pnl > 0:
+                weights[s["strategy"]] = round(0.5 + 0.5 * (s["pnl"] / best_pnl), 2)
             else:
-                weights[s["strategy"]] = round(0.5 + 0.5 * ratio, 2)
+                weights[s["strategy"]] = 1.0
         return weights

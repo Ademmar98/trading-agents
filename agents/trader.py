@@ -9,6 +9,10 @@ from core.dxtrade_broker import DXTradeBroker
 from core.positions import PositionManager
 from core.database import update_plan_status
 
+# Reject fills when the market has run this far past the planned entry —
+# the plan's SL/TP geometry no longer holds.
+MAX_PRICE_DRIFT_PCT = 1.5
+
 
 class Trader(BaseAgent):
     name = "trader"
@@ -69,23 +73,34 @@ class Trader(BaseAgent):
                 self.log(f"Skipping {symbol}: position already open")
                 continue
 
-            order = self.broker.place_order(symbol, action, qty, price, sl=sl_price, tp=tp_price)
+            # Execute at the real market price: the planned entry is a pullback
+            # target the market may never trade at, and paper-filling there
+            # books a cost basis reality wouldn't allow.
+            market_price = all_prices.get(symbol) or price
+            drift_pct = abs(market_price - price) / price * 100
+            if drift_pct > MAX_PRICE_DRIFT_PCT:
+                self.log(f"Skipping {symbol}: market {drift_pct:.2f}% away from planned entry")
+                continue
+
+            order = self.broker.place_order(symbol, action, qty, market_price, sl=sl_price, tp=tp_price)
             orders_executed.append(order)
             plan_id = planned.get("plan_id")
             strategies = planned.get("strategies") or []
             strategy = strategies[0] if strategies else ""
+            fill_price = order.get("price") or market_price
+            fill_qty = order.get("quantity") or qty
             if order.get("status") == "filled":
                 if plan_id:
                     update_plan_status(plan_id, "executed")
-                self.pos_mgr.open_position(symbol, action, qty, price, sl=sl_price, tp=tp_price, strategy=strategy)
+                self.pos_mgr.open_position(symbol, action, fill_qty, fill_price, sl=sl_price, tp=tp_price, strategy=strategy)
                 self.notifier.on_trade({
-                    "symbol": symbol, "side": action, "qty": qty,
-                    "price": price, "stop_loss": sl_price, "take_profit": tp_price,
+                    "symbol": symbol, "side": action, "qty": fill_qty,
+                    "price": fill_price, "stop_loss": sl_price, "take_profit": tp_price,
                     "status": "filled",
                 })
             status = "FILLED" if order.get("status") == "filled" else "REJECTED"
             self.log(
-                f"{action} {qty} {symbol} @ ${price:.5f} "
+                f"{action} {fill_qty} {symbol} @ ${fill_price:.5f} "
                 f"SL=${sl_price:.5f} TP=${tp_price:.5f} ({status})"
             )
 

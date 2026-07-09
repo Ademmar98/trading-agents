@@ -1,7 +1,7 @@
 ﻿import time
 from datetime import datetime, timezone
 
-from config import SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT
+from config import SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
 from core.portfolio import load_portfolio
@@ -54,6 +54,10 @@ class ExecutionAgent(BaseAgent):
                 continue
 
             pricing_entry = pricing_map.get(symbol) if isinstance(pricing_map, dict) else None
+            if pricing_entry and pricing_entry.get("action") != opp.get("action", "BUY"):
+                # Pricing computed for the opposite direction — its SL/TP would
+                # sit on the wrong side of entry; use inline pricing instead.
+                pricing_entry = None
             if pricing_entry:
                 entry_price = pricing_entry.get("entry_price", price)
                 sl_price = pricing_entry.get("stop_loss", 0)
@@ -78,8 +82,13 @@ class ExecutionAgent(BaseAgent):
                 entry_price = price
                 risk_pct = RISK_PER_TRADE_PCT
 
-            if tp_pct < MIN_TP_PCT:
-                rejected.append({**opp, "execution_reasons": [f"TP too small: {tp_pct:.1f}% < {MIN_TP_PCT}%"]})
+            # TP must clear the full cost of the round trip (entry fee + exit
+            # fee + spread) with margin, or the trade loses money even when it wins.
+            round_trip_cost = 2 * TRADE_FEE_PCT + spread_pct
+            min_viable_tp = max(MIN_TP_PCT, round_trip_cost * 1.5)
+            if tp_pct < min_viable_tp:
+                rejected.append({**opp, "execution_reasons": [
+                    f"TP too small: {tp_pct:.2f}% < {min_viable_tp:.2f}% (fees+spread {round_trip_cost:.2f}%)"]})
                 continue
 
             risk_amount = load_portfolio().equity * (risk_pct / 100)

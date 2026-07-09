@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime, timezone
 
-from config import DATA_DIR, STOP_LOSS_PCT, INITIAL_BALANCE
+from config import DATA_DIR, STOP_LOSS_PCT, INITIAL_BALANCE, TRADE_FEE_PCT
 from core.portfolio import Portfolio, Position, save_portfolio, load_portfolio
 
 
@@ -35,25 +35,30 @@ class PaperBroker:
             order["stop_loss"] = sl
         if tp:
             order["take_profit"] = tp
+        fee_ratio = TRADE_FEE_PCT / 100.0
         cost = quantity * price
         if side.upper() == "BUY":
             if symbol in self.portfolio.positions and self.portfolio.positions[symbol].quantity < 0:
                 pos = self.portfolio.positions[symbol]
                 cover_qty = min(quantity, abs(pos.quantity))
                 cost = cover_qty * price
-                self.portfolio.cash -= cost
-                realized_pnl = (pos.entry_price - price) * cover_qty
+                fee = cost * fee_ratio
+                self.portfolio.cash -= cost + fee
+                realized_pnl = (pos.entry_price - price) * cover_qty - fee
                 pos.quantity += cover_qty
                 if pos.quantity >= 0:
                     del self.portfolio.positions[symbol]
                 order["action"] = "COVER"
+                order["fee"] = round(fee, 4)
                 order["realized_pnl"] = round(realized_pnl, 2)
                 self.portfolio.trades.append(order)
-            elif cost > self.portfolio.cash:
+            elif cost * (1 + fee_ratio) > self.portfolio.cash:
                 order["status"] = "rejected"
                 order["reason"] = "insufficient funds"
             else:
-                self.portfolio.cash -= cost
+                fee = cost * fee_ratio
+                self.portfolio.cash -= cost + fee
+                order["fee"] = round(fee, 4)
                 if symbol in self.portfolio.positions and self.portfolio.positions[symbol].quantity > 0:
                     pos = self.portfolio.positions[symbol]
                     avg_cost = ((pos.entry_price * pos.quantity) + cost) / (pos.quantity + quantity)
@@ -70,22 +75,26 @@ class PaperBroker:
                 pos = self.portfolio.positions[symbol]
                 sell_qty = min(quantity, pos.quantity)
                 cost = sell_qty * price
-                self.portfolio.cash += cost
-                realized_pnl = (price - pos.entry_price) * sell_qty
+                fee = cost * fee_ratio
+                self.portfolio.cash += cost - fee
+                realized_pnl = (price - pos.entry_price) * sell_qty - fee
                 pos.quantity -= sell_qty
                 if pos.quantity <= 0:
                     del self.portfolio.positions[symbol]
                 order["action"] = "SELL"
+                order["fee"] = round(fee, 4)
                 order["realized_pnl"] = round(realized_pnl, 2)
                 self.portfolio.trades.append(order)
             else:
                 cost = quantity * price
-                self.portfolio.cash += cost
+                fee = cost * fee_ratio
+                self.portfolio.cash += cost - fee
                 self.portfolio.positions[symbol] = Position(
                     symbol=symbol, entry_price=price, quantity=-quantity,
                     current_price=price
                 )
                 order["action"] = "SHORT"
+                order["fee"] = round(fee, 4)
                 self.portfolio.trades.append(order)
         order["portfolio_cash"] = round(self.portfolio.cash, 2)
         self._save_order(order)

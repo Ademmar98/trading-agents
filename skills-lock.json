@@ -12,6 +12,12 @@
       "sourceType": "well-known",
       "computedHash": "7dfe1d4586c4db26bbaa3c676746cebf31dddba82a60da984590b0c40f2d94c2"
     },
+    "backtest": {
+      "source": "marketcalls/vectorbt-backtesting-skills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/backtest/SKILL.md",
+      "computedHash": "07abd1f1c30ba05cdc02215794999922f20100dcdc16e207e4e0142e8077b57a"
+    },
     "capture-api-response-test-fixture": {
       "source": "vercel/ai",
       "sourceType": "github",

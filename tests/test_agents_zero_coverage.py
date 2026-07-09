@@ -166,53 +166,6 @@ class TestHealthMonitor:
                 assert result["price_feed_alive"] is False
 
 
-class TestPricingAgent:
-    def test_no_opportunities(self, mock_memory):
-        mock_memory.read.return_value = {}
-        from agents.pricing_agent import PricingAgent
-        agent = PricingAgent()
-        agent.memory = mock_memory
-        result = agent.run()
-        assert len(result["pricing_map"]) == 0
-
-    def test_with_opportunities(self, mock_memory):
-        mock_memory.read.side_effect = lambda prefix, key: {
-            ("analyses", "market_scan"): {
-                "opportunities": [{
-                    "symbol": "BTC/USD", "action": "BUY", "price": 50000,
-                    "indicators": {"volatility": 2.0, "atr": 1000},
-                }],
-                "all_analyses": {"BTC/USD": {"volatility": 2.0, "atr": 1000}},
-            },
-            ("analyses", "regime_scan"): {"symbols": {"BTC/USD": {"regime": "trending_up"}}},
-        }.get((prefix, key))
-
-        from agents.pricing_agent import PricingAgent
-        agent = PricingAgent()
-        agent.memory = mock_memory
-        result = agent.run()
-
-        assert "BTC/USD" in result["pricing_map"]
-        pricing = result["pricing_map"]["BTC/USD"]
-        assert pricing["action"] == "BUY"
-        assert pricing["entry_price"] > 0
-
-    def test_skip_zero_price(self, mock_memory):
-        mock_memory.read.side_effect = lambda prefix, key: {
-            ("analyses", "market_scan"): {
-                "opportunities": [{"symbol": "BTC/USD", "action": "BUY", "price": 0}],
-                "all_analyses": {},
-            },
-            ("analyses", "regime_scan"): {},
-        }.get((prefix, key))
-
-        from agents.pricing_agent import PricingAgent
-        agent = PricingAgent()
-        agent.memory = mock_memory
-        result = agent.run()
-        assert len(result["pricing_map"]) == 0
-
-
 class TestResearchAnalyst:
     def test_no_prices(self, mock_memory):
         with patch("agents.analyst.MarketData") as MockMarket:

@@ -127,7 +127,11 @@ class ResearchAnalyst(BaseAgent):
 
         opportunities.sort(key=lambda o: o["confidence"], reverse=True)
         summary = f"Analyzed {len(analyses)} symbols, found {len(opportunities)} opportunities"
-        pricing_map = {o["symbol"]: o for o in opportunities}
+        # List is sorted by confidence desc, so setdefault keeps the strongest
+        # opportunity per symbol — a symbol can carry both a BUY and a SELL.
+        pricing_map = {}
+        for o in opportunities:
+            pricing_map.setdefault(o["symbol"], o)
         self.memory.write("analyses", "market_scan", {
             "summary": summary, "opportunities": opportunities,
             "all_analyses": analyses, "timestamp": time.time(),

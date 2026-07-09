@@ -148,15 +148,20 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
             "reason": "close", "bar": len(ohlc),
         })
 
-    return _compute_metrics(symbol, trades, equity_curve, initial_capital)
+    # Buy-and-hold over the same tested window: a strategy that trails simply
+    # holding the asset isn't earning its fees.
+    benchmark_return = ((ohlc[-1]["close"] - ohlc[200]["close"]) / ohlc[200]["close"]) * 100
+    return _compute_metrics(symbol, trades, equity_curve, initial_capital, benchmark_return)
 
 
-def _compute_metrics(symbol, trades, equity_curve, initial_capital):
+def _compute_metrics(symbol, trades, equity_curve, initial_capital, benchmark_return=0.0):
     final_equity = equity_curve[-1] if equity_curve else initial_capital
     if not equity_curve:
         return {"symbol": symbol, "total_return": 0, "final_equity": initial_capital,
                 "total_trades": 0, "win_rate": 0, "avg_win": 0, "avg_loss": 0,
-                "profit_factor": None, "max_drawdown": 0, "sharpe_ratio": 0, "trades": []}
+                "profit_factor": None, "max_drawdown": 0, "sharpe_ratio": 0, "trades": [],
+                "benchmark_return": round(benchmark_return, 2),
+                "beats_benchmark": 0 >= benchmark_return}
     total_return = ((final_equity - initial_capital) / initial_capital) * 100
     total_trades = len(trades)
     winning = [t for t in trades if t["pnl"] > 0]
@@ -190,6 +195,8 @@ def _compute_metrics(symbol, trades, equity_curve, initial_capital):
         "profit_factor": round(profit_factor, 2) if profit_factor != float("inf") else None,
         "max_drawdown": round(max_dd, 2),
         "sharpe_ratio": round(sharpe, 2),
+        "benchmark_return": round(benchmark_return, 2),
+        "beats_benchmark": total_return >= benchmark_return,
         "trades": trades[-20:],
     }
 

@@ -270,7 +270,12 @@ def get_strategy_stats_list():
 
 
 def get_unprofitable_strategies(min_trades=3, max_win_rate=40):
-    rows = fetchall("SELECT strategy FROM strategy_stats WHERE trades >= ? AND win_rate <= ?", [min_trades, max_win_rate])
+    # Drop a strategy when its win rate is poor OR it loses money overall —
+    # a 45% win rate with bad R:R still bleeds, and win rate alone missed that.
+    rows = fetchall(
+        "SELECT strategy FROM strategy_stats WHERE trades >= ? AND (win_rate <= ? OR pnl < 0)",
+        [min_trades, max_win_rate],
+    )
     return [r["strategy"] for r in rows]
 
 
