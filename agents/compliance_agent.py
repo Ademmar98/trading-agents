@@ -6,6 +6,7 @@ from core.portfolio import load_portfolio
 from core.positions import PositionManager
 from core.equity import daily_loss_pct
 from core.database import fetchall, fetchone
+from core.market import is_market_open
 
 MIN_CONFIDENCE = 0.55
 MAX_TRADES_PER_CYCLE = 3
@@ -86,6 +87,8 @@ class ComplianceAgent(BaseAgent):
                     reasons.append("Spot-only: SELL without holdings would open a short")
             if opp.get("confidence", 0) < MIN_CONFIDENCE:
                 reasons.append("Confidence below compliance threshold")
+            if not is_market_open(opp.get("symbol", "")):
+                reasons.append("Market closed for this symbol")
             if opp.get("price", 0) <= 0 or opp.get("max_qty", 0) <= 0:
                 reasons.append("Invalid price or quantity")
             if self._pos_mgr.has_position(opp.get("symbol", "")):

@@ -69,6 +69,19 @@ def _is_stock(symbol):
     return "/" not in symbol and symbol.isalpha() and len(symbol) <= 5
 
 
+def _is_forex(symbol):
+    # 6-letter pairs like EURUSD, and metals XAUUSD/XAGUSD
+    return "/" not in symbol and symbol.isalpha() and len(symbol) == 6
+
+
+def _yahoo_symbol(symbol):
+    if _is_crypto(symbol):
+        return symbol.replace("/", "-")
+    if _is_forex(symbol):
+        return f"{symbol}=X"  # Yahoo quotes spot forex/metals with the =X suffix
+    return symbol
+
+
 def fetch_binance_klines(symbol, interval="1d", limit=100):
     bsym = _to_binance_symbol(symbol)
     try:
@@ -87,12 +100,7 @@ def fetch_binance_klines(symbol, interval="1d", limit=100):
 
 
 def fetch_yahoo_ohlc(symbol, interval="1d", days=100):
-    if _is_crypto(symbol):
-        yahoo_sym = symbol.replace("/", "-")
-    else:
-        yahoo_sym = symbol
-        if _is_stock(symbol):
-            yahoo_sym = symbol
+    yahoo_sym = _yahoo_symbol(symbol)
     range_map = {"1m": "1d", "5m": "5d", "15m": "1mo", "1h": "3mo", "4h": "6mo", "1d": f"{days}d"}
     yahoo_interval = interval
     if interval == "4h":

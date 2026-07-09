@@ -221,7 +221,15 @@ def process_price_triggers(prices):
     monitor loop from racing on the same trigger.
     """
     with _trigger_lock:
-        triggered = pos_mgr.update_prices(prices)
+        # The websocket feed only streams Binance crypto; stock/metal symbols
+        # would otherwise never have their SL/TP checked. Fill the gaps from
+        # the latest market scan (refreshed every cycle).
+        merged = dict(prices)
+        scan = ((memory.read("analyses", "market_scan") or {}) if memory else {}).get("all_analyses", {}) or {}
+        for sym, d in scan.items():
+            if sym not in merged and isinstance(d, dict) and d.get("price"):
+                merged[sym] = {"price": d["price"]}
+        triggered = pos_mgr.update_prices(merged)
         if not triggered:
             return []
         broker = make_broker_with_retry()

@@ -16,6 +16,52 @@ except ImportError:
 MAX_CACHE_SIZE = 200
 
 
+def classify_symbol(symbol):
+    """crypto (BASE/QUOTE), forex (6-letter pairs incl. metals XAUUSD), or stock."""
+    if "/" in symbol:
+        return "crypto"
+    if symbol.isalpha() and len(symbol) == 6:
+        return "forex"
+    return "stock"
+
+
+def is_market_open(symbol, now=None):
+    """Whether the symbol's market currently trades.
+
+    Crypto is 24/7. Stocks follow NYSE regular hours (9:30-16:00 ET, Mon-Fri).
+    Forex/metals trade 24/5: closed Fri 21:00 UTC through Sun 22:00 UTC.
+    Outside these windows quote APIs return the stale last close, and trading
+    on a frozen price would be fiction.
+    """
+    kind = classify_symbol(symbol)
+    if kind == "crypto":
+        return True
+    now = now or datetime.now(timezone.utc)
+    if kind == "stock":
+        try:
+            from zoneinfo import ZoneInfo
+            ny = now.astimezone(ZoneInfo("America/New_York"))
+            if ny.weekday() >= 5:
+                return False
+            minutes = ny.hour * 60 + ny.minute
+            return 9 * 60 + 30 <= minutes < 16 * 60
+        except Exception:
+            # No tz database: approximate with EDT (UTC-4)
+            if now.weekday() >= 5:
+                return False
+            minutes = now.hour * 60 + now.minute
+            return 13 * 60 + 30 <= minutes < 20 * 60
+    # forex/metals
+    wd = now.weekday()
+    if wd == 5:
+        return False
+    if wd == 4 and now.hour >= 21:
+        return False
+    if wd == 6 and now.hour < 22:
+        return False
+    return True
+
+
 class MarketData:
     def __init__(self):
         self.cache = {}

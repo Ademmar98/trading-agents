@@ -20,7 +20,7 @@ if _env_file.exists():
             os.environ.setdefault(_key.strip(), _value.strip())
 
 INITIAL_BALANCE = float(os.getenv("TRADING_CAPITAL", "10000"))
-MARKET_TYPE = os.getenv("MARKET_TYPE", "crypto")  # crypto, stocks, both
+MARKET_TYPE = os.getenv("MARKET_TYPE", "crypto")  # crypto, stocks, metals, both
 
 ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "")
 ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "")
@@ -94,12 +94,36 @@ RISK_TUNABLE_PARAMS = {"MAX_POSITION_SIZE_PCT", "RISK_PER_TRADE_PCT", "STOP_LOSS
 # Breakeven SL: when price reaches this % of the TP distance, move SL to entry
 # Set BREAKEVEN_ENABLED=false to disable, BREAKEVEN_ACTIVATION_PCT=0 to use 1x SL distance only
 
-WATCHED_SYMBOLS = os.getenv(
-    "WATCHED_SYMBOLS",
+# Symbol universes per market. Crypto uses BASE/QUOTE, stocks are plain
+# tickers (<=5 letters), metals/forex are 6-letter pairs quoted via Yahoo =X
+# (spot) or MT5 when available.
+CRYPTO_SYMBOLS = [s for s in os.getenv(
+    "CRYPTO_SYMBOLS",
     "BTC/USD,ETH/USD,SOL/USD,BNB/USD,XRP/USD,ADA/USD,DOGE/USD,DOT/USD,AVAX/USD,LINK/USD,UNI/USD,ATOM/USD,LTC/USD,BCH/USD,TRX/USD,AAVE/USD,MATIC/USD,APT/USD,ARB/USD,OP/USD"
-).split(",")
+).split(",") if s.strip()]
+STOCK_SYMBOLS = [s for s in os.getenv(
+    "STOCK_SYMBOLS", "AAPL,MSFT,NVDA,TSLA,AMZN,GOOGL,META,SPY"
+).split(",") if s.strip()]
+METAL_SYMBOLS = [s for s in os.getenv("METAL_SYMBOLS", "XAUUSD,XAGUSD").split(",") if s.strip()]
 
-# Override with ALL Binance testnet USDT pairs when BINANCE_ALL_SYMBOLS=true
+# An explicit WATCHED_SYMBOLS env var wins as-is; otherwise the list is
+# assembled from the universes selected by MARKET_TYPE.
+_env_watched = os.getenv("WATCHED_SYMBOLS", "")
+if _env_watched:
+    WATCHED_SYMBOLS = [s for s in _env_watched.split(",") if s.strip()]
+else:
+    WATCHED_SYMBOLS = []
+    if MARKET_TYPE in ("crypto", "both"):
+        WATCHED_SYMBOLS += CRYPTO_SYMBOLS
+    if MARKET_TYPE in ("stocks", "both"):
+        WATCHED_SYMBOLS += STOCK_SYMBOLS
+    if MARKET_TYPE in ("metals", "both"):
+        WATCHED_SYMBOLS += METAL_SYMBOLS
+    if not WATCHED_SYMBOLS:
+        WATCHED_SYMBOLS = list(CRYPTO_SYMBOLS)
+
+# Replace the crypto part with ALL Binance testnet USDT pairs when
+# BINANCE_ALL_SYMBOLS=true; stocks/metals from MARKET_TYPE are kept.
 if os.getenv("BINANCE_ALL_SYMBOLS", "").lower() in ("true", "1", "yes"):
     try:
         import requests as _req
@@ -113,6 +137,6 @@ if os.getenv("BINANCE_ALL_SYMBOLS", "").lower() in ("true", "1", "yes"):
                 if _sym.endswith("/USD"):
                     _all.append(_sym)
         if _all:
-            WATCHED_SYMBOLS = sorted(_all)
+            WATCHED_SYMBOLS = sorted(_all) + [s for s in WATCHED_SYMBOLS if "/" not in s]
     except Exception:
         pass
