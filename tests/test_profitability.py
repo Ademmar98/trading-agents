@@ -134,6 +134,30 @@ def test_daily_trade_cap_blocks_new_entries(monkeypatch):
     assert any("Daily trade cap" in w for w in report["warnings"])
 
 
+def test_hourly_pacing_cap_blocks_burst(monkeypatch):
+    """The hourly cap keeps the daily budget from being spent in one burst."""
+    import agents.compliance_agent as ca
+    from core.positions import PositionManager
+
+    monkeypatch.setattr(ca, "MAX_TRADES_PER_HOUR", 1)
+    memory = SharedMemory()
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    PositionManager().open_position("BTC/USD", "BUY", 0.01, 50000.0)
+
+    memory.write("decisions", "portfolio_plan", {
+        "approved_opportunities": [{
+            "symbol": "SOL/USD", "action": "BUY", "confidence": 0.9,
+            "price": 150.0, "max_qty": 1.0, "risk_ok": True,
+            "reasons": [], "strategies": ["test"],
+        }],
+        "timestamp": time.time(),
+    })
+
+    report = ca.ComplianceAgent().run()
+    assert report["approved_opportunities"] == []
+    assert any("Hourly pacing" in w for w in report["warnings"])
+
+
 def test_daily_trade_cap_allows_entries_under_cap():
     from agents.compliance_agent import ComplianceAgent
 

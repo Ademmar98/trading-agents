@@ -1,6 +1,6 @@
 from statistics import stdev, mean
 
-from config import WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT, MAX_POSITION_SIZE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME
+from config import WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT, BREAKEVEN_BUFFER_PCT, MAX_POSITION_SIZE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME
 from core.database import execute, fetchone, fetchall, get_unprofitable_strategies
 from core.strategies import ALL_STRATEGIES, scan_symbol
 from core.market import MarketData
@@ -69,15 +69,17 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
             exit_price = None
             reason = None
 
-            # Breakeven: if price moved 1x initial SL distance in our favor, move SL to entry
+            # Breakeven: move SL to entry + buffer at 1:1 risk-to-reward.
+            # The buffer covers the round-trip fee so a "breakeven" exit
+            # doesn't actually lose money after commissions.
             sl_distance = abs(entry - sl)
             if sl_distance > 0:
                 if side == "BUY" and high >= entry + sl_distance and sl < entry:
-                    sl = entry
-                    pos["sl"] = entry
+                    sl = round(entry * (1 + BREAKEVEN_BUFFER_PCT / 100), 5)
+                    pos["sl"] = sl
                 elif side == "SELL" and low <= entry - sl_distance and sl > entry:
-                    sl = entry
-                    pos["sl"] = entry
+                    sl = round(entry * (1 - BREAKEVEN_BUFFER_PCT / 100), 5)
+                    pos["sl"] = sl
 
             hit_sl = (side == "BUY" and low <= sl) or (side == "SELL" and high >= sl)
             hit_tp = (side == "BUY" and high >= tp) or (side == "SELL" and low <= tp)
@@ -94,11 +96,13 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
                     pnl = (entry - exit_price) * qty
                 exit_fee = qty * exit_price * fee_ratio
                 cash += qty * exit_price - exit_fee
-                pnl_pct = (pnl / (entry * qty)) * 100 if entry * qty else 0
+                total_fee = exit_fee + qty * entry * fee_ratio
+                net_pnl = pnl - total_fee
+                net_pnl_pct = (net_pnl / (entry * qty)) * 100 if entry * qty else 0
                 trades.append({
                     "symbol": symbol, "side": side, "qty": qty,
                     "entry": entry, "exit": exit_price,
-                    "pnl": round(pnl - exit_fee, 2), "pnl_pct": round(pnl_pct, 2),
+                    "pnl": round(net_pnl, 2), "pnl_pct": round(net_pnl_pct, 2),
                     "reason": reason, "bar": i,
                     "date": current["date"][:10],
                 })
@@ -141,10 +145,13 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
             pnl = (pos["entry"] - exit_price) * pos["qty"]
         exit_fee = pos["qty"] * exit_price * fee_ratio
         cash += pos["qty"] * exit_price - exit_fee
+        total_fee = exit_fee + pos["qty"] * pos["entry"] * fee_ratio
+        net_pnl = pnl - total_fee
+        net_pnl_pct = (net_pnl / (pos["entry"] * pos["qty"])) * 100 if pos["entry"] * pos["qty"] else 0
         trades.append({
             "symbol": symbol, "side": pos["side"], "qty": pos["qty"],
             "entry": pos["entry"], "exit": exit_price,
-            "pnl": round(pnl - exit_fee, 2), "pnl_pct": round((pnl / (pos["entry"] * pos["qty"])) * 100, 2),
+            "pnl": round(net_pnl, 2), "pnl_pct": round(net_pnl_pct, 2),
             "reason": "close", "bar": len(ohlc),
         })
 

@@ -69,16 +69,28 @@ PARTIAL_TP_FRACTION = float(os.getenv("PARTIAL_TP_FRACTION", "0.5"))
 TRAILING_ACTIVATION_R = float(os.getenv("TRAILING_ACTIVATION_R", "1.0"))
 TRAILING_STOP_R = float(os.getenv("TRAILING_STOP_R", "0.5"))
 BREAKEVEN_ENABLED = os.getenv("BREAKEVEN_ENABLED", "true").lower() == "true"
-BREAKEVEN_ACTIVATION_PCT = float(os.getenv("BREAKEVEN_ACTIVATION_PCT", "50"))
+# Breakeven activates when profit reaches BREAKEVEN_ACTIVATION_PCT% of the
+# entry-to-SL distance (1R). Default 100 = exactly at 1:1 R:R.
+# After breakeven the stop stays parked at entry + buffer — no further
+# trailing — so the trade has room to reach the final TP.
+BREAKEVEN_ACTIVATION_PCT = float(os.getenv("BREAKEVEN_ACTIVATION_PCT", "100"))
+# Tiny buffer above entry for the breakeven stop to avoid noise/commission
+# exits. Applied after breakeven activates (default 0.15%).
+# Must exceed the round-trip fee (2 × TRADE_FEE_PCT = 0.2%) or a
+# "breakeven" exit still loses money after commissions.  0.3 % gives
+# a 0.1 % safety margin above the default 0.2 % round-trip cost.
+BREAKEVEN_BUFFER_PCT = float(os.getenv("BREAKEVEN_BUFFER_PCT", "0.3"))
 # Fallback SL/TP multipliers — used by ExecutionAgent when pricing data is absent
 SL_VOL_MULT = float(os.getenv("SL_VOL_MULT", "2.0"))
 TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "6.0"))
 # Must clear the round-trip fee (2 x TRADE_FEE_PCT = 0.2%) with real margin,
 # or trades that hit minimum TP still lose money after costs.
 MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "0.5"))
-# Trade-frequency cap per UTC day. Learned risk patterns show high trade
-# frequency strongly correlates with losses; entries beyond this are rejected.
-MAX_TRADES_PER_DAY = int(os.getenv("MAX_TRADES_PER_DAY", "15"))
+# Trade-frequency caps. 0 = unlimited (default). Set a positive number to
+# cap entries per UTC day / per rolling hour — risk data says overtrading
+# loses, but the caps also idle the bot once hit, so they are opt-in.
+MAX_TRADES_PER_DAY = int(os.getenv("MAX_TRADES_PER_DAY", "0"))
+MAX_TRADES_PER_HOUR = int(os.getenv("MAX_TRADES_PER_HOUR", "0"))
 # Base risk percentage fed to PricingAgent's per-opportunity calculated_risk_pct
 RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
 _LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))

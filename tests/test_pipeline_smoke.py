@@ -60,6 +60,10 @@ def seed_market_scan(memory):
         "summary": "canned", "opportunities": opportunities,
         "all_analyses": all_analyses, "timestamp": time.time(),
     })
+    # SharedMemory files persist across tests in the session tmp dir; clear
+    # any stale pricing so ExecutionAgent doesn't price against another
+    # test's entries (the Trader drift guard would then skip every order).
+    memory.write("decisions", "pricing", {"pricing_map": {}, "timestamp": time.time()})
 
 
 def seed_regime_scan(memory):

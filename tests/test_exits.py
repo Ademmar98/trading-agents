@@ -35,6 +35,9 @@ def pos_mgr():
     return PositionManager()
 
 
+BUFFER = app_config.BREAKEVEN_BUFFER_PCT / 100.0
+
+
 def test_partial_tp_banks_fraction_and_goes_breakeven(pos_mgr):
     pos_id = pos_mgr.open_position("BTC/USD", "BUY", 1.0, 100.0, sl=95.0, tp=115.0)
     # risk = 5, partial target = 100 + 5 * 1.5 = 107.5
@@ -50,7 +53,8 @@ def test_partial_tp_banks_fraction_and_goes_breakeven(pos_mgr):
     open_pos = pos_mgr.get_open_positions()
     assert len(open_pos) == 1
     assert open_pos[0]["quantity"] == pytest.approx(0.5)
-    assert open_pos[0]["stop_loss"] == 100.0  # breakeven
+    # Runner stop = entry + buffer so a stopped runner still clears fees
+    assert open_pos[0]["stop_loss"] == pytest.approx(100.0 * (1 + BUFFER))
     assert open_pos[0]["partial_taken"] == 1
     assert pos_id == open_pos[0]["id"]
 
@@ -68,11 +72,28 @@ def test_runner_stopped_at_breakeven_keeps_banked_profit(pos_mgr):
     assert pos_mgr.get_open_positions() == []
 
 
-def test_trailing_is_r_based(pos_mgr):
+def test_runner_holds_after_breakeven_no_trail(pos_mgr):
+    """Once breakeven has moved the stop past entry, trailing is suppressed:
+    the runner either reaches TP or exits at the buffered breakeven stop."""
     pos_mgr.open_position("ETH/USD", "BUY", 1.0, 100.0, sl=95.0, tp=115.0)
-    # +1.2R: arms the trail (>=1R), below the 1.5R partial target
+    # +1.2R: breakeven fires (activation = 1R), stop -> entry + buffer
     assert pos_mgr.update_prices({"ETH/USD": {"price": 106.0}}) == []
-    # Gives back 0.5R (2.5) from peak 106 -> exit at <= 103.5
+    open_pos = pos_mgr.get_open_positions()[0]
+    assert open_pos["stop_loss"] == pytest.approx(100.0 * (1 + BUFFER))
+    # Pullback that would have hit the old R-trail must NOT exit now
+    assert pos_mgr.update_prices({"ETH/USD": {"price": 103.4}}) == []
+    assert len(pos_mgr.get_open_positions()) == 1
+    # Full retrace exits at the buffered stop, not a loss
+    stopped = pos_mgr.update_prices({"ETH/USD": {"price": 100.2}})
+    assert stopped[0]["reason"] == "stop_loss"
+
+
+def test_trailing_active_when_breakeven_disabled(monkeypatch, pos_mgr):
+    """The R-based trail still protects positions when breakeven is off."""
+    monkeypatch.setattr(core_positions, "BREAKEVEN_ENABLED", False)
+    pos_mgr.open_position("ETH/USD", "BUY", 1.0, 100.0, sl=95.0, tp=115.0)
+    assert pos_mgr.update_prices({"ETH/USD": {"price": 106.0}}) == []
+    # SL untouched (still 95), trail armed at >=1R: 0.5R giveback exits
     triggered = pos_mgr.update_prices({"ETH/USD": {"price": 103.4}})
     assert len(triggered) == 1
     assert triggered[0]["reason"] == "trailing_stop"
@@ -131,5 +152,5 @@ def test_sell_side_partial_and_trail(pos_mgr):
     triggered = pos_mgr.update_prices({"XAUUSD": {"price": 92.5}})
     assert triggered[0]["reason"] == "partial_tp"
     open_pos = pos_mgr.get_open_positions()[0]
-    assert open_pos["stop_loss"] == 100.0
+    assert open_pos["stop_loss"] == pytest.approx(100.0 * (1 - BUFFER))
     assert open_pos["quantity"] == pytest.approx(0.5)

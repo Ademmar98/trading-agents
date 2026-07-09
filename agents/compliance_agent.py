@@ -1,6 +1,6 @@
 ﻿import time
 
-from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT, MAX_CONSECUTIVE_LOSSES, MAX_TRADES_PER_DAY
+from config import BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT, MAX_CONSECUTIVE_LOSSES, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR
 from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
 from core.positions import PositionManager
@@ -61,17 +61,24 @@ class ComplianceAgent(BaseAgent):
             halted = True
             blockers.append(f"Unknown broker type: {BROKER_TYPE}")
 
-        # Trade-frequency cap: overtrading is a consistent loss pattern, and
-        # every extra round trip costs fees. Exits are unaffected — this only
-        # gates new entries.
-        opened_today = fetchone(
-            "SELECT COUNT(*) AS c FROM positions WHERE opened_at >= date('now')"
-        )
-        opened_today = opened_today["c"] if opened_today else 0
-        entries_left_today = max(0, MAX_TRADES_PER_DAY - opened_today)
-        if entries_left_today == 0:
-            warnings.append(
-                f"Daily trade cap reached ({opened_today}/{MAX_TRADES_PER_DAY}) — no new entries until tomorrow")
+        # Optional trade-frequency caps (0 = unlimited). Exits are unaffected —
+        # these only gate new entries.
+        entries_left = None
+        if MAX_TRADES_PER_DAY > 0:
+            row = fetchone("SELECT COUNT(*) AS c FROM positions WHERE opened_at >= date('now')")
+            opened_today = row["c"] if row else 0
+            entries_left = max(0, MAX_TRADES_PER_DAY - opened_today)
+            if entries_left == 0:
+                warnings.append(
+                    f"Daily trade cap reached ({opened_today}/{MAX_TRADES_PER_DAY}) — no new entries until tomorrow")
+        if MAX_TRADES_PER_HOUR > 0:
+            row = fetchone("SELECT COUNT(*) AS c FROM positions WHERE opened_at >= datetime('now', '-1 hour')")
+            opened_hour = row["c"] if row else 0
+            hour_left = max(0, MAX_TRADES_PER_HOUR - opened_hour)
+            if hour_left == 0 and (entries_left is None or entries_left > 0):
+                warnings.append(
+                    f"Hourly pacing cap reached ({opened_hour}/{MAX_TRADES_PER_HOUR}) — resumes within the hour")
+            entries_left = hour_left if entries_left is None else min(entries_left, hour_left)
 
         approved = []
         rejected = []
@@ -98,7 +105,8 @@ class ComplianceAgent(BaseAgent):
             else:
                 approved.append({**opp, "compliance_ok": True})
 
-        approved = approved[:min(MAX_TRADES_PER_CYCLE, entries_left_today)]
+        cycle_cap = MAX_TRADES_PER_CYCLE if entries_left is None else min(MAX_TRADES_PER_CYCLE, entries_left)
+        approved = approved[:cycle_cap]
         report = {
             "halted": halted,
             "blockers": blockers,

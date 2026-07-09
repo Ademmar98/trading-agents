@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from config import (
     TRAILING_STOP_PCT, TRAILING_ACTIVATION_PCT, BREAKEVEN_ENABLED,
-    BREAKEVEN_ACTIVATION_PCT, TRADE_FEE_PCT,
+    BREAKEVEN_ACTIVATION_PCT, BREAKEVEN_BUFFER_PCT, TRADE_FEE_PCT,
     PARTIAL_TP_ENABLED, PARTIAL_TP_R, PARTIAL_TP_FRACTION,
     TRAILING_ACTIVATION_R, TRAILING_STOP_R,
 )
@@ -82,18 +82,20 @@ class PositionManager:
             return None
         pnl, pnl_pct = self._net_pnl(pos["side"], pos["entry_price"], exit_price, close_qty)
         now = datetime.now(timezone.utc).isoformat()
-        # Rewrite the row's unrealized pnl for the reduced quantity too, or it
-        # keeps showing the full-size figure until the next price tick.
+        # Runner stop goes to entry + buffer (same convention as breakeven):
+        # parked at exact entry, a stopped runner still loses the round-trip fee.
         if pos["side"] == "BUY":
+            runner_sl = pos["entry_price"] * (1 + BREAKEVEN_BUFFER_PCT / 100)
             rem_pnl = (exit_price - pos["entry_price"]) * remaining
         else:
+            runner_sl = pos["entry_price"] * (1 - BREAKEVEN_BUFFER_PCT / 100)
             rem_pnl = (pos["entry_price"] - exit_price) * remaining
         rem_pct = (rem_pnl / (pos["entry_price"] * remaining)) * 100 if pos["entry_price"] * remaining else 0
         execute("""
             UPDATE positions SET quantity=?, stop_loss=?, partial_taken=1,
                    current_price=?, pnl=?, pnl_pct=?, updated_at=?
             WHERE id=? AND status='open'
-        """, [remaining, pos["entry_price"], exit_price,
+        """, [remaining, runner_sl, exit_price,
               round(rem_pnl, 2), round(rem_pct, 2), now, position_id])
         execute("""
             INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, opened_at, strategy)
@@ -144,32 +146,32 @@ class PositionManager:
                     if result:
                         triggered.append(result)
                         pos["quantity"] = round(pos["quantity"] - result["qty"], 8)
-                        pos["stop_loss"] = pos["entry_price"]
+                        buffer = 1 + BREAKEVEN_BUFFER_PCT / 100 if pos["side"] == "BUY" else 1 - BREAKEVEN_BUFFER_PCT / 100
+                        pos["stop_loss"] = pos["entry_price"] * buffer
                         pos["partial_taken"] = 1
 
-            # Breakeven: move stop_loss to entry_price to lock in a risk-free trade.
-            # Activates at the lesser of:
-            #   - BREAKEVEN_ACTIVATION_PCT% of the TP distance from entry
-            #   - 1x the initial SL distance (safeguard floor)
+            # Breakeven: move stop_loss to entry + buffer at 1:1 risk-to-reward,
+            # then lock it there — no further trailing — so the trade has room
+            # to hit TP without getting choked on micro-pullbacks.
             if BREAKEVEN_ENABLED and pos["stop_loss"] and pos["entry_price"]:
                 sl_dist = abs(pos["entry_price"] - pos["stop_loss"])
-                tp_dist = abs(pos["take_profit"] - pos["entry_price"]) if pos.get("take_profit") else 0
-                tp_activation = tp_dist * (BREAKEVEN_ACTIVATION_PCT / 100) if tp_dist > 0 else float("inf")
-                activation_dist = min(tp_activation, sl_dist)
+                activation_dist = sl_dist * (BREAKEVEN_ACTIVATION_PCT / 100)
                 if pos["side"] == "BUY":
                     if price >= pos["entry_price"] + activation_dist and pos["stop_loss"] < pos["entry_price"]:
+                        sl_buffer = pos["entry_price"] * (1 + BREAKEVEN_BUFFER_PCT / 100)
                         execute("""
                             UPDATE positions SET stop_loss=?, updated_at=datetime('now')
                             WHERE id=? AND status='open'
-                        """, [pos["entry_price"], pos["id"]])
-                        pos["stop_loss"] = pos["entry_price"]
+                        """, [sl_buffer, pos["id"]])
+                        pos["stop_loss"] = sl_buffer
                 else:
                     if price <= pos["entry_price"] - activation_dist and pos["stop_loss"] > pos["entry_price"]:
+                        sl_buffer = pos["entry_price"] * (1 - BREAKEVEN_BUFFER_PCT / 100)
                         execute("""
                             UPDATE positions SET stop_loss=?, updated_at=datetime('now')
                             WHERE id=? AND status='open'
-                        """, [pos["entry_price"], pos["id"]])
-                        pos["stop_loss"] = pos["entry_price"]
+                        """, [sl_buffer, pos["id"]])
+                        pos["stop_loss"] = sl_buffer
 
             if pos["stop_loss"] and (
                 (pos["side"] == "BUY" and price <= pos["stop_loss"]) or
@@ -187,9 +189,17 @@ class PositionManager:
                     triggered.append(result)
             elif self._trailing_stop_hit(pos["side"], pos["entry_price"], peak, price,
                                          pos.get("initial_risk") or 0):
-                result = self.close_position(pos["id"], price, reason="trailing_stop")
-                if result:
-                    triggered.append(result)
+                # Once SL has been moved to (or past) entry — whether by
+                # breakeven, partial TP, or the R-trail itself — stop
+                # trailing so the runner has room to breathe.
+                sl_past_entry = (
+                    (pos["side"] == "BUY" and pos["stop_loss"] >= pos["entry_price"]) or
+                    (pos["side"] == "SELL" and pos["stop_loss"] <= pos["entry_price"])
+                )
+                if not sl_past_entry:
+                    result = self.close_position(pos["id"], price, reason="trailing_stop")
+                    if result:
+                        triggered.append(result)
         return triggered
 
     @staticmethod
