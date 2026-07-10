@@ -12,5 +12,7 @@ os.environ.setdefault("TRADING_CAPITAL", "10000")
 # and every agent run in the suite sends real Telegram messages.
 os.environ["TELEGRAM_BOT_TOKEN"] = ""
 os.environ["TELEGRAM_CHAT_ID"] = ""
+# Same for the Hermes key — tests must never hit the paid inference API.
+os.environ["HERMES_API_KEY"] = ""
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

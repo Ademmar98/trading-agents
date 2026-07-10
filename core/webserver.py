@@ -268,6 +268,12 @@ def api_sentiment():
     return sentiment or {}
 
 
+@app.get("/api/head-trader")
+def api_head_trader():
+    report = memory.read("reports", "head_trader")
+    return report or {}
+
+
 @app.get("/api/pricing")
 def api_pricing():
     pricing = memory.read("decisions", "pricing")

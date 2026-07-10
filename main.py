@@ -43,6 +43,7 @@ from agents.compliance_agent import ComplianceAgent
 from agents.execution_agent import ExecutionAgent
 from agents.trader import Trader
 from agents.auditor import Auditor
+from agents.head_trader import HeadTrader
 from agents.optimizer_agent import OptimizerAgent
 from agents.health_monitor import HealthMonitor
 
@@ -204,6 +205,7 @@ CYCLE_AGENTS = (
     ExecutionAgent,
     Trader,
     Auditor,
+    HeadTrader,  # self-throttled LLM review; no-op without HERMES_API_KEY
 )
 
 

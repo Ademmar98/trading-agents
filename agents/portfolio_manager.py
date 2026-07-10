@@ -17,6 +17,12 @@ class PortfolioManagerAgent(BaseAgent):
         regimes = self.memory.read("analyses", "regime_scan") or {}
         opportunities = sizing.get("sized_opportunities", []) or []
         strategy_weights = self._load_strategy_weights()
+        # Head-trader confidence nudges: advisory, clamped at write time, and
+        # ignored once the memo is older than 6 hours.
+        head = self.memory.read("reports", "head_trader") or {}
+        head_conf = head.get("strategy_confidence", {}) or {}
+        if time.time() - (head.get("timestamp") or 0) > 6 * 3600:
+            head_conf = {}
 
         adjusted = []
         notes = []
@@ -58,6 +64,11 @@ class PortfolioManagerAgent(BaseAgent):
                 if weight < 1.0:
                     confidence *= weight
                     reasons.append(f"Strategy weight {strat_name}: {weight:.2f}")
+                ht_mult = head_conf.get(strat_name)
+                if ht_mult:
+                    ht_mult = max(0.8, min(1.1, float(ht_mult)))
+                    confidence *= ht_mult
+                    reasons.append(f"Head trader {strat_name}: x{ht_mult:.2f}")
 
             item["confidence"] = round(min(confidence, 0.95), 4)
             item["max_qty"] = round(max_qty, 8)

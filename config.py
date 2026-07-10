@@ -29,6 +29,14 @@ ALPACA_PAPER = os.getenv("ALPACA_PAPER", "true").lower() == "true"
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 
+# Nous Research Hermes — powers the HeadTrader review agent (OpenAI-compatible)
+HERMES_API_KEY = os.getenv("HERMES_API_KEY", "")
+HERMES_API_URL = os.getenv("HERMES_API_URL", "https://inference-api.nousresearch.com/v1/chat/completions")
+HERMES_MODEL = os.getenv("HERMES_MODEL", "nousresearch/hermes-4-70b")
+# Used when the primary model is unavailable (e.g. no credits on the account)
+HERMES_FALLBACK_MODEL = os.getenv("HERMES_FALLBACK_MODEL", "stepfun/step-3.7-flash:free")
+HEAD_TRADER_INTERVAL_MIN = int(os.getenv("HEAD_TRADER_INTERVAL_MIN", "60"))
+
 _mt5_login_raw = os.getenv("MT5_LOGIN", "0")
 MT5_LOGIN = int(_mt5_login_raw) if _mt5_login_raw and _mt5_login_raw.strip() else 0
 MT5_PASSWORD = os.getenv("MT5_PASSWORD", "")
