@@ -37,6 +37,24 @@ HERMES_MODEL = os.getenv("HERMES_MODEL", "nousresearch/hermes-4-70b")
 HERMES_FALLBACK_MODEL = os.getenv("HERMES_FALLBACK_MODEL", "stepfun/step-3.7-flash:free")
 HEAD_TRADER_INTERVAL_MIN = int(os.getenv("HEAD_TRADER_INTERVAL_MIN", "60"))
 
+# ── 15-minute scalping stack ──
+# Entry: price above/below EMA (trend filter) + MACD crossover in the trend
+# direction + RSI guard against buying tops / selling bottoms.
+# Exits: SL = SCALP_ATR_SL_MULT x ATR(14); TP from the win-rate/R:R matrix.
+SCALP_15M_ENABLED = os.getenv("SCALP_15M_ENABLED", "true").lower() == "true"
+SCALP_EMA_PERIOD = int(os.getenv("SCALP_EMA_PERIOD", "50"))
+SCALP_ATR_SL_MULT = float(os.getenv("SCALP_ATR_SL_MULT", "1.5"))
+SCALP_RSI_OVERBOUGHT = float(os.getenv("SCALP_RSI_OVERBOUGHT", "70"))
+SCALP_RSI_OVERSOLD = float(os.getenv("SCALP_RSI_OVERSOLD", "30"))
+# Predictive gate before order routing: scalp setups whose estimated win
+# probability is below this are aborted. The estimate is a Laplace-smoothed
+# empirical win rate + indicator-synergy bonus — an honest heuristic, NOT a
+# calibrated probability. A fresh strategy starts near 0.5-0.6 and can only
+# climb by closing winners, so a 0.92 bar is a permanent off-switch (no
+# trades -> no history -> estimate never rises). Bootstrap at 0.60 and raise
+# the bar (e.g. toward 0.92) as the live record earns it.
+SCALP_MIN_WIN_PROB = float(os.getenv("SCALP_MIN_WIN_PROB", "0.60"))
+
 _mt5_login_raw = os.getenv("MT5_LOGIN", "0")
 MT5_LOGIN = int(_mt5_login_raw) if _mt5_login_raw and _mt5_login_raw.strip() else 0
 MT5_PASSWORD = os.getenv("MT5_PASSWORD", "")

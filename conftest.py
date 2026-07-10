@@ -14,5 +14,8 @@ os.environ["TELEGRAM_BOT_TOKEN"] = ""
 os.environ["TELEGRAM_CHAT_ID"] = ""
 # Same for the Hermes key — tests must never hit the paid inference API.
 os.environ["HERMES_API_KEY"] = ""
+# Pin the timeframe so the suite is deterministic regardless of the local
+# .env (which may run the bot on 15m for the scalping strategy).
+os.environ["TRADING_TIMEFRAME"] = "5m"
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

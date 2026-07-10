@@ -1,11 +1,15 @@
 ﻿import time
 from datetime import datetime, timezone
 
-from config import SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT
+from config import (
+    SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT,
+    SCALP_MIN_WIN_PROB, SCALP_ATR_SL_MULT,
+)
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
 from core.portfolio import load_portfolio
 from core.positions import PositionManager
+from core.scalp15 import atr_position_size
 
 MAX_SPREAD_PCT = 0.35
 
@@ -52,6 +56,27 @@ class ExecutionAgent(BaseAgent):
             if qty <= 0:
                 rejected.append({**opp, "execution_reasons": ["Computed quantity is zero"]})
                 continue
+
+            # Predictive gate for the 15m scalp stack, right before routing:
+            # setups whose estimated win probability misses the bar are
+            # aborted outright. The estimate is a smoothed empirical win rate
+            # + synergy bonus — an honest heuristic, not a calibrated
+            # probability, so the bar is env-tunable (SCALP_MIN_WIN_PROB).
+            is_scalp = "scalp_15m" in (opp.get("strategies") or [])
+            if is_scalp:
+                wp = opp.get("win_prob", 0)
+                if wp < SCALP_MIN_WIN_PROB:
+                    rejected.append({**opp, "execution_reasons": [
+                        f"Scalp win probability {wp:.0%} < {SCALP_MIN_WIN_PROB:.0%} gate"]})
+                    continue
+                # Size through the position-sizer skill's ATR method:
+                # qty = (equity x risk%) / (ATR x multiplier)
+                if opp.get("atr"):
+                    skill_qty = atr_position_size(
+                        load_portfolio().equity, opp["atr"], SCALP_ATR_SL_MULT,
+                        opp.get("calculated_risk_pct", RISK_PER_TRADE_PCT))
+                    if skill_qty > 0:
+                        qty = round(min(qty, skill_qty), 8)
 
             pricing_entry = pricing_map.get(symbol) if isinstance(pricing_map, dict) else None
             if pricing_entry and pricing_entry.get("action") != opp.get("action", "BUY"):
@@ -146,6 +171,6 @@ class ExecutionAgent(BaseAgent):
         if executable:
             e = executable[0]
             self.notifier.on_agent_action(
-                "execution", f"{len(executable)} orders ready | top: {e['action']} {e['qty']} {e['symbol']} SL={e['sl_pct']:.1f}% TP={e['tp_pct']:.1f}%"
+                "execution", f"{len(executable)} orders ready | top: {e['action']} {e['symbol']} x{e['qty']:g} SL={e['sl_pct']:.1f}% TP={e['tp_pct']:.1f}%"
             )
         return report

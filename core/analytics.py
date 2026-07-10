@@ -74,17 +74,28 @@ def compute_analytics():
     return result
 
 
-def _rolling_drawdown(pnls):
+def _rolling_drawdown(pnls, initial_balance=None):
+    """Max drawdown on the cumulative equity curve, as a fraction of peak
+    equity. The old version compared individual trade pnls to the largest
+    single win — a $10 win followed by a $2 win read as an 80% "drawdown",
+    which poisoned the dashboard and the head-trader's context.
+
+    pnls arrive newest-first (trades are ordered by closed_at DESC), so the
+    curve is built over the reversed sequence."""
     if not pnls:
         return 0, []
-    max_dd_pct = 0
-    peak = pnls[0]
+    if initial_balance is None:
+        from config import INITIAL_BALANCE
+        initial_balance = INITIAL_BALANCE
+    equity = initial_balance
+    peak = equity
+    max_dd_pct = 0.0
     rolling = []
-    for pnl in pnls:
-        if pnl > peak:
-            peak = pnl
-        dd = peak - pnl
-        dd_pct = dd / peak if peak > 0 else 0
+    for pnl in reversed(pnls):
+        equity += pnl
+        if equity > peak:
+            peak = equity
+        dd_pct = (peak - equity) / peak if peak > 0 else 0.0
         rolling.append(dd_pct)
         if dd_pct > max_dd_pct:
             max_dd_pct = dd_pct

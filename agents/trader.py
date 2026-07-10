@@ -108,7 +108,7 @@ class Trader(BaseAgent):
                 })
             status = "FILLED" if order.get("status") == "filled" else "REJECTED"
             self.log(
-                f"{action} {fill_qty} {symbol} @ ${fill_price:.5f} "
+                f"{action} {symbol} x{fill_qty:g} @ ${fill_price:.5f} "
                 f"SL=${sl_price:.5f} TP=${tp_price:.5f} ({status})"
             )
 

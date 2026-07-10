@@ -1,6 +1,6 @@
 # Trading Agents
 
-Multi-agent crypto trading bot with paper/live broker support, 25+ strategies, regime detection, risk management, and a real-time dashboard.
+Multi-agent trading firm for crypto, stocks, and metals with paper/live broker support, 25+ strategies plus a 15m scalping stack, regime detection, fee-honest accounting, scaled exits, an LLM head-trader review layer, and a real-time dashboard.
 
 ## Architecture
 
@@ -9,7 +9,7 @@ Agents run sequentially each cycle in a defined pipeline, sharing state through 
 ```
 Orchestrator → HealthMonitor → SentimentAgent → RegimeAgent → ResearchAnalyst
 → RiskManager → PositionSizer → PortfolioManagerAgent
-→ ComplianceAgent → ExecutionAgent → Trader → Auditor
+→ ComplianceAgent → ExecutionAgent → Trader → Auditor → HeadTrader
 ```
 
 - **Orchestrator** — coordinates the cycle; writes start/end markers to shared memory
@@ -24,7 +24,8 @@ Orchestrator → HealthMonitor → SentimentAgent → RegimeAgent → ResearchAn
 - **ExecutionAgent** — builds formal trade plans with SL/TP/RR, checks spread before approval
 - **Trader** — executes orders through the selected broker; checks stop-losses on every cycle
 - **Auditor** — reviews performance, generates suggestions, tracks agent health
-- **OptimizerAgent** — grid-searches parameter ranges to improve weak strategy metrics (runs in background thread, not in cycle)
+- **HeadTrader** — Hermes-powered LLM review layer (hourly): writes a blunt memo on the firm's own numbers and nudges per-strategy confidence, clamped to [0.8, 1.1]; advisory only
+- **OptimizerAgent** — walk-forward parameter search (optimize on 70% of history, adopt only what survives the unseen 30%); runs in background thread, not in cycle
 
 ## Features
 
@@ -35,6 +36,11 @@ Orchestrator → HealthMonitor → SentimentAgent → RegimeAgent → ResearchAn
 | **Real Sentiment** | Fetches Fear & Greed Index from alternative.me and blends it with price breadth |
 | **Risk Metrics** | VaR (95%), rolling max drawdown, trade duration stats, Sharpe, profit factor, Kelly sizing |
 | **Trade Plans** | Each potential trade is saved to SQLite with SL, TP, R:R ratio, strategy, regime, rationale |
+| **Multi-Market** | `MARKET_TYPE=crypto/stocks/metals/both` — stocks via Yahoo (NYSE hours enforced), metals via COMEX futures proxies (GC=F/SI=F), crypto 24/7 |
+| **15m Scalp Stack** | EMA trend filter + fresh MACD cross + RSI guard; ATR-based SL (1.5x), TP from a win-rate/R:R matrix; win-probability gate before routing (`SCALP_MIN_WIN_PROB`) |
+| **Fee-Honest Accounting** | 0.1%/side fees on every paper fill and in recorded PnL; fills cross the spread (buy ask / sell bid); TP must clear round-trip costs |
+| **Scaled Exits** | Bank 50% at 1.5R, stop to breakeven + fee buffer, runner rides to TP; R-based trailing when breakeven is off |
+| **Portfolio Risk** | Total open-risk heat cap (`MAX_OPEN_RISK_PCT`), per-cluster position caps, spot-only, daily-loss circuit breaker |
 | **Multi-Broker** | Paper (default), Binance (testnet/live), MetaQuotes 5, DXtrade |
 | **Web Dashboard** | Live dashboard on port 8000 with positions, trades, equity curve, risk, plans |
 | **Telegram** | Notifications for trades, SL/TP hits, errors, daily summaries |

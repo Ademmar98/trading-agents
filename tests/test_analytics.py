@@ -81,10 +81,19 @@ def test_value_at_risk_short():
 
 
 def test_rolling_drawdown():
+    # Newest-first (as stored): chronological is -300, -50, +200, +100.
+    # Equity from 10k: 9700 -> 9650 -> 9850 -> 9950; max dd = 350/10000.
     pnls = [100, 200, -50, -300]
-    max_dd, rolling = _rolling_drawdown(pnls)
-    assert max_dd > 0
+    max_dd, rolling = _rolling_drawdown(pnls, initial_balance=10000)
+    assert max_dd == pytest.approx(0.035)
     assert len(rolling) == 4
+
+
+def test_drawdown_not_inflated_by_small_wins():
+    """Two wins in a row is zero drawdown — the old per-trade-pnl math
+    called a $10 win followed by a $2 win an 80% drawdown."""
+    max_dd, _ = _rolling_drawdown([2.0, 10.0], initial_balance=10000)
+    assert max_dd == 0.0
 
 
 def test_trade_duration_stats():
