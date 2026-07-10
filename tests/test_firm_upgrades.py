@@ -153,10 +153,14 @@ class TestBacktesterScaledExits:
             result = backtester.backtest_symbol("SYN/USD", bars=len(tape) - 200)
 
         assert result is not None
-        reasons = {t["reason"] for t in result["trades"]}
-        assert "PARTIAL" in reasons
-        # merged metrics: the scaled position counts once
-        assert result["total_trades"] >= 1
+        # The PARTIAL row is folded into its runner by the per-position merge:
+        # one logical trade whose pnl proves the scale-out happened. Without
+        # the partial, the runner alone exits at breakeven+buffer for ~$0.
+        assert result["total_trades"] == 1
+        trade = result["trades"][-1]
+        assert trade["qty"] == pytest.approx(15.0)   # both halves accounted
+        assert trade["reason"] == "SL"               # runner's final exit
+        assert trade["pnl"] > 20                     # banked 1.5R on half the size
 
 
 class TestScorecard:
