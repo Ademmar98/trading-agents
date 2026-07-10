@@ -214,3 +214,49 @@ class TestRoundSig:
     def test_zero_passthrough(self):
         from core.pricing import round_sig
         assert round_sig(0) == 0
+
+
+class TestScalpGeometryCaps:
+    def test_daily_range_volatility_capped(self):
+        """The META case: 23.6% 14-day-range volatility must not become a
+        23%+ stop — caps clamp to MAX_SL_PCT / MAX_TP_PCT."""
+        from core.pricing import compute_pricing
+        p = compute_pricing("META", "BUY", 631.48,
+                            {"volatility": 23.59, "bid": 631.4, "ask": 631.6},
+                            "ranging", 0)
+        assert p["sl_pct"] <= app_config.MAX_SL_PCT + 0.01
+        assert p["tp_pct"] <= app_config.MAX_TP_PCT + 0.01
+
+    def test_intraday_inputs_pass_untouched(self):
+        """Realistic 15m inputs (ATR ~0.3%) produce sub-1% scalp stops."""
+        from core.pricing import compute_pricing
+        p = compute_pricing("BTC/USD", "BUY", 60000.0,
+                            {"volatility": 0.4, "bid": 59995.0, "ask": 60005.0},
+                            "trending_up", 180.0)  # ATR = 0.3%
+        assert p["sl_pct"] < 1.0
+        assert p["tp_pct"] < 2.0
+        assert p["stop_loss"] < p["entry_price"] < p["take_profit"]
+
+
+class TestBootClamp:
+    def test_wide_stops_clamped_at_init(self):
+        """Positions with pre-fix daily-range stops self-heal on boot."""
+        from core.database import execute, init_db, fetchone
+        execute("""INSERT INTO positions (symbol, side, quantity, entry_price,
+                   current_price, stop_loss, take_profit, peak_price, initial_risk)
+                   VALUES ('OLD/USD', 'BUY', 1.0, 100.0, 100.0, 70.0, 160.0, 100.0, 30.0)""")
+        init_db()  # migration runs the clamp
+        row = fetchone("SELECT * FROM positions WHERE symbol='OLD/USD'")
+        assert row["stop_loss"] == pytest.approx(100.0 * (1 - app_config.MAX_SL_PCT / 100))
+        assert row["take_profit"] == pytest.approx(100.0 * (1 + app_config.MAX_TP_PCT / 100))
+        assert row["initial_risk"] == pytest.approx(100.0 * app_config.MAX_SL_PCT / 100)
+
+    def test_scalp_stops_untouched(self):
+        from core.database import execute, init_db, fetchone
+        execute("""INSERT INTO positions (symbol, side, quantity, entry_price,
+                   current_price, stop_loss, take_profit, peak_price, initial_risk)
+                   VALUES ('OK/USD', 'BUY', 1.0, 100.0, 100.0, 99.2, 101.6, 100.0, 0.8)""")
+        init_db()
+        row = fetchone("SELECT * FROM positions WHERE symbol='OK/USD'")
+        assert row["stop_loss"] == 99.2
+        assert row["take_profit"] == 101.6

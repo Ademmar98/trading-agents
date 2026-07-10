@@ -1,6 +1,6 @@
 from math import floor, log10
 
-from config import RISK_PER_TRADE_PCT
+from config import RISK_PER_TRADE_PCT, MAX_SL_PCT, MAX_TP_PCT
 
 
 def round_sig(x, sig=6):
@@ -39,6 +39,10 @@ def compute_pricing(symbol, action, price, data, regime=None, atr_val=0):
 
     sl_distance = max(atr_dec * sl_mult, vol_dec * sl_mult * 1.2)
     tp_distance = max(atr_dec * tp_mult, vol_dec * tp_mult * 0.8)
+    # Scalp-geometry rails: no stop or target wider than the configured caps,
+    # whatever the volatility inputs claim.
+    sl_distance = min(sl_distance, MAX_SL_PCT / 100.0)
+    tp_distance = min(tp_distance, MAX_TP_PCT / 100.0)
     sma_20 = data.get("sma_20") or 0
     sma_50 = data.get("sma_50") or 0
 

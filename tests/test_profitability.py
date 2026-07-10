@@ -191,8 +191,9 @@ def test_portfolio_heat_cap_blocks_entries(monkeypatch):
     monkeypatch.setattr(ca, "MAX_OPEN_RISK_PCT", 2.0)
     memory = SharedMemory()
     save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
-    # Open risk = (50000-45000) * 0.05 = $250 = 2.5% of $10k equity -> over the 2% cap
-    PositionManager().open_position("BTC/USD", "BUY", 0.05, 50000.0, sl=45000.0)
+    # Scalp-legal 2.5% stop: open risk = (50000-48750) * 0.2 = $250 = 2.5% of
+    # equity -> over the 2% cap (a wider seed would be clamped at init_db now)
+    PositionManager().open_position("BTC/USD", "BUY", 0.2, 50000.0, sl=48750.0)
     memory.write("decisions", "portfolio_plan", {
         "approved_opportunities": [{
             "symbol": "SOL/USD", "action": "BUY", "confidence": 0.9,

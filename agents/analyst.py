@@ -9,6 +9,7 @@ from core.multiframe import analyze_symbol_multiframe
 from core.scalping_signals import analyze_symbol_mtf
 from core.scalp15 import scalp_15m_signal
 from core.database import get_unprofitable_strategies
+from core.indicators import atr as intraday_atr_fn
 from core.pricing import compute_pricing
 
 
@@ -44,6 +45,21 @@ class ResearchAnalyst(BaseAgent):
                 ohlc = self.market.get_ohlc(symbol, days=BACKTEST_BARS, interval=TRADING_TIMEFRAME)
                 hist = self.market.get_historical(symbol)
                 indicators = self.market.compute_indicators(hist)
+                # SL/TP inputs must come from the TRADING timeframe, not the
+                # daily history: compute_indicators' "volatility" is a 14-DAY
+                # high-low range (20-30% on stocks), which once priced a META
+                # scalp with a 29.5% stop. Overwrite with intraday values.
+                try:
+                    if ohlc and len(ohlc) >= 20:
+                        i_atr = intraday_atr_fn([b["high"] for b in ohlc],
+                                                [b["low"] for b in ohlc],
+                                                [b["close"] for b in ohlc]) or 0
+                        i_closes = [b["close"] for b in ohlc[-15:]]
+                        i_hi, i_lo = max(i_closes), min(i_closes)
+                        indicators["atr"] = i_atr
+                        indicators["volatility"] = round((i_hi - i_lo) / (i_lo or 1) * 100, 3)
+                except Exception:
+                    pass  # daily values stay; the MAX_SL_PCT cap still guards
                 mtf_signal = analyze_symbol_multiframe(symbol)
                 scalping_signal = analyze_symbol_mtf(symbol)
                 regime = symbol_regimes.get(symbol, {}).get("regime") if symbol_regimes else None

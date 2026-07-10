@@ -118,6 +118,12 @@ BREAKEVEN_BUFFER_PCT = float(os.getenv("BREAKEVEN_BUFFER_PCT", "0.3"))
 # Fallback SL/TP multipliers — used by ExecutionAgent when pricing data is absent
 SL_VOL_MULT = float(os.getenv("SL_VOL_MULT", "2.0"))
 TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "6.0"))
+# Hard caps on any computed stop/target distance. A scalping firm has no
+# business holding a 29% stop — that was daily-range volatility leaking into
+# 15m trade pricing. Caps are the last line of defense; the primary fix is
+# pricing from the trading timeframe's own ATR.
+MAX_SL_PCT = float(os.getenv("MAX_SL_PCT", "3.0"))
+MAX_TP_PCT = float(os.getenv("MAX_TP_PCT", "6.0"))
 # Must clear the round-trip fee (2 x TRADE_FEE_PCT = 0.2%) with real margin,
 # or trades that hit minimum TP still lose money after costs.
 MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "0.5"))
