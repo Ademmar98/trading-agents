@@ -265,7 +265,7 @@
     <h2>Open Positions <span class="idx">06</span></h2>
     <div class="table-scroll">
       <table aria-label="Open positions">
-        <thead><tr><th>Opened</th><th>Pair</th><th>Side</th><th class="r">Qty</th><th class="r">Entry</th><th class="r">Price</th><th class="r">SL</th><th class="r">TP</th><th class="r">P&amp;L</th></tr></thead>
+        <thead><tr><th>Opened</th><th>Symbol</th><th>Side</th><th class="r">Qty</th><th class="r">Entry</th><th class="r">Price</th><th class="r">SL</th><th class="r">TP</th><th class="r">P&amp;L</th></tr></thead>
         <tbody id="positions-body"></tbody>
       </table>
       <div class="empty" id="positions-empty" hidden>NO OPEN POSITIONS</div>
@@ -291,7 +291,7 @@
       <h2>Trade History <span class="idx">08</span></h2>
       <div class="table-scroll">
         <table aria-label="Trade history">
-          <thead><tr><th>Closed</th><th>Pair</th><th>Side</th><th class="r">P&amp;L</th><th class="r">%</th><th>Reason</th></tr></thead>
+          <thead><tr><th>Closed</th><th>Symbol</th><th>Side</th><th class="r">P&amp;L</th><th class="r">%</th><th>Reason</th></tr></thead>
           <tbody id="trades-body"></tbody>
         </table>
         <div class="empty" id="trades-empty" hidden>NO TRADES YET</div>
@@ -341,6 +341,14 @@
         <tbody id="regime-body"></tbody>
       </table>
       <div class="empty" id="regime-empty" hidden>NO REGIME DATA</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Head Trader Memo <span class="idx">15</span></h2>
+    <div class="table-scroll">
+      <pre id="head-trader-memo" style="white-space:pre-wrap;font-size:0.85em;line-height:1.5;margin:0;padding:8px 4px;">No memo yet</pre>
+      <div style="opacity:0.6;font-size:0.75em;padding:4px;" id="head-trader-meta"></div>
     </div>
   </section>
 
@@ -770,6 +778,14 @@ async function refresh() {
     renderPlans(plans);
     renderOptimizations(optimizations || []);
     renderPricing(pricing || {});
+    try {
+      const ht = await (await fetch("/api/head-trader" + _cb())).json();
+      if (ht && ht.memo) {
+        document.getElementById("head-trader-memo").textContent = ht.memo;
+        const ts = ht.timestamp ? new Date(ht.timestamp * 1000).toLocaleString() : "";
+        document.getElementById("head-trader-meta").textContent = (ht.model || "") + (ts ? "  |  " + ts : "");
+      }
+    } catch (e) { /* memo panel is best-effort */ }
     if (config && config.data_dir) {
       document.getElementById("data-dir-info").textContent = config.data_dir;
     }

@@ -54,6 +54,15 @@ class Auditor(BaseAgent):
             suggestions.append("Low exposure — consider deploying more capital")
         if win_rate < 40 and total_trades > 5:
             suggestions.append("Win rate below 40% — tighten entry criteria")
+        # Divergence alarm: a strategy with a real sample and negative
+        # expectancy is bleeding — surface it before the auto-exclusion
+        # filter silently disables it.
+        for name, s in strat_stats.items():
+            n = s.get("trades", 0)
+            exp = (s.get("pnl", 0) / n) if n else 0
+            if n >= 10 and exp < 0:
+                suggestions.append(
+                    f"Strategy '{name}': negative expectancy ${exp:.2f}/trade over {n} trades — review or exclude")
         if portfolio.total_pnl_pct < -5:
             suggestions.append("Drawdown exceeds 5% — review risk parameters")
             needs_rebalance = True

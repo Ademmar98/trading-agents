@@ -29,6 +29,12 @@ ALPACA_PAPER = os.getenv("ALPACA_PAPER", "true").lower() == "true"
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
 
+# Market-data fallbacks: Massive (Polygon) for stocks, TwelveData for
+# metals/forex spot and stocks. Free tiers are rate-limited (Massive 5
+# req/min, TwelveData 800 credits/day) so they back up Yahoo, not replace it.
+MASSIVE_API_KEY = os.getenv("MASSIVE_API_KEY", "")
+TWELVEDATA_API_KEY = os.getenv("TWELVEDATA_API_KEY", "")
+
 # Nous Research Hermes — powers the HeadTrader review agent (OpenAI-compatible)
 HERMES_API_KEY = os.getenv("HERMES_API_KEY", "")
 HERMES_API_URL = os.getenv("HERMES_API_URL", "https://inference-api.nousresearch.com/v1/chat/completions")
@@ -79,6 +85,9 @@ MAX_POSITION_SIZE_PCT = float(os.getenv("MAX_POSITION_SIZE_PCT", "15"))
 MAX_PORTFOLIO_RISK_PCT = float(os.getenv("MAX_PORTFOLIO_RISK_PCT", "15"))
 TRADE_FEE_PCT = float(os.getenv("TRADE_FEE_PCT", "0.1"))
 TRADING_TIMEFRAME = os.getenv("TRADING_TIMEFRAME", "5m")
+# Half-spread cost per side applied in backtests, mirroring live fills that
+# pay the ask / hit the bid instead of the mid (0.05 = 0.05% per leg).
+BACKTEST_SPREAD_PCT = float(os.getenv("BACKTEST_SPREAD_PCT", "0.05"))
 BACKTEST_BARS = int(os.getenv("BACKTEST_BARS", "2500"))
 MAX_CONSECUTIVE_LOSSES = int(os.getenv("MAX_CONSECUTIVE_LOSSES", "3"))
 STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "5"))
@@ -115,7 +124,7 @@ MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "0.5"))
 # Trade-frequency caps. 0 = unlimited (default). Set a positive number to
 # cap entries per UTC day / per rolling hour — risk data says overtrading
 # loses, but the caps also idle the bot once hit, so they are opt-in.
-MAX_TRADES_PER_DAY = int(os.getenv("MAX_TRADES_PER_DAY", "0"))
+MAX_TRADES_PER_DAY = int(os.getenv("MAX_TRADES_PER_DAY", "150"))
 MAX_TRADES_PER_HOUR = int(os.getenv("MAX_TRADES_PER_HOUR", "0"))
 # Portfolio heat: total open risk (distance to stop x qty, summed over open
 # positions) as % of equity. Blocks new entries only while above the cap —
@@ -124,6 +133,9 @@ MAX_OPEN_RISK_PCT = float(os.getenv("MAX_OPEN_RISK_PCT", "10"))
 # Concurrent positions per asset cluster (crypto / stock / forex+metals):
 # 15 crypto longs are one BTC-beta bet, not 15 independent trades. 0 = off.
 MAX_POSITIONS_PER_CLUSTER = int(os.getenv("MAX_POSITIONS_PER_CLUSTER", "8"))
+# When a candidate's 30d returns correlate >= this with an already-open
+# position, its size is halved (soft de-risk, never a block). 0 = off.
+MAX_PAIR_CORRELATION = float(os.getenv("MAX_PAIR_CORRELATION", "0.9"))
 # Base risk percentage fed to PricingAgent's per-opportunity calculated_risk_pct
 RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
 _LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))

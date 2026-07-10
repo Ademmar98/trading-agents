@@ -274,6 +274,23 @@ def api_head_trader():
     return report or {}
 
 
+@app.get("/api/scorecard")
+def api_scorecard():
+    """Per-strategy live scorecard with a verdict per strategy."""
+    from core.analytics import compute_analytics
+    a = compute_analytics()
+    rows = a.get("strategy_breakdown", []) or []
+    for r in rows:
+        n = r.get("trades", 0)
+        if n < 10:
+            r["verdict"] = "building sample"
+        elif r.get("expectancy", 0) < 0:
+            r["verdict"] = "bleeding"
+        else:
+            r["verdict"] = "earning"
+    return {"strategies": rows}
+
+
 @app.get("/api/pricing")
 def api_pricing():
     pricing = memory.read("decisions", "pricing")

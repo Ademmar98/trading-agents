@@ -18,7 +18,7 @@ def make_positions_panel(pos_mgr):
     if summary["count"] == 0:
         return Panel("[dim]No open positions[/dim]", title="[bold cyan]Positions[/bold cyan]")
     table = Table(box=box.SIMPLE)
-    table.add_column("Pair", style="yellow")
+    table.add_column("Symbol", style="yellow")
     table.add_column("Side", width=5)
     table.add_column("Entry", justify="right", width=10)
     table.add_column("Price", justify="right", width=10)
@@ -69,7 +69,7 @@ def make_trades_panel(pos_mgr):
         return Panel("[dim]No trades yet[/dim]", title="[bold cyan]Closed Trades[/bold cyan]")
     table = Table(box=box.SIMPLE)
     table.add_column("Time", style="dim", width=10)
-    table.add_column("Pair", style="yellow")
+    table.add_column("Symbol", style="yellow")
     table.add_column("Side", width=5)
     table.add_column("Entry", justify="right", width=10)
     table.add_column("Exit", justify="right", width=10)

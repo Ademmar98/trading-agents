@@ -164,9 +164,8 @@ class MetaQuotesBroker:
                         order["trigger"] = "stop_loss"
                         triggered.append(order)
             return triggered
-        from core.broker import PaperBroker
-        pb = PaperBroker()
-        return pb.check_stop_losses(prices)
+        # Paper exits are handled by PositionManager, not the broker
+        return []
 
     def get_status(self):
         base = {"broker": "mt5", "connected": self.connected, "mode": "live" if (self._use_mt5 and self.connected) else "paper_fallback"}

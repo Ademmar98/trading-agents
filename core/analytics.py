@@ -138,19 +138,28 @@ def _compute_strategy_stats(trades):
     by_strategy = {}
     for t in trades:
         strat_name = t.get("strategy") or t.get("reason", "unknown")
-        by_strategy.setdefault(strat_name, {"trades": 0, "won": 0, "pnl": 0})
-        by_strategy[strat_name]["trades"] += 1
-        by_strategy[strat_name]["pnl"] += t["pnl"]
+        s = by_strategy.setdefault(strat_name, {"trades": 0, "won": 0, "pnl": 0,
+                                                "win_pnl": 0.0, "loss_pnl": 0.0})
+        s["trades"] += 1
+        s["pnl"] += t["pnl"]
         if t["pnl"] > 0:
-            by_strategy[strat_name]["won"] += 1
+            s["won"] += 1
+            s["win_pnl"] += t["pnl"]
+        elif t["pnl"] < 0:
+            s["loss_pnl"] += abs(t["pnl"])
 
     result = []
-    for strategy, stats in sorted(by_strategy.items(), key=lambda x: x[1]["pnl"], reverse=True):
+    for strategy, s in sorted(by_strategy.items(), key=lambda x: x[1]["pnl"], reverse=True):
+        n = s["trades"]
+        losses = n - s["won"]
         result.append({
             "strategy": strategy,
-            "trades": stats["trades"],
-            "win_rate": round((stats["won"] / stats["trades"]) * 100, 1) if stats["trades"] > 0 else 0,
-            "pnl": round(stats["pnl"], 2),
+            "trades": n,
+            "win_rate": round((s["won"] / n) * 100, 1) if n else 0,
+            "pnl": round(s["pnl"], 2),
+            "expectancy": round(s["pnl"] / n, 2) if n else 0,
+            "avg_win": round(s["win_pnl"] / s["won"], 2) if s["won"] else 0,
+            "avg_loss": round(s["loss_pnl"] / losses, 2) if losses else 0,
         })
     return result
 

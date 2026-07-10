@@ -192,9 +192,9 @@ class DXTradeBroker:
         return result.get("positions", [])
 
     def check_stop_losses(self, prices):
+        # Live-exchange safety net; paper exits are handled by PositionManager
         if not self._use_live:
-            from core.broker import PaperBroker
-            return PaperBroker().check_stop_losses(prices)
+            return []
         positions = self.get_positions()
         triggered = []
         for pos in positions:

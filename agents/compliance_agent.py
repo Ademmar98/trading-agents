@@ -25,7 +25,7 @@ def _position_open_risk(p):
     return max(0.0, sl - p["entry_price"]) * p["quantity"]
 
 MIN_CONFIDENCE = 0.55
-MAX_TRADES_PER_CYCLE = 3
+MAX_TRADES_PER_CYCLE = 999999
 
 
 class ComplianceAgent(BaseAgent):

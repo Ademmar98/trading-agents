@@ -1,7 +1,8 @@
 import time
 
-from config import MAX_POSITION_SIZE_PCT, MAX_PORTFOLIO_RISK_PCT, LEVERAGE_ENABLED
+from config import MAX_POSITION_SIZE_PCT, MAX_PORTFOLIO_RISK_PCT, LEVERAGE_ENABLED, MAX_PAIR_CORRELATION
 from agents.base_agent import BaseAgent
+from core.correlation import pearson
 from core.portfolio import load_portfolio
 from core.memory import SharedMemory
 
@@ -55,6 +56,13 @@ class RiskManager(BaseAgent):
                 max_cost = min(max_trade_size, remaining_capacity)
                 adjusted["max_qty"] = round(max_cost / opp["price"], 6) if opp["price"] > 0 else 0
                 adjusted["risk_ok"] = True
+                # Correlation de-risk: candidates moving in lockstep with an
+                # open position add beta, not diversification — halve, never block.
+                corr_hit = self._max_correlation(sym, analysis, portfolio)
+                if corr_hit:
+                    other, corr = corr_hit
+                    adjusted["max_qty"] = round(adjusted["max_qty"] * 0.5, 6)
+                    risks.append(f"{sym}: {corr:.2f} correlated with open {other} — size halved")
             filtered.append(adjusted)
 
         pnl = portfolio.total_pnl_pct
@@ -64,6 +72,7 @@ class RiskManager(BaseAgent):
 
         report = {
             "verdict": risk_verdict,
+            "correlation_threshold": MAX_PAIR_CORRELATION,
             "exposure_pct": round(exposure, 2),
             "concentration_pct": round(concentration, 2),
             "max_trade_size": round(max_trade_size, 2),
@@ -73,6 +82,32 @@ class RiskManager(BaseAgent):
         }
         self.memory.write("decisions", "risk_assessment", report)
         self.log(f"Risk verdict: {risk_verdict}, {len(risks)} warnings")
+        return self._finish(report, risk_verdict, exposure, risks)
+
+    @staticmethod
+    def _max_correlation(sym, analysis, portfolio):
+        """Highest 30d-return correlation between the candidate and any open
+        position, computed from the analyst's shared-memory scan (no
+        fetching here). Returns (other_symbol, corr) past the threshold,
+        else None. Fails open on missing data."""
+        if MAX_PAIR_CORRELATION <= 0 or not portfolio.positions:
+            return None
+        all_analyses = (analysis or {}).get("all_analyses", {}) or {}
+        mine = (all_analyses.get(sym) or {}).get("returns_30d") or []
+        if len(mine) < 10:
+            return None
+        worst = None
+        for other in portfolio.positions:
+            if other == sym:
+                continue
+            theirs = (all_analyses.get(other) or {}).get("returns_30d") or []
+            corr = pearson(mine, theirs)
+            if corr is not None and abs(corr) >= MAX_PAIR_CORRELATION:
+                if worst is None or abs(corr) > abs(worst[1]):
+                    worst = (other, corr)
+        return worst
+
+    def _finish(self, report, risk_verdict, exposure, risks):
         if risk_verdict in ("high_risk", "critical"):
             self.notifier.on_agent_action("risk_manager", f"verdict={risk_verdict} | exposure {exposure:.0f}% | {len(risks)} warnings")
         return report

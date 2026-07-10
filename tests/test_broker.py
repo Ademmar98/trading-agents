@@ -74,23 +74,6 @@ def test_close_short_position():
     assert "ETH/USD" not in portfolio.positions
 
 
-def test_check_stop_loss_triggered():
-    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
-    broker = PaperBroker()
-    broker.place_order("BTC/USD", "BUY", 0.1, 60000.0, sl=57000.0, tp=66000.0)
-    triggered = broker.check_stop_losses({"BTC/USD": {"price": 56000.0}})
-    assert len(triggered) > 0
-    assert triggered[0]["trigger"] == "stop_loss"
-
-
-def test_check_stop_loss_not_triggered():
-    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
-    broker = PaperBroker()
-    broker.place_order("BTC/USD", "BUY", 0.1, 60000.0)
-    triggered = broker.check_stop_losses({"BTC/USD": {"price": 59000.0}})
-    assert len(triggered) == 0
-
-
 def test_get_status():
     save_portfolio(Portfolio(cash=8000.0, initial_balance=10000.0))
     broker = PaperBroker()

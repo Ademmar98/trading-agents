@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime, timezone
 
-from config import DATA_DIR, STOP_LOSS_PCT, INITIAL_BALANCE, TRADE_FEE_PCT
+from config import DATA_DIR, INITIAL_BALANCE, TRADE_FEE_PCT
 from core.portfolio import Portfolio, Position, save_portfolio, load_portfolio
 
 
@@ -104,25 +104,6 @@ class PaperBroker:
     def _save_order(self, order):
         f = self.orders_dir / f"{order['id']}.json"
         f.write_text(json.dumps(order, indent=2))
-
-    def check_stop_losses(self, prices: dict) -> list:
-        triggered = []
-        for sym, pos in list(self.portfolio.positions.items()):
-            price = prices.get(sym, {}).get("price", 0)
-            if not price:
-                continue
-            pos.current_price = price
-            if pos.quantity >= 0:
-                pnl_pct = (price - pos.entry_price) / pos.entry_price * 100
-                side = "SELL"
-            else:
-                pnl_pct = (pos.entry_price - price) / pos.entry_price * 100
-                side = "BUY"
-            if pnl_pct <= -STOP_LOSS_PCT:
-                order = self.place_order(sym, side, abs(pos.quantity), price)
-                order["trigger"] = "stop_loss"
-                triggered.append(order)
-        return triggered
 
     def get_status(self) -> dict:
         return {

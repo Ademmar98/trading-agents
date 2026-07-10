@@ -1,6 +1,10 @@
 from statistics import stdev, mean
 
-from config import WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT, BREAKEVEN_BUFFER_PCT, MAX_POSITION_SIZE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME
+from config import (
+    WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT, BREAKEVEN_BUFFER_PCT,
+    MAX_POSITION_SIZE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME,
+    PARTIAL_TP_ENABLED, PARTIAL_TP_R, PARTIAL_TP_FRACTION, BACKTEST_SPREAD_PCT,
+)
 from core.database import execute, fetchone, fetchall, get_unprofitable_strategies
 from core.strategies import ALL_STRATEGIES, scan_symbol
 from core.market import MarketData
@@ -49,11 +53,14 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
     if len(ohlc) < 200:
         return None
 
-    fee_ratio = TRADE_FEE_PCT / 100.0
+    # Per-leg cost = commission + half-spread, mirroring live fills that pay
+    # the ask / hit the bid rather than the mid.
+    fee_ratio = (TRADE_FEE_PCT + BACKTEST_SPREAD_PCT) / 100.0
     cash = initial_capital
     positions = []
     trades = []
     equity_curve = []
+    next_pos_id = 0
     market = MarketData()
     bad_strats = get_unprofitable_strategies()
 
@@ -68,6 +75,42 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
             side, entry, qty, sl, tp = pos["side"], pos["entry"], pos["qty"], pos["sl"], pos["tp"]
             exit_price = None
             reason = None
+            initial_risk = pos.get("initial_risk") or 0
+
+            # Scaled exit, mirroring the live PositionManager: bank
+            # PARTIAL_TP_FRACTION at PARTIAL_TP_R x initial risk and move the
+            # stop to breakeven + buffer; the runner rides toward full TP.
+            if (PARTIAL_TP_ENABLED and initial_risk > 0 and not pos.get("partial_done")):
+                if side == "BUY":
+                    partial_px = entry + initial_risk * PARTIAL_TP_R
+                    partial_hit = high >= partial_px
+                else:
+                    partial_px = entry - initial_risk * PARTIAL_TP_R
+                    partial_hit = low <= partial_px
+                if partial_hit:
+                    close_qty = round(qty * PARTIAL_TP_FRACTION, 8)
+                    if side == "BUY":
+                        p_pnl = (partial_px - entry) * close_qty
+                        new_sl = round(entry * (1 + BREAKEVEN_BUFFER_PCT / 100), 5)
+                    else:
+                        p_pnl = (entry - partial_px) * close_qty
+                        new_sl = round(entry * (1 - BREAKEVEN_BUFFER_PCT / 100), 5)
+                    exit_fee = close_qty * partial_px * fee_ratio
+                    cash += close_qty * partial_px - exit_fee
+                    net = p_pnl - exit_fee - close_qty * entry * fee_ratio
+                    denom = entry * close_qty
+                    trades.append({
+                        "symbol": symbol, "side": side, "qty": close_qty,
+                        "entry": entry, "exit": partial_px,
+                        "pnl": round(net, 2),
+                        "pnl_pct": round((net / denom) * 100, 2) if denom else 0,
+                        "reason": "PARTIAL", "bar": i,
+                        "date": current["date"][:10],
+                        "pos_id": pos.get("pos_id"),
+                    })
+                    qty = round(qty - close_qty, 8)
+                    sl = new_sl
+                    pos.update({"qty": qty, "sl": sl, "partial_done": True})
 
             # Breakeven: move SL to entry + buffer at 1:1 risk-to-reward.
             # The buffer covers the round-trip fee so a "breakeven" exit
@@ -105,6 +148,7 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
                     "pnl": round(net_pnl, 2), "pnl_pct": round(net_pnl_pct, 2),
                     "reason": reason, "bar": i,
                     "date": current["date"][:10],
+                    "pos_id": pos.get("pos_id"),
                 })
             else:
                 remaining.append(pos)
@@ -129,8 +173,11 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
                     total_cost = cost + entry_fee
                     if total_cost <= cash:
                         cash -= total_cost
+                        next_pos_id += 1
                         positions.append({
                             "side": side, "entry": close, "qty": qty, "sl": sl, "tp": tp,
+                            "initial_risk": abs(close - sl),
+                            "pos_id": next_pos_id,
                             "strategy": best.get("strategies", [best.get("strategy", "unknown")])[0]
                         })
 
@@ -153,6 +200,7 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
             "entry": pos["entry"], "exit": exit_price,
             "pnl": round(net_pnl, 2), "pnl_pct": round(net_pnl_pct, 2),
             "reason": "close", "bar": len(ohlc),
+            "pos_id": pos.get("pos_id"),
         })
 
     # Buy-and-hold over the same tested window: a strategy that trails simply
@@ -161,7 +209,31 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
     return _compute_metrics(symbol, trades, equity_curve, initial_capital, benchmark_return)
 
 
+def _merge_by_position(trades):
+    """One logical trade per position: a scaled exit writes a PARTIAL row and
+    a runner row whose split would skew win rate and trade counts (same fix
+    as the live stats aggregation)."""
+    merged = {}
+    order = []
+    for idx, t in enumerate(trades):
+        key = t.get("pos_id") if t.get("pos_id") is not None else f"row-{idx}"
+        if key in merged:
+            m = merged[key]
+            m["pnl"] = round(m["pnl"] + t["pnl"], 2)
+            m["qty"] = round(m["qty"] + t["qty"], 8)
+            m["exit"] = t["exit"]
+            m["reason"] = t["reason"]
+            m["bar"] = t["bar"]
+            denom = m["entry"] * m["qty"]
+            m["pnl_pct"] = round((m["pnl"] / denom) * 100, 2) if denom else 0
+        else:
+            merged[key] = dict(t)
+            order.append(key)
+    return [merged[k] for k in order]
+
+
 def _compute_metrics(symbol, trades, equity_curve, initial_capital, benchmark_return=0.0):
+    trades = _merge_by_position(trades)
     final_equity = equity_curve[-1] if equity_curve else initial_capital
     if not equity_curve:
         return {"symbol": symbol, "total_return": 0, "final_equity": initial_capital,

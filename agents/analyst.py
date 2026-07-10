@@ -56,10 +56,18 @@ class ResearchAnalyst(BaseAgent):
                     except Exception:
                         scalp15 = None
                 signals = scan_symbol(ohlc, regime=regime, exclude_strategies=bad_strats) if ohlc and len(ohlc) >= 30 else []
+                # 30d daily returns so the RiskManager can correlate pairs
+                # from shared memory without its own data fetches
+                closes = [h.get("close") for h in (hist or []) if h.get("close")]
+                returns_30d = [
+                    (closes[i] - closes[i - 1]) / closes[i - 1]
+                    for i in range(max(1, len(closes) - 30), len(closes)) if closes[i - 1]
+                ]
                 return symbol, {
                     "price": data["price"],
                     "change_24h": data["change_24h"],
                     "volume_24h": data["volume_24h"],
+                    "returns_30d": returns_30d,
                     "type": data.get("type", "unknown"),
                     "bid": data.get("bid"),
                     "ask": data.get("ask"),

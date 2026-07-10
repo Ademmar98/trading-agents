@@ -6,6 +6,7 @@ import requests
 from config import (
     WATCHED_SYMBOLS,
     ALPACA_API_KEY, ALPACA_SECRET_KEY,
+    MASSIVE_API_KEY, TWELVEDATA_API_KEY,
     BROKER_TYPE,
 )
 
@@ -106,6 +107,79 @@ def fetch_binance_klines(symbol, interval="1d", limit=100):
         return []
 
 
+# TwelveData: true spot quotes for metals/forex (XAU/USD "Gold Spot") plus
+# stocks. Free tier is 800 credits/day / 8 req/min, so this is a fallback.
+_TWELVEDATA_SYMBOLS = {"XAUUSD": "XAU/USD", "XAGUSD": "XAG/USD"}
+_TWELVEDATA_INTERVALS = {"1m": "1min", "5m": "5min", "15m": "15min",
+                         "30m": "30min", "1h": "1h", "4h": "4h", "1d": "1day"}
+
+
+def _twelvedata_symbol(symbol):
+    if symbol in _TWELVEDATA_SYMBOLS:
+        return _TWELVEDATA_SYMBOLS[symbol]
+    if _is_forex(symbol):
+        return f"{symbol[:3]}/{symbol[3:]}"
+    return symbol  # stocks as-is
+
+
+def fetch_twelvedata_ohlc(symbol, interval="1d", limit=100):
+    if not TWELVEDATA_API_KEY:
+        return []
+    td_interval = _TWELVEDATA_INTERVALS.get(interval)
+    if not td_interval:
+        return []
+    try:
+        r = requests.get(
+            "https://api.twelvedata.com/time_series",
+            params={"symbol": _twelvedata_symbol(symbol), "interval": td_interval,
+                    "outputsize": min(limit, 5000), "apikey": TWELVEDATA_API_KEY},
+            timeout=15,
+        )
+        values = r.json().get("values") or []
+        ohlc = []
+        for v in reversed(values):  # API returns newest-first
+            ohlc.append({
+                "date": v["datetime"],
+                "open": float(v["open"]), "high": float(v["high"]),
+                "low": float(v["low"]), "close": float(v["close"]),
+                "volume": float(v.get("volume") or 0),
+            })
+        return ohlc
+    except Exception:
+        return []
+
+
+# Massive (Polygon's rebrand): stock aggregates. Free tier is 5 req/min —
+# fallback only.
+def fetch_massive_ohlc(symbol, interval="1d", limit=100):
+    if not MASSIVE_API_KEY or not _is_stock(symbol):
+        return []
+    spans = {"1m": (1, "minute", 3), "5m": (5, "minute", 7), "15m": (15, "minute", 12),
+             "30m": (30, "minute", 20), "1h": (1, "hour", 30), "4h": (4, "hour", 90),
+             "1d": (1, "day", limit + 30)}
+    if interval not in spans:
+        return []
+    mult, span, lookback_days = spans[interval]
+    try:
+        from datetime import timedelta
+        end = datetime.now(timezone.utc).date()
+        start = end - timedelta(days=lookback_days)
+        r = requests.get(
+            f"https://api.massive.com/v2/aggs/ticker/{symbol}/range/{mult}/{span}/{start}/{end}",
+            params={"apiKey": MASSIVE_API_KEY, "limit": 50000, "sort": "asc"},
+            timeout=15,
+        )
+        results = r.json().get("results") or []
+        return [{
+            "date": datetime.fromtimestamp(b["t"] / 1000, tz=timezone.utc).isoformat(),
+            "open": float(b["o"]), "high": float(b["h"]),
+            "low": float(b["l"]), "close": float(b["c"]),
+            "volume": float(b.get("v") or 0), "ts": b["t"] // 1000,
+        } for b in results[-limit:]]
+    except Exception:
+        return []
+
+
 def fetch_yahoo_ohlc(symbol, interval="1d", days=100):
     yahoo_sym = _yahoo_symbol(symbol)
     range_map = {"1m": "1d", "5m": "5d", "15m": "1mo", "1h": "3mo", "4h": "6mo", "1d": f"{days}d"}
@@ -196,13 +270,18 @@ def fetch_ohlc(symbol, interval="1d", limit=100):
         alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
         if alpaca_result:
             return alpaca_result
-        days = limit
-        if interval == "1d":
-            days = limit
-        elif interval == "1h":
-            days = limit
-        return fetch_yahoo_ohlc(symbol, interval, days=days)
-    return fetch_yahoo_ohlc(symbol, interval, days=limit)
+        result = fetch_yahoo_ohlc(symbol, interval, days=limit)
+        # Yahoo is unofficial and rate-limits; fall through to the keyed APIs
+        if not result:
+            result = fetch_massive_ohlc(symbol, interval, limit)
+        if not result:
+            result = fetch_twelvedata_ohlc(symbol, interval, limit)
+        return result
+    # metals / forex
+    result = fetch_yahoo_ohlc(symbol, interval, days=limit)
+    if not result:
+        result = fetch_twelvedata_ohlc(symbol, interval, limit)
+    return result
 
 
 def fetch_current_price(symbol):
