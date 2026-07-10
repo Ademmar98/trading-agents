@@ -191,3 +191,26 @@ class TestDataFallbacks:
         monkeypatch.setattr(dp, "MASSIVE_API_KEY", "")
         assert dp.fetch_twelvedata_ohlc("XAUUSD", "15m", 10) == []
         assert dp.fetch_massive_ohlc("AAPL", "15m", 10) == []
+
+
+class TestRoundSig:
+    def test_normal_prices_unchanged(self):
+        from core.pricing import round_sig
+        assert round_sig(102.0) == 102.0
+        assert round_sig(62693.123456) == 62693.1
+
+    def test_micro_prices_keep_geometry(self):
+        """round(x, 5) turned a $0.00003 grid into 33% steps; six significant
+        figures keep SL/TP distinct and proportional."""
+        from core.pricing import round_sig, compute_pricing
+        assert round_sig(0.0000312345678) == 0.0000312346
+        p = compute_pricing("1000SATS/USD", "BUY", 0.0000312,
+                            {"volatility": 2.0, "bid": 0.0000312, "ask": 0.0000312},
+                            None, 0)
+        assert 0 < p["stop_loss"] < p["entry_price"] < p["take_profit"]
+        # SL distance must be near the intended ~3.6%, not a 33% grid step
+        assert 1.0 < p["sl_pct"] < 10.0
+
+    def test_zero_passthrough(self):
+        from core.pricing import round_sig
+        assert round_sig(0) == 0

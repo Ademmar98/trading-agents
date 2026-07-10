@@ -19,6 +19,7 @@ from config import (
 from core.data_provider import fetch_ohlc
 from core.database import fetchone
 from core.indicators import ema_all, rsi, atr
+from core.pricing import round_sig
 
 TIMEFRAME = "15m"
 MIN_BARS = 60
@@ -124,13 +125,13 @@ def scalp_15m_signal(symbol, regime=None, ohlc=None):
     return {
         "action": action,
         "price": price,
-        "entry_price": round(price, 5),
-        "stop_loss": round(stop_loss, 5),
-        "take_profit": round(take_profit, 5),
+        "entry_price": round_sig(price),
+        "stop_loss": round_sig(stop_loss),
+        "take_profit": round_sig(take_profit),
         "sl_pct": round(sl_dist / price * 100, 2),
         "tp_pct": round(sl_dist * rr / price * 100, 2),
         "atr": atr_v,
-        "ema": round(ema_v, 5),
+        "ema": round_sig(ema_v),
         "rsi": round(rsi_v, 1),
         "rr": rr,
         "win_prob": round(wp, 3),

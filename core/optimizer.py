@@ -1,4 +1,5 @@
 from core.backtester import backtest_symbol, fetch_klines
+from core.pricing import round_sig
 from core.database import execute, fetchall, fetchone
 from core.strategies import scan_symbol
 from config import INITIAL_BALANCE, TRADE_FEE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME
@@ -65,20 +66,19 @@ def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, bars=
                     cost = qty * current["close"]
                     entry_fee = cost * FEE_RATIO
                     total_cost = cost + entry_fee
+                    # Entry only when affordable — previously the position
+                    # was created even when cash couldn't cover it.
                     if total_cost <= cash:
                         cash -= total_cost
-                    sl_p = round(current["close"] * (1 - (1 / 100) * sl_mult)) if best["action"] == "BUY" else round(current["close"] * (1 + (1 / 100) * sl_mult))
-                    tp_p = round(current["close"] * (1 + (1 / 100) * tp_mult)) if best["action"] == "BUY" else round(current["close"] * (1 - (1 / 100) * tp_mult))
-                    # Use volatility for SL/TP
-                    vol = (max(c["high"] for c in slice_data[-14:]) - min(c["low"] for c in slice_data[-14:])) / current["close"]
-                    vol = max(vol, 0.005)
-                    if best["action"] == "BUY":
-                        sl_p = round(current["close"] * (1 - vol * sl_mult), 5)
-                        tp_p = round(current["close"] * (1 + vol * tp_mult), 5)
-                    else:
-                        sl_p = round(current["close"] * (1 + vol * sl_mult), 5)
-                        tp_p = round(current["close"] * (1 - vol * tp_mult), 5)
-                    position = {"side": best["action"], "entry": current["close"], "qty": qty, "sl": sl_p, "tp": tp_p}
+                        vol = (max(c["high"] for c in slice_data[-14:]) - min(c["low"] for c in slice_data[-14:])) / current["close"]
+                        vol = max(vol, 0.005)
+                        if best["action"] == "BUY":
+                            sl_p = round_sig(current["close"] * (1 - vol * sl_mult))
+                            tp_p = round_sig(current["close"] * (1 + vol * tp_mult))
+                        else:
+                            sl_p = round_sig(current["close"] * (1 + vol * sl_mult))
+                            tp_p = round_sig(current["close"] * (1 - vol * tp_mult))
+                        position = {"side": best["action"], "entry": current["close"], "qty": qty, "sl": sl_p, "tp": tp_p}
 
         pos_val = position["qty"] * current["close"] if position else 0
         if position and position["side"] == "SELL":

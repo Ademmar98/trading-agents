@@ -1,4 +1,15 @@
+from math import floor, log10
+
 from config import RISK_PER_TRADE_PCT
+
+
+def round_sig(x, sig=6):
+    """Round to significant figures, not fixed decimals. round(x, 5) turns a
+    $0.00003 micro-cap's price grid into 33% steps — SL/TP geometry becomes
+    nonsense and backtests explode (a real +13,716% artifact)."""
+    if not x:
+        return x
+    return round(x, max(0, sig - 1 - floor(log10(abs(x)))))
 
 
 REGIME_PRICING = {
@@ -34,23 +45,23 @@ def compute_pricing(symbol, action, price, data, regime=None, atr_val=0):
     if action == "BUY":
         target = bid
         if sma_20 > 0 and target > sma_20:
-            entry_price = round(max(sma_20, target * (1 - cfg["entry_slip"])), 5)
+            entry_price = round_sig(max(sma_20, target * (1 - cfg["entry_slip"])))
         elif sma_50 > 0 and target > sma_50:
-            entry_price = round(max(sma_50, target * (1 - cfg["entry_slip"] * 0.7)), 5)
+            entry_price = round_sig(max(sma_50, target * (1 - cfg["entry_slip"] * 0.7)))
         else:
-            entry_price = round(target, 5)
-        sl_price = round(entry_price * (1 - sl_distance), 5)
-        tp_price = round(entry_price * (1 + tp_distance), 5)
+            entry_price = round_sig(target)
+        sl_price = round_sig(entry_price * (1 - sl_distance))
+        tp_price = round_sig(entry_price * (1 + tp_distance))
     else:
         target = ask
         if sma_20 > 0 and target < sma_20:
-            entry_price = round(min(sma_20, target * (1 + cfg["entry_slip"])), 5)
+            entry_price = round_sig(min(sma_20, target * (1 + cfg["entry_slip"])))
         elif sma_50 > 0 and target < sma_50:
-            entry_price = round(min(sma_50, target * (1 + cfg["entry_slip"] * 0.7)), 5)
+            entry_price = round_sig(min(sma_50, target * (1 + cfg["entry_slip"] * 0.7)))
         else:
-            entry_price = round(target, 5)
-        sl_price = round(entry_price * (1 + sl_distance), 5)
-        tp_price = round(entry_price * (1 - tp_distance), 5)
+            entry_price = round_sig(target)
+        sl_price = round_sig(entry_price * (1 + sl_distance))
+        tp_price = round_sig(entry_price * (1 - tp_distance))
 
     denom = entry_price or 1e-8
     sl_pct = abs(entry_price - sl_price) / denom * 100

@@ -8,6 +8,7 @@ from config import (
 from core.database import execute, fetchone, fetchall, get_unprofitable_strategies
 from core.strategies import ALL_STRATEGIES, scan_symbol
 from core.market import MarketData
+from core.pricing import round_sig
 
 
 MAX_ACTIVE_POSITIONS = 3
@@ -34,11 +35,11 @@ def _calc_sl_tp(entry_price, side, volatility_pct, atr_pct=0, sl_mult=2.5, tp_mu
     sl_distance = max(atr_dec * sl_mult, vol_dec * sl_mult * 1.2)
     tp_distance = max(atr_dec * tp_mult, vol_dec * tp_mult * 0.8)
     if side == "BUY":
-        sl = round(entry_price * (1 - sl_distance), 5)
-        tp = round(entry_price * (1 + tp_distance), 5)
+        sl = round_sig(entry_price * (1 - sl_distance))
+        tp = round_sig(entry_price * (1 + tp_distance))
     else:
-        sl = round(entry_price * (1 + sl_distance), 5)
-        tp = round(entry_price * (1 - tp_distance), 5)
+        sl = round_sig(entry_price * (1 + sl_distance))
+        tp = round_sig(entry_price * (1 - tp_distance))
     return sl, tp
 
 
@@ -91,10 +92,10 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
                     close_qty = round(qty * PARTIAL_TP_FRACTION, 8)
                     if side == "BUY":
                         p_pnl = (partial_px - entry) * close_qty
-                        new_sl = round(entry * (1 + BREAKEVEN_BUFFER_PCT / 100), 5)
+                        new_sl = round_sig(entry * (1 + BREAKEVEN_BUFFER_PCT / 100))
                     else:
                         p_pnl = (entry - partial_px) * close_qty
-                        new_sl = round(entry * (1 - BREAKEVEN_BUFFER_PCT / 100), 5)
+                        new_sl = round_sig(entry * (1 - BREAKEVEN_BUFFER_PCT / 100))
                     exit_fee = close_qty * partial_px * fee_ratio
                     cash += close_qty * partial_px - exit_fee
                     net = p_pnl - exit_fee - close_qty * entry * fee_ratio
@@ -118,10 +119,10 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
             sl_distance = abs(entry - sl)
             if sl_distance > 0:
                 if side == "BUY" and high >= entry + sl_distance and sl < entry:
-                    sl = round(entry * (1 + BREAKEVEN_BUFFER_PCT / 100), 5)
+                    sl = round_sig(entry * (1 + BREAKEVEN_BUFFER_PCT / 100))
                     pos["sl"] = sl
                 elif side == "SELL" and low <= entry - sl_distance and sl > entry:
-                    sl = round(entry * (1 - BREAKEVEN_BUFFER_PCT / 100), 5)
+                    sl = round_sig(entry * (1 - BREAKEVEN_BUFFER_PCT / 100))
                     pos["sl"] = sl
 
             hit_sl = (side == "BUY" and low <= sl) or (side == "SELL" and high >= sl)
