@@ -81,6 +81,15 @@ class Notifier:
             self._offset = results[-1]["update_id"] + 1
         return results
 
+    def _authorized(self, chat_id, sender_id):
+        """Only the configured chat / allow-listed ids may command the bot.
+        The bot's username is discoverable, so without this gate any Telegram
+        user could read the portfolio — and the original handler even
+        reassigned self.chat_id to the sender, letting a stranger hijack
+        every future notification."""
+        allowed = self._allowed_ids
+        return bool(allowed) and (str(chat_id) in allowed or str(sender_id) in allowed)
+
     def _handle_update(self, update):
         msg = update.get("message") or {}
         cb = update.get("callback_query") or {}
@@ -88,9 +97,9 @@ class Notifier:
             self._handle_callback(cb)
             return
         chat_id = str(msg.get("chat", {}).get("id", ""))
-        if not chat_id:
-            return
-        self.chat_id = chat_id
+        sender_id = str((msg.get("from") or {}).get("id", ""))
+        if not chat_id or not self._authorized(chat_id, sender_id):
+            return  # silently ignore strangers; never adopt their chat_id
         text = (msg.get("text") or "").strip()
         if not text:
             return
@@ -107,7 +116,9 @@ class Notifier:
         data = cb.get("data", "")
         msg = cb.get("message", {})
         chat_id = str(msg.get("chat", {}).get("id", ""))
-        self.chat_id = chat_id
+        sender_id = str((cb.get("from") or {}).get("id", ""))
+        if not self._authorized(chat_id, sender_id):
+            return
         self._answer_callback(cb["id"])
         handler = self._handlers.get(data)
         if handler:

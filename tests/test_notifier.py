@@ -119,3 +119,38 @@ def test_portfolio_snapshot_positions_key():
             "positions": [{"symbol": "ETH/USD", "side": "SHORT", "entry_price": 3000, "current_price": 2900}],
         })
         mock_send.assert_called_once()
+
+
+class TestTelegramAuthorization:
+    """The command bot must ignore strangers entirely — no data access, and
+    critically no adoption of their chat_id for future notifications."""
+
+    def _notifier(self):
+        from core.notifier import Notifier
+        return Notifier(bot_token="t", chat_id="5542937176")
+
+    def test_stranger_message_ignored_and_chat_not_hijacked(self):
+        n = self._notifier()
+        calls = []
+        n._handlers = {"/pnl": lambda m: calls.append("pnl")}
+        n._handle_update({"message": {
+            "chat": {"id": 999999}, "from": {"id": 999999}, "text": "/pnl"}})
+        assert calls == []
+        assert n.chat_id == "5542937176"  # destination unchanged
+
+    def test_owner_message_handled(self):
+        n = self._notifier()
+        calls = []
+        n._handlers = {"/pnl": lambda m: calls.append("pnl")}
+        n._handle_update({"message": {
+            "chat": {"id": 5542937176}, "from": {"id": 5542937176}, "text": "/pnl"}})
+        assert calls == ["pnl"]
+
+    def test_stranger_callback_ignored(self):
+        n = self._notifier()
+        calls = []
+        n._handlers = {"/positions": lambda m: calls.append("pos")}
+        n._handle_callback({"id": "cb1", "data": "/positions",
+                            "from": {"id": 424242},
+                            "message": {"chat": {"id": 424242}}})
+        assert calls == []
