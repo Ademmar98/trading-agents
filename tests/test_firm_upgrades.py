@@ -260,3 +260,61 @@ class TestBootClamp:
         row = fetchone("SELECT * FROM positions WHERE symbol='OK/USD'")
         assert row["stop_loss"] == 99.2
         assert row["take_profit"] == 101.6
+
+
+class TestNoLeveragePolicy:
+    """Halal requirement: gross notional may never exceed 1x equity —
+    cash-only trading enforced at compliance, counting same-cycle approvals."""
+
+    def _seed(self, memory, candidates):
+        memory.write("decisions", "portfolio_plan", {
+            "approved_opportunities": candidates, "timestamp": time.time(),
+        })
+
+    def _opp(self, symbol, price, qty):
+        return {"symbol": symbol, "action": "BUY", "confidence": 0.9,
+                "price": price, "max_qty": qty, "risk_ok": True,
+                "reasons": [], "strategies": ["test"]}
+
+    def test_blocks_entry_exceeding_equity(self):
+        from agents.compliance_agent import ComplianceAgent
+        from core.positions import PositionManager
+
+        memory = SharedMemory()
+        save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+        # $9,000 already deployed (no SL -> no heat interference)
+        PositionManager().open_position("BTC/USD", "BUY", 0.15, 60000.0)
+        # Candidate worth $2,000 would take gross notional to $11,000 > $10,000
+        self._seed(memory, [self._opp("SOL/USD", 200.0, 10.0)])
+
+        report = ComplianceAgent().run()
+        assert report["approved_opportunities"] == []
+        assert any("No-leverage policy" in r
+                   for r in report["rejected_opportunities"][0]["compliance_reasons"])
+
+    def test_allows_entry_within_equity(self):
+        from agents.compliance_agent import ComplianceAgent
+        from core.positions import PositionManager
+
+        memory = SharedMemory()
+        save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+        PositionManager().open_position("BTC/USD", "BUY", 0.15, 60000.0)  # $9,000
+        self._seed(memory, [self._opp("SOL/USD", 200.0, 2.0)])  # $400 fits
+
+        report = ComplianceAgent().run()
+        assert len(report["approved_opportunities"]) == 1
+
+    def test_same_cycle_approvals_consume_budget(self):
+        from agents.compliance_agent import ComplianceAgent
+
+        memory = SharedMemory()
+        save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+        # Two $6,000 candidates: only the first fits under 1x equity
+        self._seed(memory, [self._opp("BTC/USD", 60000.0, 0.1),
+                            self._opp("ETH/USD", 3000.0, 2.0)])
+
+        report = ComplianceAgent().run()
+        assert len(report["approved_opportunities"]) == 1
+        assert len(report["rejected_opportunities"]) == 1
+        assert any("No-leverage policy" in r
+                   for r in report["rejected_opportunities"][0]["compliance_reasons"])

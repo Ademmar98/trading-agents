@@ -3,7 +3,7 @@
 from config import (
     BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT,
     MAX_CONSECUTIVE_LOSSES, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR,
-    MAX_OPEN_RISK_PCT, MAX_POSITIONS_PER_CLUSTER,
+    MAX_OPEN_RISK_PCT, MAX_POSITIONS_PER_CLUSTER, MAX_GROSS_LEVERAGE,
 )
 from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
@@ -111,6 +111,15 @@ class ComplianceAgent(BaseAgent):
             k = classify_symbol(p["symbol"])
             cluster_counts[k] = cluster_counts.get(k, 0) + 1
 
+        # No-leverage policy (halal requirement): total open notional must
+        # stay within equity x MAX_GROSS_LEVERAGE — strict cash-only trading.
+        # Approvals within this cycle count toward the budget immediately.
+        gross_notional = sum(
+            (p.get("current_price") or p.get("entry_price") or 0) * p["quantity"]
+            for p in open_positions
+        )
+        approved_notional = 0.0
+
         approved = []
         rejected = []
         for opp in candidates:
@@ -134,6 +143,13 @@ class ComplianceAgent(BaseAgent):
                 if cluster_counts.get(cluster, 0) >= MAX_POSITIONS_PER_CLUSTER:
                     reasons.append(
                         f"Cluster '{cluster}' already holds {cluster_counts[cluster]} positions (cap {MAX_POSITIONS_PER_CLUSTER})")
+            candidate_notional = (opp.get("price") or 0) * (opp.get("max_qty") or 0)
+            if MAX_GROSS_LEVERAGE > 0 and (
+                gross_notional + approved_notional + candidate_notional
+                > portfolio.equity * MAX_GROSS_LEVERAGE
+            ):
+                reasons.append(
+                    f"No-leverage policy: gross notional would exceed {MAX_GROSS_LEVERAGE:g}x equity")
             if opp.get("price", 0) <= 0 or opp.get("max_qty", 0) <= 0:
                 reasons.append("Invalid price or quantity")
             if self._pos_mgr.has_position(opp.get("symbol", "")):
@@ -142,6 +158,7 @@ class ComplianceAgent(BaseAgent):
                 rejected.append({**opp, "compliance_reasons": reasons})
             else:
                 approved.append({**opp, "compliance_ok": True})
+                approved_notional += candidate_notional
 
         cycle_cap = MAX_TRADES_PER_CYCLE if entries_left is None else min(MAX_TRADES_PER_CYCLE, entries_left)
         approved = approved[:cycle_cap]

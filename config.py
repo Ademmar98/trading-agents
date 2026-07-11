@@ -142,6 +142,10 @@ MAX_POSITIONS_PER_CLUSTER = int(os.getenv("MAX_POSITIONS_PER_CLUSTER", "8"))
 # When a candidate's 30d returns correlate >= this with an already-open
 # position, its size is halved (soft de-risk, never a block). 0 = off.
 MAX_PAIR_CORRELATION = float(os.getenv("MAX_PAIR_CORRELATION", "0.9"))
+# Hard no-leverage rule (halal requirement): total open notional may never
+# exceed equity x this factor. 1.0 = strict cash-only trading — no margin,
+# ever, on any venue. This is firm policy, not a tunable risk knob.
+MAX_GROSS_LEVERAGE = float(os.getenv("MAX_GROSS_LEVERAGE", "1.0"))
 # Base risk percentage fed to PricingAgent's per-opportunity calculated_risk_pct
 RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "0.5"))
 _LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))
@@ -173,8 +177,11 @@ CRYPTO_SYMBOLS = [s for s in os.getenv(
     "CRYPTO_SYMBOLS",
     "BTC/USD,ETH/USD,SOL/USD,BNB/USD,XRP/USD,ADA/USD,DOGE/USD,DOT/USD,AVAX/USD,LINK/USD,UNI/USD,ATOM/USD,LTC/USD,BCH/USD,TRX/USD,AAVE/USD,MATIC/USD,APT/USD,ARB/USD,OP/USD"
 ).split(",") if s.strip()]
+# SPY removed from defaults: an index ETF holds banks/insurers and other
+# non-halal-screened businesses. Individual names remain the operator's
+# responsibility to screen (e.g. AAOIFI criteria / a screening service).
 STOCK_SYMBOLS = [s for s in os.getenv(
-    "STOCK_SYMBOLS", "AAPL,MSFT,NVDA,TSLA,AMZN,GOOGL,META,SPY"
+    "STOCK_SYMBOLS", "AAPL,MSFT,NVDA,TSLA,AMZN,GOOGL,META"
 ).split(",") if s.strip()]
 METAL_SYMBOLS = [s for s in os.getenv("METAL_SYMBOLS", "XAUUSD,XAGUSD").split(",") if s.strip()]
 
