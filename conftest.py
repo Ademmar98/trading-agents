@@ -17,5 +17,8 @@ os.environ["HERMES_API_KEY"] = ""
 # Pin the timeframe so the suite is deterministic regardless of the local
 # .env (which may run the bot on 15m for the scalping strategy).
 os.environ["TRADING_TIMEFRAME"] = "5m"
+# Pin the fee: fee-accounting tests must keep exercising the fee math even
+# when the firm itself runs fee-free (GOAT Funded Trader is spread-cost only).
+os.environ["TRADE_FEE_PCT"] = "0.1"
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

@@ -30,3 +30,6 @@ htmlcov/
 # Logs and temporary files
 *.log
 *.tmp
+
+data_migrated_to_vps_20260711/
+

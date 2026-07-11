@@ -149,6 +149,34 @@ def fetch_twelvedata_ohlc(symbol, interval="1d", limit=100):
         return []
 
 
+# Crypto.com Exchange public API — keyless, exchange-grade crypto data.
+# Fallback for Binance klines; also serves XAUT (tokenized gold) if needed.
+_CRYPTOCOM_TIMEFRAMES = {"1m": "M1", "5m": "M5", "15m": "M15", "30m": "M30",
+                         "1h": "H1", "4h": "H4", "1d": "D1"}
+
+
+def fetch_cryptocom_ohlc(symbol, interval="1d", limit=100):
+    tf = _CRYPTOCOM_TIMEFRAMES.get(interval)
+    if not tf or not _is_crypto(symbol):
+        return []
+    inst = symbol.replace("/", "_")  # BTC/USD -> BTC_USD (spot naming)
+    try:
+        r = requests.get(
+            "https://api.crypto.com/exchange/v1/public/get-candlestick",
+            params={"instrument_name": inst, "timeframe": tf, "count": min(limit, 300)},
+            timeout=15,
+        )
+        bars = ((r.json().get("result") or {}).get("data")) or []
+        return [{
+            "date": datetime.fromtimestamp(b["t"] / 1000, tz=timezone.utc).isoformat(),
+            "open": float(b["o"]), "high": float(b["h"]),
+            "low": float(b["l"]), "close": float(b["c"]),
+            "volume": float(b.get("v") or 0), "ts": b["t"] // 1000,
+        } for b in bars[-limit:]]
+    except Exception:
+        return []
+
+
 # Massive (Polygon's rebrand): stock aggregates. Free tier is 5 req/min —
 # fallback only.
 def fetch_massive_ohlc(symbol, interval="1d", limit=100):
@@ -265,7 +293,11 @@ def fetch_ohlc(symbol, interval="1d", limit=100):
         alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
         if alpaca_result:
             return alpaca_result
-        return fetch_binance_klines(symbol, interval, limit)
+        result = fetch_binance_klines(symbol, interval, limit)
+        # Crypto.com Exchange as keyless second source when Binance fails
+        if not result:
+            result = fetch_cryptocom_ohlc(symbol, interval, limit)
+        return result
     if _is_stock(symbol):
         alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
         if alpaca_result:
