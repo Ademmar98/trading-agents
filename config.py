@@ -90,7 +90,7 @@ TRADING_TIMEFRAME = os.getenv("TRADING_TIMEFRAME", "5m")
 BACKTEST_SPREAD_PCT = float(os.getenv("BACKTEST_SPREAD_PCT", "0.05"))
 BACKTEST_BARS = int(os.getenv("BACKTEST_BARS", "2500"))
 MAX_CONSECUTIVE_LOSSES = int(os.getenv("MAX_CONSECUTIVE_LOSSES", "3"))
-STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "5"))
+STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "2.0"))
 DAILY_LOSS_LIMIT_PCT = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "3"))
 TRAILING_STOP_PCT = float(os.getenv("TRAILING_STOP_PCT", "0.5"))
 TRAILING_ACTIVATION_PCT = float(os.getenv("TRAILING_ACTIVATION_PCT", "0.8"))
@@ -116,8 +116,8 @@ BREAKEVEN_ACTIVATION_PCT = float(os.getenv("BREAKEVEN_ACTIVATION_PCT", "100"))
 # a 0.1 % safety margin above the default 0.2 % round-trip cost.
 BREAKEVEN_BUFFER_PCT = float(os.getenv("BREAKEVEN_BUFFER_PCT", "0.3"))
 # Fallback SL/TP multipliers — used by ExecutionAgent when pricing data is absent
-SL_VOL_MULT = float(os.getenv("SL_VOL_MULT", "2.0"))
-TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "6.0"))
+SL_VOL_MULT = float(os.getenv("SL_VOL_MULT", "1.5"))
+TP_VOL_MULT = float(os.getenv("TP_VOL_MULT", "2.0"))
 # Hard caps on any computed stop/target distance. A scalping firm has no
 # business holding a 29% stop — that was daily-range volatility leaking into
 # 15m trade pricing. Caps are the last line of defense; the primary fix is
@@ -143,7 +143,7 @@ MAX_POSITIONS_PER_CLUSTER = int(os.getenv("MAX_POSITIONS_PER_CLUSTER", "8"))
 # position, its size is halved (soft de-risk, never a block). 0 = off.
 MAX_PAIR_CORRELATION = float(os.getenv("MAX_PAIR_CORRELATION", "0.9"))
 # Base risk percentage fed to PricingAgent's per-opportunity calculated_risk_pct
-RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "1.0"))
+RISK_PER_TRADE_PCT = float(os.getenv("RISK_PER_TRADE_PCT", "0.5"))
 _LOCK_PORT_OVERRIDE = int(os.getenv("TRADING_LOCK_PORT", "0"))
 if _LOCK_PORT_OVERRIDE:
     LOCK_PORT = _LOCK_PORT_OVERRIDE

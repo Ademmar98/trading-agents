@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 from config import (
     SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT,
-    SCALP_MIN_WIN_PROB, SCALP_ATR_SL_MULT,
+    SCALP_MIN_WIN_PROB, SCALP_ATR_SL_MULT, MAX_SL_PCT, MAX_TP_PCT,
 )
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
@@ -104,6 +104,14 @@ class ExecutionAgent(BaseAgent):
                     tp_pct = vol_decimal * TP_VOL_MULT * 100
                     sl_price = round(price * (1 + vol_decimal * SL_VOL_MULT), 5)
                     tp_price = round(price * (1 - vol_decimal * TP_VOL_MULT), 5)
+                sl_pct = min(sl_pct, MAX_SL_PCT)
+                tp_pct = min(tp_pct, MAX_TP_PCT)
+                if action == "BUY":
+                    sl_price = round(price * (1 - sl_pct / 100), 5)
+                    tp_price = round(price * (1 + tp_pct / 100), 5)
+                else:
+                    sl_price = round(price * (1 + sl_pct / 100), 5)
+                    tp_price = round(price * (1 - tp_pct / 100), 5)
                 entry_price = price
                 risk_pct = RISK_PER_TRADE_PCT
 

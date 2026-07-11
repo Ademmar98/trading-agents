@@ -436,6 +436,7 @@ def main():
         console.print(f"[yellow]Restored {existing['count']} open position(s)[/yellow]")
 
     if notifier._enabled:
+        notifier.start_polling()
         if RESET:
             notifier.send(f"[Trading Agent Firm - Fresh Test Initialized with ${INITIAL_BALANCE:,.0f} USD Capital]")
         else:
