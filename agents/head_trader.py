@@ -77,6 +77,7 @@ class HeadTrader(BaseAgent):
         p = load_portfolio()
         regime = self.memory.read("analyses", "regime_scan") or {}
         gate = self.memory.read("decisions", "compliance_gate") or {}
+        news = self.memory.read("reports", "news_scan") or {}
         breakdown = analytics.get("strategy_breakdown") or []
         context = {
             "equity": round(p.equity, 2),
@@ -94,6 +95,8 @@ class HeadTrader(BaseAgent):
             "strategy_breakdown": breakdown[:12],
             "regime_summary": regime.get("summary", {}),
             "compliance_warnings": gate.get("warnings", []),
+            "news_tone": news.get("overall"),
+            "news_by_symbol": {k: v.get("score") for k, v in (news.get("symbols") or {}).items()},
         }
         return json.dumps(context, default=str)
 

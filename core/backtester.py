@@ -4,6 +4,7 @@ from config import (
     WATCHED_SYMBOLS, INITIAL_BALANCE, TRADE_FEE_PCT, BREAKEVEN_BUFFER_PCT,
     MAX_POSITION_SIZE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME,
     PARTIAL_TP_ENABLED, PARTIAL_TP_R, PARTIAL_TP_FRACTION, BACKTEST_SPREAD_PCT,
+    BUY_ONLY,
 )
 from core.database import execute, fetchone, fetchall, get_unprofitable_strategies
 from core.strategies import ALL_STRATEGIES, scan_symbol
@@ -158,7 +159,7 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
         if len(positions) < MAX_ACTIVE_POSITIONS:
             signals = scan_symbol(slice_data, exclude_strategies=bad_strats)
             buy_signals = [s for s in signals if s["action"] == "BUY"]
-            sell_signals = [s for s in signals if s["action"] == "SELL"]
+            sell_signals = [] if BUY_ONLY else [s for s in signals if s["action"] == "SELL"]
             if buy_signals or sell_signals:
                 ind = market.compute_indicators(slice_data[-30:])
                 vol = ind.get("volatility", 2)

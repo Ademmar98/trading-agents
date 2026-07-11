@@ -77,6 +77,7 @@ class TestSignal:
         assert scalp15.scalp_15m_signal("BTC/USD", ohlc=_bars()) is None
 
     def test_short_side_mirrors(self, monkeypatch):
+        monkeypatch.setattr(scalp15, "BUY_ONLY", False)  # exercise the SELL mirror
         _rig(monkeypatch, ema=110.0, hist=(0.5, -0.4), rsi_v=45.0)
         sig = scalp15.scalp_15m_signal("BTC/USD", regime="ranging", ohlc=_bars())
         assert sig["action"] == "SELL"

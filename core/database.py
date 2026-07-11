@@ -64,6 +64,21 @@ def init_db():
                 updated_at TEXT DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS pending_orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                symbol TEXT NOT NULL,
+                side TEXT DEFAULT 'BUY',
+                limit_price REAL NOT NULL,
+                quantity REAL NOT NULL,
+                stop_loss REAL DEFAULT 0,
+                take_profit REAL DEFAULT 0,
+                strategy TEXT DEFAULT '',
+                status TEXT DEFAULT 'pending',
+                created_at TEXT DEFAULT (datetime('now')),
+                expires_at TEXT,
+                filled_at TEXT
+            );
+
             CREATE TABLE IF NOT EXISTS trades (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 position_id INTEGER,

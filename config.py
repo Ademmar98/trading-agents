@@ -43,11 +43,33 @@ HERMES_MODEL = os.getenv("HERMES_MODEL", "nousresearch/hermes-4-70b")
 HERMES_FALLBACK_MODEL = os.getenv("HERMES_FALLBACK_MODEL", "stepfun/step-3.7-flash:free")
 HEAD_TRADER_INTERVAL_MIN = int(os.getenv("HEAD_TRADER_INTERVAL_MIN", "60"))
 
+# ── Firm direction policy ──
+# BUY-only: all sell-side signal generation, analysis, and routing is
+# disabled — agents spend their entire effort on long setups. Closing an
+# open long is unaffected (that SELL is an exit, not a position).
+BUY_ONLY = os.getenv("BUY_ONLY", "true").lower() == "true"
+
+# ── News agent ──
+NEWS_AGENT_ENABLED = os.getenv("NEWS_AGENT_ENABLED", "true").lower() == "true"
+NEWS_INTERVAL_MIN = int(os.getenv("NEWS_INTERVAL_MIN", "15"))
+
+# ── BUY-limit entries (microstructure) ──
+# When price is extended above session VWAP, rest a limit at VWAP instead of
+# paying up at market; unfilled limits expire.
+USE_LIMIT_ENTRIES = os.getenv("USE_LIMIT_ENTRIES", "true").lower() == "true"
+LIMIT_ENTRY_EXT_PCT = float(os.getenv("LIMIT_ENTRY_EXT_PCT", "0.3"))
+LIMIT_ORDER_TTL_MIN = int(os.getenv("LIMIT_ORDER_TTL_MIN", "60"))
+
 # ── 15-minute scalping stack ──
 # Entry: price above/below EMA (trend filter) + MACD crossover in the trend
 # direction + RSI guard against buying tops / selling bottoms.
 # Exits: SL = SCALP_ATR_SL_MULT x ATR(14); TP from the win-rate/R:R matrix.
 SCALP_15M_ENABLED = os.getenv("SCALP_15M_ENABLED", "true").lower() == "true"
+# The same EMA/MACD/RSI stack runs independently on every listed timeframe;
+# each gets its own strategy tag (scalp_1m ... scalp_4h) so the learning
+# loop judges them separately.
+SCALP_TIMEFRAMES = [t for t in os.getenv(
+    "SCALP_TIMEFRAMES", "1m,5m,15m,30m,1h,4h").split(",") if t.strip()]
 SCALP_EMA_PERIOD = int(os.getenv("SCALP_EMA_PERIOD", "50"))
 SCALP_ATR_SL_MULT = float(os.getenv("SCALP_ATR_SL_MULT", "1.5"))
 SCALP_RSI_OVERBOUGHT = float(os.getenv("SCALP_RSI_OVERBOUGHT", "70"))

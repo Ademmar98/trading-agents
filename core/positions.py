@@ -66,6 +66,30 @@ class PositionManager:
                 "entry_price": pos["entry_price"], "exit_price": exit_price,
                 "pnl": round(pnl, 2), "pnl_pct": round(pnl_pct, 2), "reason": reason}
 
+    def adjust_levels(self, position_id, new_sl=None, new_tp=None):
+        """Steward adjustments with a hard invariant: risk may only shrink.
+        SL can move toward price (tighten), never away; TP may move either
+        way (extending a target adds no risk)."""
+        row = fetchone("SELECT * FROM positions WHERE id=? AND status='open'", [position_id])
+        if not row:
+            return False
+        pos = dict(row)
+        updates, params = [], []
+        if new_sl is not None and pos["stop_loss"]:
+            tighter = (new_sl > pos["stop_loss"]) if pos["side"] == "BUY" else (new_sl < pos["stop_loss"])
+            if tighter:
+                updates.append("stop_loss=?")
+                params.append(new_sl)
+        if new_tp is not None and new_tp > 0:
+            updates.append("take_profit=?")
+            params.append(new_tp)
+        if not updates:
+            return False
+        params.append(position_id)
+        execute(f"UPDATE positions SET {', '.join(updates)}, updated_at=datetime('now') "
+                "WHERE id=? AND status='open'", params)
+        return True
+
     def close_partial(self, position_id, exit_price, fraction, reason="partial_tp"):
         """Close a fraction of the position and move the stop to breakeven.
 

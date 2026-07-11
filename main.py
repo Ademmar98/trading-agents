@@ -23,7 +23,7 @@ from core.portfolio import load_portfolio, save_portfolio, Portfolio
 from core.memory import SharedMemory
 from core.database import init_db, fetchall, set_meta
 from core.positions import PositionManager
-from core import websocket_prices
+from core import pending_orders, websocket_prices
 from core.notifier import Notifier
 from core.analytics import get_analytics, get_strategy_stats
 from core.webserver import start_webserver, get_market_prices
@@ -34,6 +34,7 @@ from core.reconcile import reconcile_with_exchange
 from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
 from agents.sentiment_agent import SentimentAgent
+from agents.news_agent import NewsAgent
 from agents.regime_agent import RegimeAgent
 
 from agents.risk_manager import RiskManager
@@ -196,6 +197,7 @@ CYCLE_AGENTS = (
     Orchestrator,
     HealthMonitor,
     SentimentAgent,
+    NewsAgent,  # self-throttled RSS scan; no-op inside NEWS_INTERVAL_MIN
     RegimeAgent,
     ResearchAnalyst,
     RiskManager,
@@ -232,7 +234,8 @@ def process_price_triggers(prices):
             if sym not in merged and isinstance(d, dict) and d.get("price"):
                 merged[sym] = {"price": d["price"]}
         triggered = pos_mgr.update_prices(merged)
-        if not triggered:
+        fills = pending_orders.check_fills(merged, pos_mgr.has_position)
+        if not triggered and not fills:
             return []
         broker = make_broker_with_retry()
         for tr in triggered:
@@ -240,6 +243,19 @@ def process_price_triggers(prices):
             order = broker.place_order(tr["symbol"], close_side, tr["qty"], tr["exit_price"])
             memory.log("system", f"{tr['reason']}: {tr['symbol']} ${tr['pnl']:+.2f} (exit {order.get('status', '?')})")
             notifier.on_sl_tp(tr)
+        for po in fills:
+            order = broker.place_order(po["symbol"], "BUY", po["quantity"], po["limit_price"],
+                                       sl=po["stop_loss"], tp=po["take_profit"])
+            if order.get("status") == "filled":
+                pos_mgr.open_position(po["symbol"], "BUY", order.get("quantity") or po["quantity"],
+                                      order.get("price") or po["limit_price"],
+                                      sl=po["stop_loss"], tp=po["take_profit"],
+                                      strategy=po.get("strategy", ""))
+                memory.log("system", f"limit filled: BUY {po['symbol']} x{po['quantity']:g} @ ${po['limit_price']}")
+                notifier.on_trade({"symbol": po["symbol"], "side": "BUY",
+                                   "qty": po["quantity"], "price": po["limit_price"],
+                                   "stop_loss": po["stop_loss"], "take_profit": po["take_profit"],
+                                   "status": "filled"})
         return triggered
 
 

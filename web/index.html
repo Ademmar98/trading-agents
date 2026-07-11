@@ -224,8 +224,8 @@
   </section>
 
   <section>
-    <h2>Trade Journal <span class="idx">02</span></h2>
-    <div class="chart-box" style="height:160px"><canvas id="pnl-chart" role="img" aria-label="P&amp;L per trade bar chart"></canvas></div>
+    <h2>Days P&amp;L <span class="idx">02</span></h2>
+    <div class="chart-box" style="height:160px"><canvas id="pnl-chart" role="img" aria-label="Realized P&amp;L per day bar chart"></canvas></div>
   </section>
 
   <section>
@@ -427,10 +427,10 @@ function renderChart(points) {
 }
 
 let pnlChart = null;
-function renderPnlChart(trades) {
-  const labels = trades.map((t) => exactSql(t.closed_at));
-  const values = trades.map((t) => t.pnl);
-  const colors = trades.map((t) => (t.pnl >= 0 ? "#00C24E" : "#FF433D"));
+function renderPnlChart(days) {
+  const labels = days.map((d) => d.day);
+  const values = days.map((d) => d.pnl);
+  const colors = days.map((d) => (d.pnl >= 0 ? "#00C24E" : "#FF433D"));
   if (pnlChart) {
     pnlChart.data.labels = labels;
     pnlChart.data.datasets[0].data = values;
@@ -756,7 +756,7 @@ async function refresh() {
       fetch("/api/regime" + _cb()).then((r) => r.json()),
       fetch("/api/plans" + _cb()).then((r) => r.json()),
       fetch("/api/market-prices" + _cb()).then((r) => r.json()),
-      fetch("/api/trade-journal" + _cb()).then((r) => r.json()),
+      fetch("/api/daily-pnl" + _cb()).then((r) => r.json()),
       fetch("/api/strategy-stats" + _cb()).then((r) => r.json()),
       fetch("/api/optimizations" + _cb()).then((r) => r.json()),
       fetch("/api/pricing" + _cb()).then((r) => r.json()),
@@ -767,7 +767,7 @@ async function refresh() {
     renderPositions(positions);
     renderTrades(trades);
     renderChart(equity);
-    renderPnlChart(tradeJournal || []);
+    renderPnlChart((tradeJournal && tradeJournal.days) ? tradeJournal.days.slice().reverse() : []);
     renderStrategyStats(stratStats || []);
     renderActivity(activity);
     renderErrors(errors);

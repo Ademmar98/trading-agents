@@ -274,6 +274,20 @@ def api_head_trader():
     return report or {}
 
 
+@app.get("/api/daily-pnl")
+def api_daily_pnl():
+    """Realized PnL per UTC day (one logical trade per position)."""
+    rows = fetchall("""
+        SELECT date(closed_at) AS day, COUNT(*) AS trades,
+               ROUND(SUM(pnl), 2) AS pnl,
+               SUM(CASE WHEN pnl > 0 THEN 1 ELSE 0 END) AS wins
+        FROM (SELECT SUM(pnl) AS pnl, MAX(closed_at) AS closed_at
+              FROM trades GROUP BY COALESCE(position_id, id))
+        GROUP BY day ORDER BY day DESC LIMIT 30
+    """)
+    return {"days": [dict(r) for r in rows]}
+
+
 @app.get("/api/scorecard")
 def api_scorecard():
     """Per-strategy live scorecard with a verdict per strategy."""

@@ -2,7 +2,7 @@ from core.backtester import backtest_symbol, fetch_klines
 from core.pricing import round_sig
 from core.database import execute, fetchall, fetchone
 from core.strategies import scan_symbol
-from config import INITIAL_BALANCE, TRADE_FEE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME
+from config import INITIAL_BALANCE, TRADE_FEE_PCT, BACKTEST_BARS, TRADING_TIMEFRAME, BUY_ONLY
 
 FEE_RATIO = TRADE_FEE_PCT / 100.0
 
@@ -59,6 +59,8 @@ def _backtest_with_params(symbol, sl_mult, tp_mult, pos_size, conf_thresh, bars=
         if not position:
             signals = scan_symbol(slice_data)
             signals = [s for s in signals if s["confidence"] >= conf_thresh]
+            if BUY_ONLY:
+                signals = [s for s in signals if s["action"] == "BUY"]
             if signals and current["close"] > 0:
                 best = max(signals, key=lambda s: s["confidence"])
                 qty = (cash * pos_size / 100) / current["close"]

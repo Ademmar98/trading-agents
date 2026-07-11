@@ -14,7 +14,7 @@ skill's ATR method: qty = (equity x risk%) / (ATR x multiplier).
 """
 from config import (
     SCALP_EMA_PERIOD, SCALP_ATR_SL_MULT, SCALP_RSI_OVERBOUGHT,
-    SCALP_RSI_OVERSOLD, RISK_PER_TRADE_PCT,
+    SCALP_RSI_OVERSOLD, RISK_PER_TRADE_PCT, BUY_ONLY,
 )
 from core.data_provider import fetch_ohlc
 from core.database import fetchone
@@ -41,16 +41,16 @@ def _macd_series(closes, fast=12, slow=26, signal=9):
     return [macd_line[i + off2] - sig[i] for i in range(len(sig))]
 
 
-def estimate_win_probability(regime_aligned):
-    """Estimated win probability for the scalp stack.
+def estimate_win_probability(regime_aligned, strategy="scalp_15m"):
+    """Estimated win probability for a scalp stack timeframe.
 
-    Laplace-smoothed empirical win rate of the 'scalp_15m' strategy
+    Laplace-smoothed empirical win rate of that timeframe's strategy tag
     ((wins + 1) / (trades + 2), prior 0.5) plus a synergy bonus when the
     detected regime agrees with the trade direction. This is an honest
     heuristic, NOT a calibrated probability — treat gates on it accordingly.
     """
     row = fetchone(
-        "SELECT trades, win_rate FROM strategy_stats WHERE strategy='scalp_15m'"
+        "SELECT trades, win_rate FROM strategy_stats WHERE strategy=?", [strategy]
     )
     n = row["trades"] if row and row["trades"] else 0
     wins = (row["win_rate"] / 100.0) * n if row and row["win_rate"] else 0
@@ -75,10 +75,12 @@ def rr_for_win_prob(wp):
     return 2.0
 
 
-def scalp_15m_signal(symbol, regime=None, ohlc=None):
-    """Return a scalp setup dict, or None when the stack doesn't align."""
+def scalp_signal(symbol, regime=None, ohlc=None, timeframe=TIMEFRAME):
+    """Run the EMA/MACD/RSI stack on one timeframe. Returns a setup dict
+    tagged with that timeframe's own strategy name, or None."""
+    strategy_tag = f"scalp_{timeframe}"
     if ohlc is None:
-        ohlc = fetch_ohlc(symbol, interval=TIMEFRAME, limit=130)
+        ohlc = fetch_ohlc(symbol, interval=timeframe, limit=130)
     if not ohlc or len(ohlc) < MIN_BARS:
         return None
     closes = [b["close"] for b in ohlc]
@@ -102,7 +104,7 @@ def scalp_15m_signal(symbol, regime=None, ohlc=None):
     action = None
     if price > ema_v and crossed_up and rsi_v < SCALP_RSI_OVERBOUGHT:
         action = "BUY"
-    elif price < ema_v and crossed_down and rsi_v > SCALP_RSI_OVERSOLD:
+    elif (not BUY_ONLY) and price < ema_v and crossed_down and rsi_v > SCALP_RSI_OVERSOLD:
         action = "SELL"
     if not action:
         return None
@@ -111,7 +113,7 @@ def scalp_15m_signal(symbol, regime=None, ohlc=None):
         (action == "BUY" and regime in ("trending_up", "trending")) or
         (action == "SELL" and regime in ("trending_down",))
     )
-    wp = estimate_win_probability(regime_aligned)
+    wp = estimate_win_probability(regime_aligned, strategy_tag)
     rr = rr_for_win_prob(wp)
 
     sl_dist = atr_v * SCALP_ATR_SL_MULT
@@ -135,14 +137,21 @@ def scalp_15m_signal(symbol, regime=None, ohlc=None):
         "rsi": round(rsi_v, 1),
         "rr": rr,
         "win_prob": round(wp, 3),
+        "timeframe": timeframe,
+        "strategy": strategy_tag,
         "calculated_risk_pct": RISK_PER_TRADE_PCT,
         "reasons": [
-            f"scalp15 EMA{SCALP_EMA_PERIOD} {'up' if action == 'BUY' else 'down'}trend",
-            "scalp15 MACD cross",
-            f"scalp15 RSI {rsi_v:.0f}",
-            f"scalp15 wp {wp:.0%} rr {rr}",
+            f"{strategy_tag} EMA{SCALP_EMA_PERIOD} {'up' if action == 'BUY' else 'down'}trend",
+            f"{strategy_tag} MACD cross",
+            f"{strategy_tag} RSI {rsi_v:.0f}",
+            f"{strategy_tag} wp {wp:.0%} rr {rr}",
         ],
     }
+
+
+# Backward-compatible alias (tests and older callers)
+def scalp_15m_signal(symbol, regime=None, ohlc=None):
+    return scalp_signal(symbol, regime=regime, ohlc=ohlc, timeframe="15m")
 
 
 def atr_position_size(equity, atr_value, atr_multiplier=SCALP_ATR_SL_MULT,

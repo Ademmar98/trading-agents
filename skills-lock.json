@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "Unity Performance": {
+      "source": "cryptorabea/claude_unity_dev_plugin",
+      "sourceType": "github",
+      "skillPath": "skills/unity-performance/SKILL.md",
+      "computedHash": "7cf718cb5941681cdf8d3ebd6b56d42ea964f9fabb940e65019d21586632308c"
+    },
     "agent-browser": {
       "source": "vercel-labs/agent-browser",
       "sourceType": "github",
@@ -24,11 +30,29 @@
       "skillPath": "skills/capture-api-response-test-fixture/SKILL.md",
       "computedHash": "d54838c1adda55a469cc7aafba8e09aaf7a4e59445fe43f6cadda01781a5a154"
     },
+    "crypto-backtest": {
+      "source": "0xrikt/crypto-skills",
+      "sourceType": "github",
+      "skillPath": "crypto-backtest/SKILL.md",
+      "computedHash": "416d47d06e55daf364c2d4ac2bf6d15853498e9b00678a57be65a4c2d32b1fb3"
+    },
+    "crypto-expert": {
+      "source": "rightnow-ai/openfang",
+      "sourceType": "github",
+      "skillPath": "crates/openfang-skills/bundled/crypto-expert/SKILL.md",
+      "computedHash": "c64a5b970829b72811dadc0678b25024423ec13fb3dc0b3b30b390037c2156e4"
+    },
     "crypto-market-rank": {
       "source": "binance/binance-skills-hub",
       "sourceType": "github",
       "skillPath": "skills/binance-web3/crypto-market-rank/SKILL.md",
       "computedHash": "4f2bc27fb48ba2728f428289bce5308b21367e644d2ee37bd8f53ed96d70aa6d"
+    },
+    "crypto-protocol-diagram": {
+      "source": "trailofbits/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/trailmark/skills/crypto-protocol-diagram/SKILL.md",
+      "computedHash": "45f9347ddaeba8bebf005c01313f64635a482e72c4036d53f5eecb0eb339b266"
     },
     "crypto-report": {
       "source": "claude-office-skills/skills",
@@ -47,6 +71,24 @@
       "sourceType": "github",
       "skillPath": "crypto-trading-advisor/SKILL.md",
       "computedHash": "9a6925560bb9f9940e891aca9a392e293f80ea37284618b65007e8eb98586185"
+    },
+    "crypto-trading-bots": {
+      "source": "omer-metin/skills-for-antigravity",
+      "sourceType": "github",
+      "skillPath": "skills/crypto-trading-bots/SKILL.md",
+      "computedHash": "aaae2a40719b4006ff88420ca0c48ebac3c09c27fa13bd0a96594dc2d7c656bc"
+    },
+    "cryptoquant-pro-2-10-teneo": {
+      "source": "teneoprotocolai/teneo-skills",
+      "sourceType": "github",
+      "skillPath": "skills/agents/teneo-agent-cryptoquant-pro-2-10/SKILL.md",
+      "computedHash": "1e59a42e053a557ccca8655220ca661a01d3e761d6f8aa2f5bf146398e5d44f3"
+    },
+    "ctf-crypto": {
+      "source": "ljagiello/ctf-skills",
+      "sourceType": "github",
+      "skillPath": "ctf-crypto/SKILL.md",
+      "computedHash": "fadd2eeff064b2faab096dbb32a2fa4cf27842d69f4a45ed1b3bd0587d3bf0fc"
     },
     "docker-expert": {
       "source": "sickn33/antigravity-awesome-skills",
@@ -72,6 +114,12 @@
       "skillPath": "stdlib/domains/finance-expert/SKILL.md",
       "computedHash": "83ff6d943fe47f1cec6c79b2d364303c2e058366c3fdfc6bc5938539cc914b33"
     },
+    "finance-news": {
+      "source": "sundial-org/awesome-openclaw-skills",
+      "sourceType": "github",
+      "skillPath": "skills/finance-news/SKILL.md",
+      "computedHash": "591601102ca8ca97934fd5415a7e43c43a7e608f1df33e3e198e680c6e16e351"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
@@ -95,6 +143,12 @@
       "sourceType": "github",
       "skillPath": "SKILL.md",
       "computedHash": "73bff3eabe7fe30abbc7b3d7399a35b1b2b0a41bb9bd4bed8a8bc7f68b0e4cd3"
+    },
+    "lattice-crypto-attacks": {
+      "source": "yaklang/hack-skills",
+      "sourceType": "github",
+      "skillPath": "skills/lattice-crypto-attacks/SKILL.md",
+      "computedHash": "cca2516134c040871a3af3726ea0a2853a5c67cae624d1ff4df8f75c77b47679"
     },
     "llm-trading-agent-security": {
       "source": "affaan-m/everything-claude-code",

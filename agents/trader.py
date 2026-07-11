@@ -8,6 +8,8 @@ from core.live_broker import MetaQuotesBroker
 from core.dxtrade_broker import DXTradeBroker
 from core.positions import PositionManager
 from core.database import update_plan_status
+from core import pending_orders
+from config import USE_LIMIT_ENTRIES, LIMIT_ENTRY_EXT_PCT
 
 # Reject fills when the market has run this far past the planned entry —
 # the plan's SL/TP geometry no longer holds.
@@ -89,6 +91,18 @@ class Trader(BaseAgent):
                 fill_ref = quote.get("ask") or market_price
             else:
                 fill_ref = quote.get("bid") or market_price
+
+            # Extended above session VWAP? Rest a BUY limit at VWAP instead of
+            # buying the local top; the pending-order loop fills or expires it.
+            vwap_v = quote.get("vwap")
+            if (USE_LIMIT_ENTRIES and action == "BUY" and vwap_v
+                    and market_price > vwap_v * (1 + LIMIT_ENTRY_EXT_PCT / 100)
+                    and not pending_orders.open_pending(symbol)):
+                pending_orders.place_limit(
+                    symbol, vwap_v, qty, sl=sl_price, tp=tp_price,
+                    strategy=(planned.get("strategies") or [""])[0])
+                self.log(f"BUY {symbol}: extended {((market_price/vwap_v)-1)*100:.2f}% over VWAP — resting limit @ ${vwap_v}")
+                continue
 
             order = self.broker.place_order(symbol, action, qty, fill_ref, sl=sl_price, tp=tp_price)
             orders_executed.append(order)
