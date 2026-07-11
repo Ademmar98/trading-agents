@@ -250,9 +250,10 @@ def run_cycle():
         for agent_cls in CYCLE_AGENTS:
             agent_cls().run()
 
-        prices = websocket_prices.get_all_prices()
-        if prices:
-            process_price_triggers(prices)
+        # Always run: the websocket feed is Binance-only and geo-blocked on
+        # some hosts (US VPS) — the trigger processor falls back to the
+        # analyst's scan prices internally, so an empty feed must not skip it.
+        process_price_triggers(websocket_prices.get_all_prices() or {})
 
         _rebalance_positions()
         snapshot_equity()
@@ -480,9 +481,7 @@ def main():
     try:
         if HEADLESS:
             while True:
-                prices = websocket_prices.get_all_prices()
-                if prices:
-                    process_price_triggers(prices)
+                process_price_triggers(websocket_prices.get_all_prices() or {})
                 sync_position_stores()
                 snapshot_equity()
                 time.sleep(30)
@@ -494,9 +493,8 @@ def main():
                     if analysis:
                         prices = {s: {"price": d.get("price", 0)}
                                  for s, d in (analysis.get("all_analyses", {}) or {}).items()}
-                if prices:
-                    process_price_triggers(prices)
-                    sync_position_stores()
+                process_price_triggers(prices or {})
+                sync_position_stores()
                 portfolio = load_portfolio()
                 live.update(make_layout(portfolio, pos_mgr, memory, live_broker))
                 time.sleep(2)
