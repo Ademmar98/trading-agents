@@ -3,7 +3,7 @@ import concurrent.futures
 
 from config import (
     WATCHED_SYMBOLS, TRADING_TIMEFRAME, BACKTEST_BARS, SCALP_15M_ENABLED,
-    SCALP_TIMEFRAMES, BUY_ONLY, MAX_TP_PCT,
+    SCALP_TIMEFRAMES, BUY_ONLY, MAX_TP_PCT, MACRO_BELLWETHERS,
 )
 from agents.base_agent import BaseAgent
 from core.market import MarketData
@@ -299,9 +299,22 @@ class ResearchAnalyst(BaseAgent):
         pricing_map = {}
         for o in opportunities:
             pricing_map.setdefault(o["symbol"], o)
+        # Bellwether momentum (~30min over the last two closed 15m bars) so
+        # compliance can pause a whole asset class mid-dip
+        bellwether_moves = {}
+        for cluster, bell in MACRO_BELLWETHERS.items():
+            try:
+                bars = self.market.get_ohlc(bell, days=2, interval="15m")
+                if bars and len(bars) >= 3 and bars[-3].get("close"):
+                    bellwether_moves[cluster] = round(
+                        (bars[-1]["close"] - bars[-3]["close"]) / bars[-3]["close"] * 100, 3)
+            except Exception:
+                continue
+
         self.memory.write("analyses", "market_scan", {
             "summary": summary, "opportunities": opportunities,
-            "all_analyses": analyses, "timestamp": time.time(),
+            "all_analyses": analyses, "bellwether_moves": bellwether_moves,
+            "timestamp": time.time(),
         })
         self.memory.write("decisions", "pricing", {
             "pricing_map": pricing_map, "timestamp": time.time(),

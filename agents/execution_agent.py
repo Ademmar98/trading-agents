@@ -9,6 +9,7 @@ from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
 from core.portfolio import load_portfolio
 from core.positions import PositionManager
+from core.risk import session_risk_mult
 from core.scalp15 import atr_position_size
 
 MAX_SPREAD_PCT = 0.35
@@ -124,7 +125,9 @@ class ExecutionAgent(BaseAgent):
                     f"TP too small: {tp_pct:.2f}% < {min_viable_tp:.2f}% (fees+spread {round_trip_cost:.2f}%)"]})
                 continue
 
-            risk_amount = load_portfolio().equity * (risk_pct / 100)
+            # Session-aware sizing: Asian-session moves are sharper and fills
+            # worse — risk half size there (SESSION_RISK_MULTS)
+            risk_amount = load_portfolio().equity * (risk_pct / 100) * session_risk_mult()
             if sl_price and entry_price:
                 risk_per_unit = abs(entry_price - sl_price)
                 if risk_per_unit > 0:

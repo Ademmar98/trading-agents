@@ -181,3 +181,100 @@ class TestOpenTradeSteward:
         # bearish trend + RSI>75 = 2 votes, in profit -> SL tightened toward price
         new_sl = fetchone("SELECT stop_loss FROM positions WHERE id=?", [pid])["stop_loss"]
         assert new_sl > 95.0
+
+
+class TestCorrelatedSelloffDefenses:
+    """Post-mortem 2026-07-12: six alt longs stopped together on one BTC dip."""
+
+    def test_group_counting(self):
+        from core.risk import count_group_positions, symbol_group
+        assert symbol_group("AAVE/USD") == "crypto_alts"
+        assert symbol_group("BTC/USD") == "crypto_majors"
+        held = ["AAVE/USD", "UNI/USD", "BTC/USD", "AAPL"]
+        assert count_group_positions("ADA/USD", held) == 2   # two alts held
+        assert count_group_positions("ETH/USD", held) == 1   # one major held
+        assert count_group_positions("XAUUSD", held) == 0
+
+    def test_session_multiplier(self):
+        from datetime import datetime, timezone
+        from core.risk import session_risk_mult
+        asian = datetime(2026, 7, 12, 3, 0, tzinfo=timezone.utc)
+        euro = datetime(2026, 7, 12, 10, 0, tzinfo=timezone.utc)
+        us = datetime(2026, 7, 12, 16, 0, tzinfo=timezone.utc)
+        late = datetime(2026, 7, 12, 23, 0, tzinfo=timezone.utc)
+        assert session_risk_mult(asian) == 0.5
+        assert session_risk_mult(euro) == 0.8
+        assert session_risk_mult(us) == 1.0
+        assert session_risk_mult(late) == 0.5
+
+    def test_macro_dip_alert(self):
+        from core.risk import macro_dip_alert
+        assert macro_dip_alert("crypto", {"crypto": -1.4}) is True
+        assert macro_dip_alert("crypto", {"crypto": -0.6}) is False
+        assert macro_dip_alert("crypto", {}) is False
+        assert macro_dip_alert("stock", {"crypto": -2.0}) is False
+
+    def test_vol_aware_stop_atr_first(self, monkeypatch):
+        import core.risk as risk
+        monkeypatch.setattr(risk, "MAX_SL_PCT", 5.0)
+        monkeypatch.setattr(risk, "MIN_SL_PCT", 0.3)
+        from core.risk import vol_aware_stop_loss
+        # normal: ATR decides (0.8% ATR x 1.5 = 1.2%), NOT the cap
+        assert vol_aware_stop_loss(0.8, 1.5) == pytest.approx(1.2)
+        # absurd volatility: sanity ceiling
+        assert vol_aware_stop_loss(9.0, 1.5) == 5.0
+        # micro noise: floor
+        assert vol_aware_stop_loss(0.05, 1.5) == pytest.approx(0.3)
+        assert vol_aware_stop_loss(0, 1.5) is None
+
+    def test_compliance_group_guard_blocks_third_alt(self, monkeypatch):
+        import agents.compliance_agent as ca
+        from core.positions import PositionManager
+        save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+        pm = PositionManager()
+        pm.open_position("AAVE/USD", "BUY", 0.1, 100.0)
+        pm.open_position("UNI/USD", "BUY", 1.0, 10.0)
+        memory = SharedMemory()
+        memory.write("analyses", "market_scan", {"bellwether_moves": {}, "timestamp": time.time()})
+        memory.write("decisions", "portfolio_plan", {
+            "approved_opportunities": [{
+                "symbol": "ADA/USD", "action": "BUY", "confidence": 0.7,
+                "price": 0.5, "max_qty": 100.0, "risk_ok": True,
+                "reasons": [], "strategies": ["test"],
+            }],
+            "timestamp": time.time(),
+        })
+        report = ca.ComplianceAgent().run()
+        assert report["approved_opportunities"] == []
+        assert any("Correlation group" in r
+                   for r in report["rejected_opportunities"][0]["compliance_reasons"])
+
+    def test_macro_dip_interlock_blocks_cluster(self):
+        import agents.compliance_agent as ca
+        save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+        memory = SharedMemory()
+        memory.write("analyses", "market_scan", {
+            "bellwether_moves": {"crypto": -1.5}, "timestamp": time.time()})
+        memory.write("decisions", "portfolio_plan", {
+            "approved_opportunities": [{
+                "symbol": "SOL/USD", "action": "BUY", "confidence": 0.7,
+                "price": 150.0, "max_qty": 1.0, "risk_ok": True,
+                "reasons": [], "strategies": ["test"],
+            }],
+            "timestamp": time.time(),
+        })
+        report = ca.ComplianceAgent().run()
+        assert report["approved_opportunities"] == []
+        assert any("Macro dip interlock" in r
+                   for r in report["rejected_opportunities"][0]["compliance_reasons"])
+
+    def test_pricing_uses_atr_not_cap(self, monkeypatch):
+        import core.risk as risk
+        monkeypatch.setattr(risk, "MAX_SL_PCT", 5.0)
+        from core.pricing import compute_pricing
+        # ATR 0.5% x trending sl_mult 1.5 = 0.75% stop — nowhere near any cap
+        p = compute_pricing("BTC/USD", "BUY", 60000.0,
+                            {"volatility": 4.0, "bid": 59995.0, "ask": 60005.0},
+                            "trending_up", 300.0)
+        assert p["sl_pct"] == pytest.approx(0.8, abs=0.1)
+        assert p["sl_pct"] < 2.0  # the old formula would have clamped at the cap

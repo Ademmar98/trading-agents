@@ -37,12 +37,17 @@ def compute_pricing(symbol, action, price, data, regime=None, atr_val=0):
     bid = data.get("bid") or price
     ask = data.get("ask") or price
 
-    sl_distance = max(atr_dec * sl_mult, vol_dec * sl_mult * 1.2)
-    tp_distance = max(atr_dec * tp_mult, vol_dec * tp_mult * 0.8)
-    # Scalp-geometry rails: no stop or target wider than the configured caps,
-    # whatever the volatility inputs claim.
-    sl_distance = min(sl_distance, MAX_SL_PCT / 100.0)
-    tp_distance = min(tp_distance, MAX_TP_PCT / 100.0)
+    # ATR-first placement: the pair's own noise sets the stop; MIN/MAX act
+    # only as sanity rails. The old max(atr, range-vol) formula ballooned in
+    # volatile sessions until every stop landed at exactly the cap — six
+    # correlated alts all stopped at -2% in one 30-minute dip.
+    from core.risk import vol_aware_stop_loss
+    sl_pct_val = vol_aware_stop_loss(atr_pct, sl_mult)
+    if sl_pct_val is None:
+        sl_pct_val = max(0.3, min(vol_dec * 100 * sl_mult * 1.2, MAX_SL_PCT))
+    sl_distance = sl_pct_val / 100.0
+    # TP keeps the regime's R:R ratio relative to the actual stop
+    tp_distance = min(sl_distance * (tp_mult / sl_mult), MAX_TP_PCT / 100.0)
     sma_20 = data.get("sma_20") or 0
     sma_50 = data.get("sma_50") or 0
 

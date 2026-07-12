@@ -4,7 +4,9 @@ from config import (
     BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT,
     MAX_CONSECUTIVE_LOSSES, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR,
     MAX_OPEN_RISK_PCT, MAX_POSITIONS_PER_CLUSTER, MAX_GROSS_LEVERAGE,
+    MAX_GROUP_POSITIONS, GROUP_OVERRIDE_CONF, MACRO_DIP_OVERRIDE_CONF,
 )
+from core.risk import count_group_positions, macro_dip_alert
 from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
 from core.positions import PositionManager
@@ -120,6 +122,14 @@ class ComplianceAgent(BaseAgent):
         )
         approved_notional = 0.0
 
+        # Correlated-selloff defenses: positions in the same correlation
+        # group move as one asset — count them together (open + approved
+        # this cycle); and read the analyst's bellwether momentum so a whole
+        # class pauses mid-dip.
+        scan = self.memory.read("analyses", "market_scan") or {}
+        bellwether_moves = scan.get("bellwether_moves") or {}
+        held_symbols = [p["symbol"] for p in open_positions]
+
         approved = []
         rejected = []
         for opp in candidates:
@@ -143,6 +153,18 @@ class ComplianceAgent(BaseAgent):
                 if cluster_counts.get(cluster, 0) >= MAX_POSITIONS_PER_CLUSTER:
                     reasons.append(
                         f"Cluster '{cluster}' already holds {cluster_counts[cluster]} positions (cap {MAX_POSITIONS_PER_CLUSTER})")
+            group_n = count_group_positions(opp.get("symbol", ""), held_symbols)
+            if (MAX_GROUP_POSITIONS > 0 and group_n >= MAX_GROUP_POSITIONS
+                    and opp.get("confidence", 0) < GROUP_OVERRIDE_CONF):
+                reasons.append(
+                    f"Correlation group already holds {group_n} positions "
+                    f"(cap {MAX_GROUP_POSITIONS}; override needs conf >= {GROUP_OVERRIDE_CONF:g})")
+            cluster = classify_symbol(opp.get("symbol", ""))
+            if (macro_dip_alert(cluster, bellwether_moves)
+                    and opp.get("confidence", 0) < MACRO_DIP_OVERRIDE_CONF):
+                reasons.append(
+                    f"Macro dip interlock: {cluster} bellwether "
+                    f"{bellwether_moves.get(cluster)}% in 30m — new entries paused")
             candidate_notional = (opp.get("price") or 0) * (opp.get("max_qty") or 0)
             if MAX_GROSS_LEVERAGE > 0 and (
                 gross_notional + approved_notional + candidate_notional
@@ -159,6 +181,7 @@ class ComplianceAgent(BaseAgent):
             else:
                 approved.append({**opp, "compliance_ok": True})
                 approved_notional += candidate_notional
+                held_symbols.append(opp.get("symbol", ""))  # counts toward group caps this cycle
 
         cycle_cap = MAX_TRADES_PER_CYCLE if entries_left is None else min(MAX_TRADES_PER_CYCLE, entries_left)
         approved = approved[:cycle_cap]

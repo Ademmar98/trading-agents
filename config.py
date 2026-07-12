@@ -164,6 +164,33 @@ MAX_POSITIONS_PER_CLUSTER = int(os.getenv("MAX_POSITIONS_PER_CLUSTER", "8"))
 # When a candidate's 30d returns correlate >= this with an already-open
 # position, its size is halved (soft de-risk, never a block). 0 = off.
 MAX_PAIR_CORRELATION = float(os.getenv("MAX_PAIR_CORRELATION", "0.9"))
+# ── Correlated-selloff defenses (post-mortem 2026-07-12: 6 alt BUYs all
+# stopped at the cap during one Asian-session BTC dip) ──
+# Correlation groups: assets that move as one. Cap simultaneous positions
+# per group; only exceptional confidence may exceed it.
+CORRELATION_GROUPS = {
+    "crypto_alts": ["AAVE/USD", "UNI/USD", "ADA/USD", "BCH/USD", "DOT/USD",
+                    "LTC/USD", "LINK/USD", "AVAX/USD", "SOL/USD", "XRP/USD",
+                    "DOGE/USD", "ATOM/USD", "TRX/USD", "MATIC/USD", "APT/USD",
+                    "ARB/USD", "OP/USD", "BNB/USD"],
+    "crypto_majors": ["BTC/USD", "ETH/USD"],
+    "us_equities": ["AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL", "META"],
+    "metals": ["XAUUSD", "XAGUSD"],
+}
+MAX_GROUP_POSITIONS = int(os.getenv("MAX_GROUP_POSITIONS", "2"))
+GROUP_OVERRIDE_CONF = float(os.getenv("GROUP_OVERRIDE_CONF", "0.85"))
+# Session-aware risk sizing: low-liquidity hours amplify moves and spreads.
+# Asian (00-08 UTC) x0.5, European (08-14) x0.8, US overlap (14-22) x1.0,
+# late-US/pre-Asian (22-24) x0.5.
+SESSION_RISK_MULTS = os.getenv("SESSION_RISK_MULTS", "0.5,0.8,1.0,0.5")
+# Macro dip interlock: bellwether down more than this % in ~30min pauses new
+# entries in its whole asset class until it stabilizes.
+MACRO_DIP_PCT = float(os.getenv("MACRO_DIP_PCT", "1.0"))
+MACRO_DIP_OVERRIDE_CONF = float(os.getenv("MACRO_DIP_OVERRIDE_CONF", "0.9"))
+MACRO_BELLWETHERS = {"crypto": "BTC/USD", "stock": "MSFT", "forex": "XAUUSD"}
+# SL floor: ATR-first placement may never be tighter than this (noise floor)
+MIN_SL_PCT = float(os.getenv("MIN_SL_PCT", "0.3"))
+
 # Hard no-leverage rule (halal requirement): total open notional may never
 # exceed equity x this factor. 1.0 = strict cash-only trading — no margin,
 # ever, on any venue. This is firm policy, not a tunable risk knob.
