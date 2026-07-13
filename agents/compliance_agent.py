@@ -2,7 +2,7 @@
 
 from config import (
     BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT,
-    MAX_CONSECUTIVE_LOSSES, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR,
+    STREAK_LOSS_HALT_PCT, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR,
     MAX_OPEN_RISK_PCT, MAX_POSITIONS_PER_CLUSTER, MAX_GROSS_LEVERAGE,
     MAX_GROUP_POSITIONS, GROUP_OVERRIDE_CONF, MACRO_DIP_OVERRIDE_CONF,
 )
@@ -64,16 +64,32 @@ class ComplianceAgent(BaseAgent):
         if day_pnl < -DAILY_LOSS_LIMIT_PCT:
             halted = True
             blockers.append(f"Daily loss {day_pnl:.2f}% breached the {DAILY_LOSS_LIMIT_PCT}% circuit breaker — no new trades today")
-        recent = fetchall("SELECT pnl FROM trades ORDER BY closed_at DESC LIMIT ?", [MAX_CONSECUTIVE_LOSSES])
-        consecutive_losses = 0
+        # Streak breaker in money, not count: sum the run of consecutive
+        # losing positions (grouped — a partial exit is one trade) and halt
+        # when the streak has cost STREAK_LOSS_HALT_PCT of equity. Three
+        # dust losses shouldn't stop the firm; a streak that bleeds real
+        # capital should. One winning close resets the streak.
+        equity_now = portfolio.equity or 1
+        recent = fetchall("""
+            SELECT SUM(pnl) AS pnl FROM trades
+            GROUP BY COALESCE(position_id, id)
+            ORDER BY MAX(closed_at) DESC LIMIT 50
+        """)
+        streak_loss = 0.0
+        streak_n = 0
         for row in recent:
-            if row["pnl"] < 0:
-                consecutive_losses += 1
+            if (row["pnl"] or 0) < 0:
+                streak_loss += row["pnl"]
+                streak_n += 1
             else:
                 break
-        if consecutive_losses >= MAX_CONSECUTIVE_LOSSES:
+        streak_pct = streak_loss / equity_now * 100
+        if STREAK_LOSS_HALT_PCT > 0 and streak_pct <= -STREAK_LOSS_HALT_PCT:
             halted = True
-            blockers.append(f"{consecutive_losses} consecutive losses hit the {MAX_CONSECUTIVE_LOSSES} limit — trading halted")
+            blockers.append(
+                f"Losing streak of {streak_n} trades ${streak_loss:+.2f} ({streak_pct:+.2f}%) "
+                f"breached the -{STREAK_LOSS_HALT_PCT:g}% capital streak breaker — "
+                f"no new entries until a winner resets it")
 
         if BROKER_TYPE not in {"paper", "binance", "mt5", "alpaca", "dxtrade"}:
             halted = True

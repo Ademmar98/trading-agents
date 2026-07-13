@@ -369,13 +369,19 @@ class Notifier:
         self.send(f"🚨 <b>ERROR:</b> {message}")
 
     def daily_summary(self, s):
+        from config import (DAILY_PROFIT_TARGET_MIN, DAILY_PROFIT_TARGET_MAX,
+                            TOTAL_PROFIT_TARGET_MIN, TOTAL_PROFIT_TARGET_MAX)
+        day_goal = "✅ hit" if s["day_pnl_pct"] >= DAILY_PROFIT_TARGET_MIN else "✖ missed"
         self.send(
             f"📊 <b>Daily Summary — {s['date']}</b>\n"
             f"Equity ${s['equity']:,.2f}  ({s['day_pnl_pct']:+.2f}% today, "
             f"{s['total_pnl_pct']:+.2f}% all-time)\n"
             f"Closed {s['trades_closed']} | Win rate {s['win_rate']:.0f}% | "
             f"Realized ${s['pnl_closed']:+,.2f}\n"
-            f"Open {s['open_positions']} | Cash ${s['cash']:,.2f}"
+            f"Open {s['open_positions']} | Cash ${s['cash']:,.2f}\n"
+            f"🎯 Day goal +{DAILY_PROFIT_TARGET_MIN:g}–{DAILY_PROFIT_TARGET_MAX:g}%: {day_goal} | "
+            f"Firm goal +{TOTAL_PROFIT_TARGET_MIN:g}–{TOTAL_PROFIT_TARGET_MAX:g}%: "
+            f"{s['total_pnl_pct']:+.2f}% so far"
         )
 
     def on_sl_tp(self, result):

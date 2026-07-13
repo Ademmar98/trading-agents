@@ -20,5 +20,8 @@ os.environ["TRADING_TIMEFRAME"] = "5m"
 # Pin the fee: fee-accounting tests must keep exercising the fee math even
 # when the firm itself runs fee-free (GOAT Funded Trader is spread-cost only).
 os.environ["TRADE_FEE_PCT"] = "0.1"
+# Swing scans fetch daily/4h candles over the network — off in the
+# deterministic suite; tests/test_swing.py exercises the module directly.
+os.environ["SWING_ENABLED"] = "false"
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

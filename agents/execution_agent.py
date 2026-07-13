@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from config import (
     SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT,
     SCALP_MIN_WIN_PROB, SCALP_ATR_SL_MULT, MAX_SL_PCT, MAX_TP_PCT,
-    BROKEN_SL_PCT,
+    BROKEN_SL_PCT, SWING_MAX_SL_PCT,
 )
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
@@ -81,6 +81,12 @@ class ExecutionAgent(BaseAgent):
                         qty = round(min(qty, skill_qty), 8)
 
             pricing_entry = pricing_map.get(symbol) if isinstance(pricing_map, dict) else None
+            if opp.get("stop_loss") and opp.get("take_profit") and opp.get("entry_price"):
+                # The signal carries its own geometry (scalp and swing styles,
+                # analyst-priced classics) — another opportunity's pricing_map
+                # slot must never override it, or a swing entry would inherit
+                # a scalp's 1% stop.
+                pricing_entry = opp
             if pricing_entry and pricing_entry.get("action") != opp.get("action", "BUY"):
                 # Pricing computed for the opposite direction — its SL/TP would
                 # sit on the wrong side of entry; use inline pricing instead.
@@ -122,6 +128,9 @@ class ExecutionAgent(BaseAgent):
             # stop farther than BROKEN_SL_PCT from entry means the volatility
             # inputs are garbage. Never route these — reject and alert.
             side = opp.get("action", "BUY")
+            is_swing = any(str(s).startswith("swing")
+                           for s in (opp.get("strategies") or []))
+            sane_sl_bound = SWING_MAX_SL_PCT if is_swing else BROKEN_SL_PCT
             broken = None
             if side == "BUY":
                 if tp_price <= entry_price:
@@ -134,8 +143,8 @@ class ExecutionAgent(BaseAgent):
                 elif sl_price <= entry_price:
                     broken = f"SL ${sl_price:g} at/below entry ${entry_price:g} (SELL)"
             sl_dist_pct = (abs(entry_price - sl_price) / entry_price * 100) if entry_price else 0
-            if not broken and sl_dist_pct > BROKEN_SL_PCT:
-                broken = f"SL {sl_dist_pct:.1f}% from entry (> {BROKEN_SL_PCT:g}% sanity bound)"
+            if not broken and sl_dist_pct > sane_sl_bound:
+                broken = f"SL {sl_dist_pct:.1f}% from entry (> {sane_sl_bound:g}% sanity bound)"
             if broken:
                 rejected.append({**opp, "execution_reasons": [f"Broken geometry: {broken}"]})
                 self.notifier.on_rejected_signal(symbol, broken)

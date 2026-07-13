@@ -29,7 +29,7 @@ from core.analytics import get_analytics, get_strategy_stats
 from core.webserver import start_webserver, get_market_prices
 from core.dashboard import make_layout
 from core.backtester import run_all_backtests, get_backtest_results, backtest_symbol
-from core.equity import snapshot_equity, build_daily_summary, pop_completed_day
+from core.equity import snapshot_equity, build_daily_summary, pop_completed_day, check_goals
 from core.reconcile import reconcile_with_exchange
 from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
@@ -273,6 +273,10 @@ def run_cycle():
 
         _rebalance_positions()
         snapshot_equity()
+        try:
+            check_goals(notifier)
+        except Exception as e:
+            memory.log("system", f"Goal check warning: {e}")
         completed_day = pop_completed_day()
         if completed_day:
             notifier.daily_summary(build_daily_summary(completed_day))

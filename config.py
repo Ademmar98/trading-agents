@@ -83,6 +83,33 @@ SCALP_RSI_OVERSOLD = float(os.getenv("SCALP_RSI_OVERSOLD", "30"))
 # the bar (e.g. toward 0.92) as the live record earns it.
 SCALP_MIN_WIN_PROB = float(os.getenv("SCALP_MIN_WIN_PROB", "0.60"))
 
+# ── Swing desk (runs beside the scalp stack) ──
+# Multi-day BUY positions from daily structure with 4h alignment; each setup
+# carries its own strategy tag (swing_breakout / swing_pullback /
+# swing_momentum) so the learning loop judges styles separately.
+# Requirements per entry: daily uptrend (SMA20>SMA50 and price>SMA50) AND
+# 4h close above its EMA50. Exits are swing-scale by firm policy:
+# SL = SWING_ATR_SL_MULT x daily ATR clamped to 1-25% below entry;
+# TP = SL x SWING_RR clamped to 3-100% above entry.
+SWING_ENABLED = os.getenv("SWING_ENABLED", "true").lower() == "true"
+SWING_SCAN_INTERVAL_MIN = int(os.getenv("SWING_SCAN_INTERVAL_MIN", "30"))
+SWING_RISK_PER_TRADE_PCT = float(os.getenv("SWING_RISK_PER_TRADE_PCT", "0.5"))
+SWING_ATR_SL_MULT = float(os.getenv("SWING_ATR_SL_MULT", "2.0"))
+SWING_RR = float(os.getenv("SWING_RR", "3.0"))
+SWING_MIN_SL_PCT = float(os.getenv("SWING_MIN_SL_PCT", "1.0"))
+SWING_MAX_SL_PCT = float(os.getenv("SWING_MAX_SL_PCT", "25.0"))
+SWING_MIN_TP_PCT = float(os.getenv("SWING_MIN_TP_PCT", "3.0"))
+SWING_MAX_TP_PCT = float(os.getenv("SWING_MAX_TP_PCT", "100.0"))
+
+# ── Firm goals (reporting targets, not trade gates) ──
+# Daily: +0.5% to +3% of equity per day. Total: +10% to +50% of capital.
+# Progress is shown on the dashboard/daily summary; hitting a goal pings
+# Telegram once per day / once per milestone.
+DAILY_PROFIT_TARGET_MIN = float(os.getenv("DAILY_PROFIT_TARGET_MIN", "0.5"))
+DAILY_PROFIT_TARGET_MAX = float(os.getenv("DAILY_PROFIT_TARGET_MAX", "3.0"))
+TOTAL_PROFIT_TARGET_MIN = float(os.getenv("TOTAL_PROFIT_TARGET_MIN", "10.0"))
+TOTAL_PROFIT_TARGET_MAX = float(os.getenv("TOTAL_PROFIT_TARGET_MAX", "50.0"))
+
 _mt5_login_raw = os.getenv("MT5_LOGIN", "0")
 MT5_LOGIN = int(_mt5_login_raw) if _mt5_login_raw and _mt5_login_raw.strip() else 0
 MT5_PASSWORD = os.getenv("MT5_PASSWORD", "")
@@ -111,7 +138,13 @@ TRADING_TIMEFRAME = os.getenv("TRADING_TIMEFRAME", "5m")
 # pay the ask / hit the bid instead of the mid (0.05 = 0.05% per leg).
 BACKTEST_SPREAD_PCT = float(os.getenv("BACKTEST_SPREAD_PCT", "0.05"))
 BACKTEST_BARS = int(os.getenv("BACKTEST_BARS", "2500"))
+# Legacy count-based halt (kept for compatibility; the live breaker is now
+# STREAK_LOSS_HALT_PCT — money, not count).
 MAX_CONSECUTIVE_LOSSES = int(os.getenv("MAX_CONSECUTIVE_LOSSES", "3"))
+# Streak breaker in money: a run of consecutive losing positions whose
+# combined loss reaches this % of equity halts new entries. Three dust
+# losses shouldn't stop the firm; a streak that bleeds real capital should.
+STREAK_LOSS_HALT_PCT = float(os.getenv("STREAK_LOSS_HALT_PCT", "1.2"))
 STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "2.0"))
 DAILY_LOSS_LIMIT_PCT = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "3"))
 TRAILING_STOP_PCT = float(os.getenv("TRAILING_STOP_PCT", "0.5"))

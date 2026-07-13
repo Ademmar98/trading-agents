@@ -70,6 +70,26 @@ def get_summary():
         "win_rate": (win_cnt / trade_cnt * 100) if trade_cnt else 0,
         "broker": BROKER_TYPE,
         "testnet": BINANCE_USE_TESTNET,
+        "goals": _goal_progress(total_pnl_pct),
+    }
+
+
+def _goal_progress(total_pnl_pct):
+    """Firm goals for the dashboard: daily +0.5-3%, total +10-50%."""
+    from config import (DAILY_PROFIT_TARGET_MIN, DAILY_PROFIT_TARGET_MAX,
+                        TOTAL_PROFIT_TARGET_MIN, TOTAL_PROFIT_TARGET_MAX)
+    try:
+        from core.equity import daily_loss_pct
+        day_pnl = round(daily_loss_pct(), 2)
+    except Exception:
+        day_pnl = 0.0
+    return {
+        "day_pnl_pct": day_pnl,
+        "daily_target": [DAILY_PROFIT_TARGET_MIN, DAILY_PROFIT_TARGET_MAX],
+        "daily_hit": day_pnl >= DAILY_PROFIT_TARGET_MIN,
+        "total_pnl_pct": round(total_pnl_pct, 2),
+        "total_target": [TOTAL_PROFIT_TARGET_MIN, TOTAL_PROFIT_TARGET_MAX],
+        "total_hit": total_pnl_pct >= TOTAL_PROFIT_TARGET_MIN,
     }
 
 

@@ -4,6 +4,7 @@ import concurrent.futures
 from config import (
     WATCHED_SYMBOLS, TRADING_TIMEFRAME, BACKTEST_BARS, SCALP_15M_ENABLED,
     SCALP_TIMEFRAMES, BUY_ONLY, MAX_TP_PCT, MACRO_BELLWETHERS,
+    SWING_ENABLED, SWING_SCAN_INTERVAL_MIN,
 )
 from agents.base_agent import BaseAgent
 from core.market import MarketData
@@ -13,7 +14,8 @@ from core.strategies import scan_symbol
 from core.multiframe import analyze_symbol_multiframe
 from core.scalping_signals import analyze_symbol_mtf
 from core.scalp15 import scalp_signal
-from core.database import get_unprofitable_strategies
+from core.swing import swing_signal
+from core.database import get_unprofitable_strategies, get_meta, set_meta
 from core.indicators import atr as intraday_atr_fn
 from core.pricing import compute_pricing, round_sig
 
@@ -76,6 +78,10 @@ class ResearchAnalyst(BaseAgent):
         news_syms = news.get("symbols", {}) if time.time() - (news.get("timestamp") or 0) < 3600 else {}
         adjusted = []
         for pos in self.pos_mgr.get_open_positions():
+            if (pos.get("strategy") or "").startswith("swing"):
+                # Swing stops live on daily structure — tightening them with
+                # 15m ATR would strangle multi-day positions.
+                continue
             a = analyses.get(pos["symbol"])
             if not a or pos["side"] != "BUY":
                 continue
@@ -122,8 +128,19 @@ class ResearchAnalyst(BaseAgent):
         symbol_regimes = regime_scan.get("symbols", {})
         bad_strats = get_unprofitable_strategies()
 
+        # Swing scans run on daily/4h bars, which change slowly — refresh
+        # every SWING_SCAN_INTERVAL_MIN and reuse the cached scan between.
+        swing_due = False
+        if SWING_ENABLED:
+            try:
+                last_swing = float(get_meta("swing_last_scan", "0") or 0)
+            except (TypeError, ValueError):
+                last_swing = 0.0
+            swing_due = time.time() - last_swing > SWING_SCAN_INTERVAL_MIN * 60
+
         analyses = {}
         opportunities = []
+        swing_map = {}
 
         def analyze_symbol(symbol):
             data = prices[symbol]
@@ -168,6 +185,14 @@ class ResearchAnalyst(BaseAgent):
                         except Exception:
                             continue
                     scalp_sigs.sort(key=lambda s: s["win_prob"], reverse=True)
+                swing_sig = None
+                if swing_due:
+                    try:
+                        d1 = self.market.get_ohlc(symbol, days=200, interval="1d")
+                        h4 = self.market.get_ohlc(symbol, days=100, interval="4h")
+                        swing_sig = swing_signal(symbol, d1 or None, h4 or None, regime=regime)
+                    except Exception:
+                        swing_sig = None
                 signals = scan_symbol(ohlc, regime=regime, exclude_strategies=bad_strats) if ohlc and len(ohlc) >= 30 else []
                 if BUY_ONLY:
                     # Firm policy: all analytical effort goes into longs
@@ -192,19 +217,22 @@ class ResearchAnalyst(BaseAgent):
                     "mtf_signal": mtf_signal,
                     "scalping_signal": scalping_signal,
                     "scalp_signals": scalp_sigs,
-                }, signals, mtf_signal, scalping_signal, scalp_sigs, regime, indicators
+                }, signals, mtf_signal, scalping_signal, scalp_sigs, regime, indicators, swing_sig
             except Exception as e:
                 self.log(f"Error analyzing {symbol}: {e}")
-                return symbol, None, [], None, None, [], None, {}
+                return symbol, None, [], None, None, [], None, {}, None
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = {executor.submit(analyze_symbol, sym): sym for sym in symbols}
             for future in concurrent.futures.as_completed(futures):
                 result = future.result()
-                sym, analysis, signals, mtf_signal, scalping_signal, scalp_sigs, regime, indicators = result
+                (sym, analysis, signals, mtf_signal, scalping_signal,
+                 scalp_sigs, regime, indicators, swing_sig) = result
                 if analysis is None:
                     continue
                 analyses[sym] = analysis
+                if swing_sig:
+                    swing_map[sym] = swing_sig
                 seen_actions = set()
                 for sig in signals:
                     action = sig["action"]
@@ -290,6 +318,36 @@ class ResearchAnalyst(BaseAgent):
                             "atr": ssig["atr"],
                         },
                     })
+
+        # Swing desk: fresh scan results get cached; between scans the cached
+        # setups keep flowing into the pipeline (daily bars move slowly).
+        if SWING_ENABLED:
+            if swing_due:
+                set_meta("swing_last_scan", str(time.time()))
+                self.memory.write("analyses", "swing_scan", {
+                    "symbols": swing_map, "timestamp": time.time()})
+            else:
+                cached = self.memory.read("analyses", "swing_scan") or {}
+                if time.time() - (cached.get("timestamp") or 0) < 12 * 3600:
+                    swing_map = cached.get("symbols", {}) or {}
+            for sym, ssig in swing_map.items():
+                if not ssig or sym not in prices:
+                    continue
+                ind = analyses.get(sym, {})
+                opportunities.append({
+                    **ssig,
+                    "symbol": sym,
+                    "price": prices[sym]["price"],  # live mark; SL/TP stay from signal time
+                    "strategies": [ssig["strategy"]],
+                    "regime": (symbol_regimes.get(sym, {}) or {}).get("regime") if symbol_regimes else None,
+                    "multi_timeframe": True,
+                    "indicators": {
+                        "trend": ind.get("trend", "bullish"),
+                        "rsi": ind.get("rsi_14", 50),
+                        "volatility": ind.get("volatility", 0),
+                        "atr": ssig.get("atr", 0),
+                    },
+                })
 
         self._apply_priority_boosts(opportunities, analyses)
         opportunities.sort(key=lambda o: o["confidence"], reverse=True)
