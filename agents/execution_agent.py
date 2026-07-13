@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from config import (
     SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT,
     SCALP_MIN_WIN_PROB, SCALP_ATR_SL_MULT, MAX_SL_PCT, MAX_TP_PCT,
+    BROKEN_SL_PCT,
 )
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
@@ -115,6 +116,30 @@ class ExecutionAgent(BaseAgent):
                     tp_price = round(price * (1 - tp_pct / 100), 5)
                 entry_price = price
                 risk_pct = RISK_PER_TRADE_PCT
+
+            # Broken-geometry guard: a BUY whose TP sits at/below entry or
+            # whose SL sits at/above entry is corrupt data, not a trade; a
+            # stop farther than BROKEN_SL_PCT from entry means the volatility
+            # inputs are garbage. Never route these — reject and alert.
+            side = opp.get("action", "BUY")
+            broken = None
+            if side == "BUY":
+                if tp_price <= entry_price:
+                    broken = f"TP ${tp_price:g} at/below entry ${entry_price:g}"
+                elif sl_price >= entry_price:
+                    broken = f"SL ${sl_price:g} at/above entry ${entry_price:g}"
+            else:
+                if tp_price >= entry_price:
+                    broken = f"TP ${tp_price:g} at/above entry ${entry_price:g} (SELL)"
+                elif sl_price <= entry_price:
+                    broken = f"SL ${sl_price:g} at/below entry ${entry_price:g} (SELL)"
+            sl_dist_pct = (abs(entry_price - sl_price) / entry_price * 100) if entry_price else 0
+            if not broken and sl_dist_pct > BROKEN_SL_PCT:
+                broken = f"SL {sl_dist_pct:.1f}% from entry (> {BROKEN_SL_PCT:g}% sanity bound)"
+            if broken:
+                rejected.append({**opp, "execution_reasons": [f"Broken geometry: {broken}"]})
+                self.notifier.on_rejected_signal(symbol, broken)
+                continue
 
             # TP must clear the full cost of the round trip (entry fee + exit
             # fee + spread) with margin, or the trade loses money even when it wins.

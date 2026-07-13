@@ -6,12 +6,26 @@ from functools import partial
 
 import requests
 
+from config import TELEGRAM_QUIET
+
 
 def _fmt_num(n, decimals=2):
     """Format a number with commas and decimals."""
     if n is None:
         return "?"
     return f"{n:,.{decimals}f}"
+
+
+def _fmt_price(p):
+    """Price with sensible precision: $63,850.12 for BTC, $0.0000345 for
+    micro-caps — fixed 5 decimals made both ends unreadable."""
+    if p is None:
+        return "?"
+    if p >= 1000:
+        return f"{p:,.2f}"
+    if p >= 1:
+        return f"{p:,.4f}"
+    return f"{p:.6g}"
 
 
 def _fmt_pct(n, decimals=2):
@@ -332,7 +346,7 @@ class Notifier:
     def on_trade(self, order):
         if not self._enabled:
             return
-        symbol = order.get("symbol", "?").replace("/", "")
+        symbol = order.get("symbol", "?")
         side = order.get("side", order.get("action", "?"))
         qty = order.get("quantity", order.get("qty", 0))
         price = order.get("price", 0)
@@ -340,51 +354,62 @@ class Notifier:
         tp = order.get("take_profit", order.get("tp", 0))
         status = order.get("status", "filled")
         if status == "filled":
-            pct = abs((price - sl) / price * 100) if sl and price else 0
-            est_profit = abs((tp - price) / price * 100) if tp and price else 0
-            now = datetime.now(timezone.utc).strftime("%H:%M:%S")
+            sl_pct = abs((price - sl) / price * 100) if sl and price else 0
+            tp_pct = abs((tp - price) / price * 100) if tp and price else 0
+            rr = (tp_pct / sl_pct) if sl_pct else 0
+            now = datetime.now(timezone.utc).strftime("%H:%M UTC")
             self.send(
-                f"<b>{now}</b> trader | OPEN {side} {symbol}\n"
-                f"Entry ${price:.5f} | SL ${sl:.5f} ({pct:.1f}%)\n"
-                f"TP ${tp:.5f} ({est_profit:.1f}%) | Qty {qty:.4f}"
+                f"🟢 <b>OPEN {side} {symbol}</b>  <i>{now}</i>\n"
+                f"Entry ${_fmt_price(price)} × {qty:g}\n"
+                f"SL ${_fmt_price(sl)} (−{sl_pct:.2f}%) | "
+                f"TP ${_fmt_price(tp)} (+{tp_pct:.2f}%) | R:R {rr:.1f}"
             )
 
     def on_error(self, message):
-        self.send(f"<b>ERROR:</b> {message}")
+        self.send(f"🚨 <b>ERROR:</b> {message}")
 
     def daily_summary(self, s):
-        sign = "+" if s["day_pnl_pct"] >= 0 else ""
         self.send(
-            f"<b>Daily Summary — {s['date']}</b>\n"
-            f"Equity: ${s['equity']:,.2f} ({sign}{s['day_pnl_pct']:.2f}% today, "
+            f"📊 <b>Daily Summary — {s['date']}</b>\n"
+            f"Equity ${s['equity']:,.2f}  ({s['day_pnl_pct']:+.2f}% today, "
             f"{s['total_pnl_pct']:+.2f}% all-time)\n"
-            f"Closed trades: {s['trades_closed']}  Win rate: {s['win_rate']:.0f}%\n"
-            f"Realized P&L: ${s['pnl_closed']:+,.2f}\n"
-            f"Open positions: {s['open_positions']}  Cash: ${s['cash']:,.2f}"
+            f"Closed {s['trades_closed']} | Win rate {s['win_rate']:.0f}% | "
+            f"Realized ${s['pnl_closed']:+,.2f}\n"
+            f"Open {s['open_positions']} | Cash ${s['cash']:,.2f}"
         )
 
     def on_sl_tp(self, result):
-        now = datetime.now(timezone.utc).strftime("%H:%M:%S")
-        symbol = result.get("symbol", "?").replace("/", "")
+        now = datetime.now(timezone.utc).strftime("%H:%M UTC")
+        symbol = result.get("symbol", "?")
         reason = result.get("reason", "exit").upper()
         pnl = result.get("pnl", 0)
         pnl_pct = result.get("pnl_pct", 0)
         side = result.get("side", "?")
-        icon = "+" if pnl >= 0 else ""
+        icon = "🟢" if pnl >= 0 else "🔴"
         self.send(
-            f"<b>{now}</b> trader | {reason} {side} {symbol} {icon}\n"
-            f"P&L ${pnl:+.2f} ({pnl_pct:+.2f}%) "
-            f"| Exit ${result.get('exit_price', 0):.5f}"
+            f"{icon} <b>{reason} {side} {symbol}</b>  <i>{now}</i>\n"
+            f"P&L ${pnl:+.2f} ({pnl_pct:+.2f}%) | Exit ${_fmt_price(result.get('exit_price', 0))}"
         )
+
+    def on_rejected_signal(self, symbol, reason):
+        """Broken-geometry rejections — always alert, even in quiet mode:
+        a corrupt signal reaching execution means a data problem upstream."""
+        if not self._enabled:
+            return
+        self.send(f"⛔ <b>REJECTED {symbol}</b> — broken signal geometry: {reason}")
 
     def on_agent_action(self, agent_name, action_text):
         if not self._enabled:
+            return
+        # Quiet mode: per-cycle agent chatter stays in the logs and web
+        # dashboard; only halts are urgent enough for the phone.
+        if TELEGRAM_QUIET and "HALT" not in action_text.upper():
             return
         now = datetime.now(timezone.utc).strftime("%H:%M:%S")
         self.send(f"<b>{now}</b> {agent_name} | {action_text}")
 
     def portfolio_snapshot(self, portfolio):
-        if not self._enabled:
+        if not self._enabled or TELEGRAM_QUIET:
             return
         now = datetime.now(timezone.utc).strftime("%H:%M:%S")
         total_pnl = portfolio.get("total_pnl", 0)

@@ -149,6 +149,13 @@ MAX_TP_PCT = float(os.getenv("MAX_TP_PCT", "6.0"))
 # Must clear the round-trip fee (2 x TRADE_FEE_PCT = 0.2%) with real margin,
 # or trades that hit minimum TP still lose money after costs.
 MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "0.5"))
+# Broken-geometry bound: a stop farther than this from entry means the
+# volatility inputs are corrupt (the 29.5%-SL class of bug), not a trade.
+# Distinct from MAX_SL_PCT: that caps normal pricing, this rejects garbage.
+BROKEN_SL_PCT = float(os.getenv("BROKEN_SL_PCT", "20"))
+# Quiet Telegram: only trade opens/closes, daily summary, halts/errors and
+# rejected-signal alerts. Per-agent chatter stays in the logs/dashboard.
+TELEGRAM_QUIET = os.getenv("TELEGRAM_QUIET", "true").lower() == "true"
 # Trade-frequency caps. 0 = unlimited (default). Set a positive number to
 # cap entries per UTC day / per rolling hour — risk data says overtrading
 # loses, but the caps also idle the bot once hit, so they are opt-in.
