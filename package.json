@@ -1,0 +1,15 @@
+{
+  "name": "paper-bot-memory",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Standalone TypeScript paper-trading replay bot with a two-file memory system (data/ledger.csv + data/learnings.md). Sidecar to the Python firm — shares nothing with it except the data/ directory.",
+  "type": "module",
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "replay:raw": "node src/index.ts replay:raw",
+    "replay:memory": "node src/index.ts replay:memory",
+    "memory:reset": "node src/index.ts memory:reset"
+  }
+}

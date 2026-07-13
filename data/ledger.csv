@@ -1,0 +1,58 @@
+timestamp,symbol,action,price,quantity,reason,mode,outcome,pnl
+2026-07-10T22:15:00Z,BTC_USD,BUY,64028.42,0.01561806,entry bullish-cross|downtrend|low-vol,raw,loss,
+2026-07-11T02:30:00Z,BTC_USD,SELL,64012.22,0.01561806,bearish-cross exit setup=bullish-cross|downtrend|low-vol,raw,loss,-2.25
+2026-07-11T04:30:00Z,BTC_USD,BUY,64112.52,0.01559758,entry bullish-cross|uptrend|low-vol,raw,loss,
+2026-07-11T11:00:00Z,BTC_USD,SELL,64156.54,0.01559758,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,loss,-1.31
+2026-07-11T14:00:00Z,BTC_USD,BUY,64211.82,0.01557346,entry bullish-cross|uptrend|low-vol,raw,loss,
+2026-07-11T17:15:00Z,BTC_USD,SELL,64167.39,0.01557346,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,loss,-2.69
+2026-07-11T19:00:00Z,BTC_USD,BUY,64297.03,0.01555282,entry bullish-cross|uptrend|low-vol,raw,loss,
+2026-07-11T23:00:00Z,BTC_USD,SELL,64171.71,0.01555282,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,loss,-3.95
+2026-07-12T03:15:00Z,BTC_USD,BUY,64067.08,0.01560864,entry bullish-cross|downtrend|low-vol,raw,loss,
+2026-07-12T06:00:00Z,BTC_USD,SELL,63933.83,0.01560864,bearish-cross exit setup=bullish-cross|downtrend|low-vol,raw,loss,-4.08
+2026-07-12T09:15:00Z,BTC_USD,BUY,63852.73,0.01566104,entry bullish-cross|downtrend|low-vol,raw,win,
+2026-07-12T19:15:00Z,BTC_USD,SELL,64139.64,0.01566104,bearish-cross exit setup=bullish-cross|downtrend|low-vol,raw,win,2.49
+2026-07-12T20:15:00Z,BTC_USD,BUY,64169.48,0.01558373,entry bullish-cross|uptrend|low-vol,raw,loss,
+2026-07-12T22:15:00Z,BTC_USD,SELL,63760.14,0.01558373,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,loss,-8.37
+2026-07-10T21:15:00Z,ETH_USD,BUY,1791.2,0.55828495,entry bullish-cross|downtrend|low-vol,raw,loss,
+2026-07-11T02:00:00Z,ETH_USD,SELL,1788.24,0.55828495,bearish-cross exit setup=bullish-cross|downtrend|low-vol,raw,loss,-3.65
+2026-07-11T04:15:00Z,ETH_USD,BUY,1795.98,0.55679907,entry bullish-cross|uptrend|low-vol,raw,loss,
+2026-07-11T10:30:00Z,ETH_USD,SELL,1797.47,0.55679907,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,loss,-1.17
+2026-07-11T13:15:00Z,ETH_USD,BUY,1799.07,0.55584274,entry bullish-cross|uptrend|low-vol,raw,win,
+2026-07-11T22:30:00Z,ETH_USD,SELL,1812.92,0.55584274,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,win,5.69
+2026-07-12T03:15:00Z,ETH_USD,BUY,1804.86,0.55405959,entry bullish-cross|downtrend|low-vol,raw,loss,
+2026-07-12T06:15:00Z,ETH_USD,SELL,1792.76,0.55405959,bearish-cross exit setup=bullish-cross|downtrend|low-vol,raw,loss,-8.70
+2026-07-12T09:30:00Z,ETH_USD,BUY,1798.8,0.55592617,entry bullish-cross|downtrend|low-vol,raw,win,
+2026-07-12T19:45:00Z,ETH_USD,SELL,1818.11,0.55592617,bearish-cross exit setup=bullish-cross|downtrend|low-vol,raw,win,8.72
+2026-07-12T20:45:00Z,ETH_USD,BUY,1822.3,0.54875707,entry bullish-cross|uptrend|low-vol,raw,loss,
+2026-07-12T21:30:00Z,ETH_USD,SELL,1814.59,0.54875707,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,loss,-6.23
+2026-07-10T21:15:00Z,SOL_USD,BUY,77.87,12.84191601,entry bullish-cross|downtrend|low-vol,raw,loss,
+2026-07-11T01:45:00Z,SOL_USD,SELL,77.5,12.84191601,bearish-cross exit setup=bullish-cross|downtrend|low-vol,raw,loss,-6.75
+2026-07-11T05:45:00Z,SOL_USD,BUY,77.81,12.85181853,entry bullish-cross|uptrend|low-vol,raw,win,
+2026-07-11T11:15:00Z,SOL_USD,SELL,78.01,12.85181853,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,win,0.57
+2026-07-11T12:30:00Z,SOL_USD,BUY,78.02,12.81722635,entry bullish-cross|uptrend|low-vol,raw,loss,
+2026-07-11T17:30:00Z,SOL_USD,SELL,77.98,12.81722635,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,loss,-2.51
+2026-07-11T20:45:00Z,SOL_USD,BUY,78.18,12.79099514,entry bullish-cross|uptrend|low-vol,raw,loss,
+2026-07-11T23:15:00Z,SOL_USD,SELL,77.56,12.79099514,bearish-cross exit setup=bullish-cross|uptrend|low-vol,raw,loss,-9.92
+2026-07-12T03:45:00Z,SOL_USD,BUY,76.91,13.00221038,entry bullish-cross|downtrend|low-vol,raw,loss,
+2026-07-12T06:15:00Z,SOL_USD,SELL,75.99,13.00221038,bearish-cross exit setup=bullish-cross|downtrend|low-vol,raw,loss,-13.95
+2026-07-12T09:00:00Z,SOL_USD,BUY,76.67,13.04291118,entry bullish-cross|downtrend|low-vol,raw,win,
+2026-07-12T22:00:00Z,SOL_USD,SELL,77.07,13.04291118,bearish-cross exit setup=bullish-cross|downtrend|low-vol,raw,win,3.21
+2026-07-10T22:15:00Z,BTC_USD,SKIP,64028.42,0,known bad trade: 2 real prior loss(es) on BTC_USD setup bullish-cross|downtrend|low-vol (total $-6.33) and learnings.md warns about it,memory,skipped,
+2026-07-11T04:30:00Z,BTC_USD,SKIP,64112.52,0,known bad trade: 4 real prior loss(es) on BTC_USD setup bullish-cross|uptrend|low-vol (total $-16.32) and learnings.md warns about it,memory,skipped,
+2026-07-11T14:00:00Z,BTC_USD,SKIP,64211.82,0,known bad trade: 4 real prior loss(es) on BTC_USD setup bullish-cross|uptrend|low-vol (total $-16.32) and learnings.md warns about it,memory,skipped,
+2026-07-11T19:00:00Z,BTC_USD,SKIP,64297.03,0,known bad trade: 4 real prior loss(es) on BTC_USD setup bullish-cross|uptrend|low-vol (total $-16.32) and learnings.md warns about it,memory,skipped,
+2026-07-12T03:15:00Z,BTC_USD,SKIP,64067.08,0,known bad trade: 2 real prior loss(es) on BTC_USD setup bullish-cross|downtrend|low-vol (total $-6.33) and learnings.md warns about it,memory,skipped,
+2026-07-12T09:15:00Z,BTC_USD,SKIP,63852.73,0,known bad trade: 2 real prior loss(es) on BTC_USD setup bullish-cross|downtrend|low-vol (total $-6.33) and learnings.md warns about it,memory,skipped,
+2026-07-12T20:15:00Z,BTC_USD,SKIP,64169.48,0,known bad trade: 4 real prior loss(es) on BTC_USD setup bullish-cross|uptrend|low-vol (total $-16.32) and learnings.md warns about it,memory,skipped,
+2026-07-10T21:15:00Z,ETH_USD,SKIP,1791.2,0,known bad trade: 2 real prior loss(es) on ETH_USD setup bullish-cross|downtrend|low-vol (total $-12.35) and learnings.md warns about it,memory,skipped,
+2026-07-11T04:15:00Z,ETH_USD,SKIP,1795.98,0,known bad trade: 2 real prior loss(es) on ETH_USD setup bullish-cross|uptrend|low-vol (total $-7.40) and learnings.md warns about it,memory,skipped,
+2026-07-11T13:15:00Z,ETH_USD,SKIP,1799.07,0,known bad trade: 2 real prior loss(es) on ETH_USD setup bullish-cross|uptrend|low-vol (total $-7.40) and learnings.md warns about it,memory,skipped,
+2026-07-12T03:15:00Z,ETH_USD,SKIP,1804.86,0,known bad trade: 2 real prior loss(es) on ETH_USD setup bullish-cross|downtrend|low-vol (total $-12.35) and learnings.md warns about it,memory,skipped,
+2026-07-12T09:30:00Z,ETH_USD,SKIP,1798.8,0,known bad trade: 2 real prior loss(es) on ETH_USD setup bullish-cross|downtrend|low-vol (total $-12.35) and learnings.md warns about it,memory,skipped,
+2026-07-12T20:45:00Z,ETH_USD,SKIP,1822.3,0,known bad trade: 2 real prior loss(es) on ETH_USD setup bullish-cross|uptrend|low-vol (total $-7.40) and learnings.md warns about it,memory,skipped,
+2026-07-10T21:15:00Z,SOL_USD,SKIP,77.87,0,known bad trade: 2 real prior loss(es) on SOL_USD setup bullish-cross|downtrend|low-vol (total $-20.70) and learnings.md warns about it,memory,skipped,
+2026-07-11T05:45:00Z,SOL_USD,SKIP,77.81,0,known bad trade: 2 real prior loss(es) on SOL_USD setup bullish-cross|uptrend|low-vol (total $-12.43) and learnings.md warns about it,memory,skipped,
+2026-07-11T12:30:00Z,SOL_USD,SKIP,78.02,0,known bad trade: 2 real prior loss(es) on SOL_USD setup bullish-cross|uptrend|low-vol (total $-12.43) and learnings.md warns about it,memory,skipped,
+2026-07-11T20:45:00Z,SOL_USD,SKIP,78.18,0,known bad trade: 2 real prior loss(es) on SOL_USD setup bullish-cross|uptrend|low-vol (total $-12.43) and learnings.md warns about it,memory,skipped,
+2026-07-12T03:45:00Z,SOL_USD,SKIP,76.91,0,known bad trade: 2 real prior loss(es) on SOL_USD setup bullish-cross|downtrend|low-vol (total $-20.70) and learnings.md warns about it,memory,skipped,
+2026-07-12T09:00:00Z,SOL_USD,SKIP,76.67,0,known bad trade: 2 real prior loss(es) on SOL_USD setup bullish-cross|downtrend|low-vol (total $-20.70) and learnings.md warns about it,memory,skipped,
