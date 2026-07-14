@@ -20,7 +20,9 @@ if _env_file.exists():
             os.environ.setdefault(_key.strip(), _value.strip())
 
 INITIAL_BALANCE = float(os.getenv("TRADING_CAPITAL", "10000"))
-MARKET_TYPE = os.getenv("MARKET_TYPE", "crypto")  # crypto, stocks, metals, both
+# Crypto-only firm. Stocks/metals/forex trading was removed 2026-07-14 —
+# a spot-crypto book on 24/7 markets with a single high-quality data feed.
+MARKET_TYPE = "crypto"
 
 ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "")
 ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "")
@@ -28,12 +30,6 @@ ALPACA_PAPER = os.getenv("ALPACA_PAPER", "true").lower() == "true"
 
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-20250514")
-
-# Market-data fallbacks: Massive (Polygon) for stocks, TwelveData for
-# metals/forex spot and stocks. Free tiers are rate-limited (Massive 5
-# req/min, TwelveData 800 credits/day) so they back up Yahoo, not replace it.
-MASSIVE_API_KEY = os.getenv("MASSIVE_API_KEY", "")
-TWELVEDATA_API_KEY = os.getenv("TWELVEDATA_API_KEY", "")
 
 # Nous Research Hermes — powers the HeadTrader review agent (OpenAI-compatible)
 HERMES_API_KEY = os.getenv("HERMES_API_KEY", "")
@@ -110,17 +106,7 @@ DAILY_PROFIT_TARGET_MAX = float(os.getenv("DAILY_PROFIT_TARGET_MAX", "3.0"))
 TOTAL_PROFIT_TARGET_MIN = float(os.getenv("TOTAL_PROFIT_TARGET_MIN", "10.0"))
 TOTAL_PROFIT_TARGET_MAX = float(os.getenv("TOTAL_PROFIT_TARGET_MAX", "50.0"))
 
-_mt5_login_raw = os.getenv("MT5_LOGIN", "0")
-MT5_LOGIN = int(_mt5_login_raw) if _mt5_login_raw and _mt5_login_raw.strip() else 0
-MT5_PASSWORD = os.getenv("MT5_PASSWORD", "")
-MT5_SERVER = os.getenv("MT5_SERVER", "MetaQuotes-Demo")
-
-DXTRADE_API_URL = os.getenv("DXTRADE_API_URL", "https://dx.velotrade.com/dxsca-web")
-DXTRADE_USERNAME = os.getenv("DXTRADE_USERNAME", "")
-DXTRADE_PASSWORD = os.getenv("DXTRADE_PASSWORD", "")
-DXTRADE_DOMAIN = os.getenv("DXTRADE_DOMAIN", "default")
-
-BROKER_TYPE = os.getenv("BROKER_TYPE", "paper")  # paper, binance, mt5, alpaca, dxtrade
+BROKER_TYPE = os.getenv("BROKER_TYPE", "paper")  # paper, binance, alpaca (crypto venues only)
 
 BINANCE_API_KEY = os.getenv("BINANCE_API_KEY", "")
 BINANCE_API_SECRET = os.getenv("BINANCE_API_SECRET", "")
@@ -214,8 +200,6 @@ CORRELATION_GROUPS = {
                     "DOGE/USD", "ATOM/USD", "TRX/USD", "MATIC/USD", "APT/USD",
                     "ARB/USD", "OP/USD", "BNB/USD"],
     "crypto_majors": ["BTC/USD", "ETH/USD"],
-    "us_equities": ["AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL", "META"],
-    "metals": ["XAUUSD", "XAGUSD"],
 }
 MAX_GROUP_POSITIONS = int(os.getenv("MAX_GROUP_POSITIONS", "2"))
 GROUP_OVERRIDE_CONF = float(os.getenv("GROUP_OVERRIDE_CONF", "0.85"))
@@ -227,7 +211,7 @@ SESSION_RISK_MULTS = os.getenv("SESSION_RISK_MULTS", "0.5,0.8,1.0,0.5")
 # entries in its whole asset class until it stabilizes.
 MACRO_DIP_PCT = float(os.getenv("MACRO_DIP_PCT", "1.0"))
 MACRO_DIP_OVERRIDE_CONF = float(os.getenv("MACRO_DIP_OVERRIDE_CONF", "0.9"))
-MACRO_BELLWETHERS = {"crypto": "BTC/USD", "stock": "MSFT", "forex": "XAUUSD"}
+MACRO_BELLWETHERS = {"crypto": "BTC/USD"}
 # SL floor: ATR-first placement may never be tighter than this (noise floor)
 MIN_SL_PCT = float(os.getenv("MIN_SL_PCT", "0.3"))
 
@@ -259,39 +243,23 @@ RISK_TUNABLE_PARAMS = {"MAX_POSITION_SIZE_PCT", "RISK_PER_TRADE_PCT", "STOP_LOSS
 # Breakeven SL: when price reaches this % of the TP distance, move SL to entry
 # Set BREAKEVEN_ENABLED=false to disable, BREAKEVEN_ACTIVATION_PCT=0 to use 1x SL distance only
 
-# Symbol universes per market. Crypto uses BASE/QUOTE, stocks are plain
-# tickers (<=5 letters), metals/forex are 6-letter pairs quoted via Yahoo =X
-# (spot) or MT5 when available.
+# Crypto spot universe (BASE/QUOTE). Crypto-only firm — no stocks/metals/forex.
 CRYPTO_SYMBOLS = [s for s in os.getenv(
     "CRYPTO_SYMBOLS",
     "BTC/USD,ETH/USD,SOL/USD,BNB/USD,XRP/USD,ADA/USD,DOGE/USD,DOT/USD,AVAX/USD,LINK/USD,UNI/USD,ATOM/USD,LTC/USD,BCH/USD,TRX/USD,AAVE/USD,MATIC/USD,APT/USD,ARB/USD,OP/USD"
 ).split(",") if s.strip()]
-# SPY removed from defaults: an index ETF holds banks/insurers and other
-# non-halal-screened businesses. Individual names remain the operator's
-# responsibility to screen (e.g. AAOIFI criteria / a screening service).
-STOCK_SYMBOLS = [s for s in os.getenv(
-    "STOCK_SYMBOLS", "AAPL,MSFT,NVDA,TSLA,AMZN,GOOGL,META"
-).split(",") if s.strip()]
-METAL_SYMBOLS = [s for s in os.getenv("METAL_SYMBOLS", "XAUUSD,XAGUSD").split(",") if s.strip()]
 
-# An explicit WATCHED_SYMBOLS env var wins as-is; otherwise the list is
-# assembled from the universes selected by MARKET_TYPE.
+# An explicit WATCHED_SYMBOLS env var wins as-is (crypto pairs only);
+# otherwise the firm watches CRYPTO_SYMBOLS.
 _env_watched = os.getenv("WATCHED_SYMBOLS", "")
 if _env_watched:
-    WATCHED_SYMBOLS = [s for s in _env_watched.split(",") if s.strip()]
-else:
-    WATCHED_SYMBOLS = []
-    if MARKET_TYPE in ("crypto", "both"):
-        WATCHED_SYMBOLS += CRYPTO_SYMBOLS
-    if MARKET_TYPE in ("stocks", "both"):
-        WATCHED_SYMBOLS += STOCK_SYMBOLS
-    if MARKET_TYPE in ("metals", "both"):
-        WATCHED_SYMBOLS += METAL_SYMBOLS
+    WATCHED_SYMBOLS = [s for s in _env_watched.split(",") if s.strip() and "/" in s]
     if not WATCHED_SYMBOLS:
         WATCHED_SYMBOLS = list(CRYPTO_SYMBOLS)
+else:
+    WATCHED_SYMBOLS = list(CRYPTO_SYMBOLS)
 
-# Replace the crypto part with ALL Binance testnet USDT pairs when
-# BINANCE_ALL_SYMBOLS=true; stocks/metals from MARKET_TYPE are kept.
+# Watch ALL Binance testnet USDT spot pairs when BINANCE_ALL_SYMBOLS=true.
 if os.getenv("BINANCE_ALL_SYMBOLS", "").lower() in ("true", "1", "yes"):
     try:
         import requests as _req
@@ -305,6 +273,6 @@ if os.getenv("BINANCE_ALL_SYMBOLS", "").lower() in ("true", "1", "yes"):
                 if _sym.endswith("/USD"):
                     _all.append(_sym)
         if _all:
-            WATCHED_SYMBOLS = sorted(_all) + [s for s in WATCHED_SYMBOLS if "/" not in s]
+            WATCHED_SYMBOLS = sorted(_all)
     except Exception:
         pass

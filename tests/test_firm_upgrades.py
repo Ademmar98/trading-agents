@@ -178,19 +178,18 @@ class TestScorecard:
 
 
 class TestDataFallbacks:
-    def test_twelvedata_symbol_mapping(self):
-        from core.data_provider import _twelvedata_symbol
-        assert _twelvedata_symbol("XAUUSD") == "XAU/USD"
-        assert _twelvedata_symbol("XAGUSD") == "XAG/USD"
-        assert _twelvedata_symbol("EURUSD") == "EUR/USD"
-        assert _twelvedata_symbol("AAPL") == "AAPL"
+    def test_cryptocom_timeframe_mapping(self):
+        from core.data_provider import _CRYPTOCOM_TIMEFRAMES
+        assert _CRYPTOCOM_TIMEFRAMES["15m"] == "M15"
+        assert _CRYPTOCOM_TIMEFRAMES["1h"] == "H1"
+        assert _CRYPTOCOM_TIMEFRAMES["1d"] == "D1"
 
-    def test_fetchers_disabled_without_keys(self, monkeypatch):
-        import core.data_provider as dp
-        monkeypatch.setattr(dp, "TWELVEDATA_API_KEY", "")
-        monkeypatch.setattr(dp, "MASSIVE_API_KEY", "")
-        assert dp.fetch_twelvedata_ohlc("XAUUSD", "15m", 10) == []
-        assert dp.fetch_massive_ohlc("AAPL", "15m", 10) == []
+    def test_non_crypto_symbol_gets_no_data(self):
+        # Crypto-only firm: anything without a BASE/QUOTE pair returns nothing.
+        from core.data_provider import fetch_ohlc, fetch_current_price, fetch_cryptocom_ohlc
+        assert fetch_ohlc("AAPL", "15m", 10) == []
+        assert fetch_current_price("XAUUSD") == 0
+        assert fetch_cryptocom_ohlc("AAPL", "15m", 10) == []
 
 
 class TestRoundSig:
@@ -218,10 +217,10 @@ class TestRoundSig:
 
 class TestScalpGeometryCaps:
     def test_daily_range_volatility_capped(self):
-        """The META case: 23.6% 14-day-range volatility must not become a
-        23%+ stop — caps clamp to MAX_SL_PCT / MAX_TP_PCT."""
+        """23.6% daily-range volatility must not become a 23%+ stop — caps
+        clamp to MAX_SL_PCT / MAX_TP_PCT (the original 29.5%-stop bug)."""
         from core.pricing import compute_pricing
-        p = compute_pricing("META", "BUY", 631.48,
+        p = compute_pricing("BTC/USD", "BUY", 631.48,
                             {"volatility": 23.59, "bid": 631.4, "ask": 631.6},
                             "ranging", 0)
         assert p["sl_pct"] <= app_config.MAX_SL_PCT + 0.01

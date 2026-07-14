@@ -6,7 +6,6 @@ import requests
 from config import (
     WATCHED_SYMBOLS,
     ALPACA_API_KEY, ALPACA_SECRET_KEY,
-    MASSIVE_API_KEY, TWELVEDATA_API_KEY,
     BROKER_TYPE,
 )
 
@@ -22,10 +21,8 @@ def _get_alpaca():
     global _ALPACA_CLIENT
     if _ALPACA_CLIENT is None and ALPACA_AVAILABLE:
         try:
-            from alpaca.data import StockHistoricalDataClient
             from alpaca.data import CryptoHistoricalDataClient
             _ALPACA_CLIENT = {
-                "stock": StockHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY),
                 "crypto": CryptoHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY),
             }
         except ImportError:
@@ -66,30 +63,6 @@ def _is_crypto(symbol):
     return "/" in symbol
 
 
-def _is_stock(symbol):
-    return "/" not in symbol and symbol.isalpha() and len(symbol) <= 5
-
-
-def _is_forex(symbol):
-    # 6-letter pairs like EURUSD, and metals XAUUSD/XAGUSD
-    return "/" not in symbol and symbol.isalpha() and len(symbol) == 6
-
-
-# Yahoo no longer serves spot metals as XAUUSD=X; COMEX front-month futures
-# are the standard free proxy and track spot closely.
-_METALS_YAHOO = {"XAUUSD": "GC=F", "XAGUSD": "SI=F"}
-
-
-def _yahoo_symbol(symbol):
-    if symbol in _METALS_YAHOO:
-        return _METALS_YAHOO[symbol]
-    if _is_crypto(symbol):
-        return symbol.replace("/", "-")
-    if _is_forex(symbol):
-        return f"{symbol}=X"  # Yahoo quotes spot forex pairs with the =X suffix
-    return symbol
-
-
 def fetch_binance_klines(symbol, interval="1d", limit=100):
     bsym = _to_binance_symbol(symbol)
     try:
@@ -107,50 +80,8 @@ def fetch_binance_klines(symbol, interval="1d", limit=100):
         return []
 
 
-# TwelveData: true spot quotes for metals/forex (XAU/USD "Gold Spot") plus
-# stocks. Free tier is 800 credits/day / 8 req/min, so this is a fallback.
-_TWELVEDATA_SYMBOLS = {"XAUUSD": "XAU/USD", "XAGUSD": "XAG/USD"}
-_TWELVEDATA_INTERVALS = {"1m": "1min", "5m": "5min", "15m": "15min",
-                         "30m": "30min", "1h": "1h", "4h": "4h", "1d": "1day"}
-
-
-def _twelvedata_symbol(symbol):
-    if symbol in _TWELVEDATA_SYMBOLS:
-        return _TWELVEDATA_SYMBOLS[symbol]
-    if _is_forex(symbol):
-        return f"{symbol[:3]}/{symbol[3:]}"
-    return symbol  # stocks as-is
-
-
-def fetch_twelvedata_ohlc(symbol, interval="1d", limit=100):
-    if not TWELVEDATA_API_KEY:
-        return []
-    td_interval = _TWELVEDATA_INTERVALS.get(interval)
-    if not td_interval:
-        return []
-    try:
-        r = requests.get(
-            "https://api.twelvedata.com/time_series",
-            params={"symbol": _twelvedata_symbol(symbol), "interval": td_interval,
-                    "outputsize": min(limit, 5000), "apikey": TWELVEDATA_API_KEY},
-            timeout=15,
-        )
-        values = r.json().get("values") or []
-        ohlc = []
-        for v in reversed(values):  # API returns newest-first
-            ohlc.append({
-                "date": v["datetime"],
-                "open": float(v["open"]), "high": float(v["high"]),
-                "low": float(v["low"]), "close": float(v["close"]),
-                "volume": float(v.get("volume") or 0),
-            })
-        return ohlc
-    except Exception:
-        return []
-
-
 # Crypto.com Exchange public API — keyless, exchange-grade crypto data.
-# Fallback for Binance klines; also serves XAUT (tokenized gold) if needed.
+# Fallback for Binance klines where Binance is geo-blocked (e.g. US VPS).
 _CRYPTOCOM_TIMEFRAMES = {"1m": "M1", "5m": "M5", "15m": "M15", "30m": "M30",
                          "1h": "H1", "4h": "H4", "1d": "D1"}
 
@@ -177,77 +108,12 @@ def fetch_cryptocom_ohlc(symbol, interval="1d", limit=100):
         return []
 
 
-# Massive (Polygon's rebrand): stock aggregates. Free tier is 5 req/min —
-# fallback only.
-def fetch_massive_ohlc(symbol, interval="1d", limit=100):
-    if not MASSIVE_API_KEY or not _is_stock(symbol):
-        return []
-    spans = {"1m": (1, "minute", 3), "5m": (5, "minute", 7), "15m": (15, "minute", 12),
-             "30m": (30, "minute", 20), "1h": (1, "hour", 30), "4h": (4, "hour", 90),
-             "1d": (1, "day", limit + 30)}
-    if interval not in spans:
-        return []
-    mult, span, lookback_days = spans[interval]
-    try:
-        from datetime import timedelta
-        end = datetime.now(timezone.utc).date()
-        start = end - timedelta(days=lookback_days)
-        r = requests.get(
-            f"https://api.massive.com/v2/aggs/ticker/{symbol}/range/{mult}/{span}/{start}/{end}",
-            params={"apiKey": MASSIVE_API_KEY, "limit": 50000, "sort": "asc"},
-            timeout=15,
-        )
-        results = r.json().get("results") or []
-        return [{
-            "date": datetime.fromtimestamp(b["t"] / 1000, tz=timezone.utc).isoformat(),
-            "open": float(b["o"]), "high": float(b["h"]),
-            "low": float(b["l"]), "close": float(b["c"]),
-            "volume": float(b.get("v") or 0), "ts": b["t"] // 1000,
-        } for b in results[-limit:]]
-    except Exception:
-        return []
-
-
-def fetch_yahoo_ohlc(symbol, interval="1d", days=100):
-    yahoo_sym = _yahoo_symbol(symbol)
-    range_map = {"1m": "1d", "5m": "5d", "15m": "1mo", "1h": "3mo", "4h": "6mo", "1d": f"{days}d"}
-    yahoo_interval = interval
-    if interval == "4h":
-        yahoo_interval = "1h"
-    y_range = range_map.get(interval, f"{days}d")
-    try:
-        r = requests.get(
-            f"https://query1.finance.yahoo.com/v8/finance/chart/{yahoo_sym}",
-            params={"range": y_range, "interval": yahoo_interval},
-            headers={"User-Agent": "Mozilla/5.0"},
-            timeout=15,
-        )
-        data = r.json()
-        result = data.get("chart", {}).get("result", [{}])[0]
-        quotes = result.get("indicators", {}).get("quote", [{}])[0]
-        timestamps = result.get("timestamp", [])
-        ohlc = []
-        for i, ts in enumerate(timestamps):
-            ohlc.append({
-                "date": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
-                "open": quotes.get("open", [None])[i] if quotes.get("open") else None,
-                "high": quotes.get("high", [None])[i] if quotes.get("high") else None,
-                "low": quotes.get("low", [None])[i] if quotes.get("low") else None,
-                "close": quotes.get("close", [None])[i] if quotes.get("close") else None,
-                "volume": quotes.get("volume", [0])[i] if quotes.get("volume") else 0,
-                "ts": ts,
-            })
-        return [c for c in ohlc if c["close"] is not None]
-    except Exception:
-        return []
-
-
 def fetch_alpaca_bars(symbol, interval="1d", limit=100):
     client = _get_alpaca()
-    if not client:
+    if not client or not _is_crypto(symbol):
         return None
     try:
-        from alpaca.data.requests import StockBarsRequest, CryptoBarsRequest
+        from alpaca.data.requests import CryptoBarsRequest
         from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
         tf_map = {
             "1m": TimeFrame(1, TimeFrameUnit.Minute),
@@ -258,12 +124,8 @@ def fetch_alpaca_bars(symbol, interval="1d", limit=100):
             "1d": TimeFrame(1, TimeFrameUnit.Day),
         }
         tf = tf_map.get(interval, TimeFrame(1, TimeFrameUnit.Day))
-        if _is_crypto(symbol):
-            req = CryptoBarsRequest(symbol_or_symbols=[symbol.replace("/", "")], timeframe=tf, limit=limit)
-            bars = client["crypto"].get_crypto_bars(req)
-        else:
-            req = StockBarsRequest(symbol_or_symbols=[symbol], timeframe=tf, limit=limit, feed="iex")
-            bars = client["stock"].get_stock_bars(req)
+        req = CryptoBarsRequest(symbol_or_symbols=[symbol.replace("/", "")], timeframe=tf, limit=limit)
+        bars = client["crypto"].get_crypto_bars(req)
         df = bars.df
         if df.empty:
             return []
@@ -289,89 +151,48 @@ def fetch_alpaca_bars(symbol, interval="1d", limit=100):
 
 
 def fetch_ohlc(symbol, interval="1d", limit=100):
-    if _is_crypto(symbol):
-        alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
-        if alpaca_result:
-            return alpaca_result
-        result = fetch_binance_klines(symbol, interval, limit)
-        # Crypto.com Exchange as keyless second source when Binance fails
-        if not result:
-            result = fetch_cryptocom_ohlc(symbol, interval, limit)
-        return result
-    if _is_stock(symbol):
-        alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
-        if alpaca_result:
-            return alpaca_result
-        result = fetch_yahoo_ohlc(symbol, interval, days=limit)
-        # Yahoo is unofficial and rate-limits; fall through to the keyed APIs
-        if not result:
-            result = fetch_massive_ohlc(symbol, interval, limit)
-        if not result:
-            result = fetch_twelvedata_ohlc(symbol, interval, limit)
-        return result
-    # metals / forex
-    result = fetch_yahoo_ohlc(symbol, interval, days=limit)
+    if not _is_crypto(symbol):
+        return []
+    alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
+    if alpaca_result:
+        return alpaca_result
+    result = fetch_binance_klines(symbol, interval, limit)
+    # Crypto.com Exchange as keyless second source when Binance fails/geo-blocks
     if not result:
-        result = fetch_twelvedata_ohlc(symbol, interval, limit)
+        result = fetch_cryptocom_ohlc(symbol, interval, limit)
     return result
 
 
 def fetch_current_price(symbol):
-    if _is_crypto(symbol):
-        bsym = _to_binance_symbol(symbol)
-        try:
-            r = requests.get(f"{BINANCE_BASE}/api/v3/ticker/price", params={"symbol": bsym}, timeout=10)
-            return float(r.json()["price"])
-        except Exception:
-            pass
-        cg_id = symbol.split("/")[0].lower()
-        try:
-            r = requests.get(
-                "https://api.coingecko.com/api/v3/simple/price",
-                params={"ids": cg_id, "vs_currencies": "usd"},
-                timeout=10,
-            )
-            return r.json().get(cg_id, {}).get("usd", 0)
-        except Exception:
-            pass
-    elif _is_stock(symbol) or _is_forex(symbol):
-        # Stocks quote directly; metals/forex go through the same _yahoo_symbol
-        # mapping as OHLC (GC=F / SI=F / EURUSD=X) instead of falling to 0.
-        try:
-            r = requests.get(
-                f"https://query1.finance.yahoo.com/v8/finance/chart/{_yahoo_symbol(symbol)}",
-                params={"range": "1d", "interval": "1d"},
-                headers={"User-Agent": "Mozilla/5.0"},
-                timeout=10,
-            )
-            meta = r.json().get("chart", {}).get("result", [{}])[0].get("meta", {})
-            return meta.get("regularMarketPrice", 0)
-        except Exception:
-            pass
+    if not _is_crypto(symbol):
+        return 0
+    bsym = _to_binance_symbol(symbol)
+    try:
+        r = requests.get(f"{BINANCE_BASE}/api/v3/ticker/price", params={"symbol": bsym}, timeout=10)
+        return float(r.json()["price"])
+    except Exception:
+        pass
+    cg_id = symbol.split("/")[0].lower()
+    try:
+        r = requests.get(
+            "https://api.coingecko.com/api/v3/simple/price",
+            params={"ids": cg_id, "vs_currencies": "usd"},
+            timeout=10,
+        )
+        return r.json().get(cg_id, {}).get("usd", 0)
+    except Exception:
+        pass
     return 0
 
 
 def fetch_prices(symbols=None):
     symbols = symbols or WATCHED_SYMBOLS
-    result = {}
     crypto = [s for s in symbols if _is_crypto(s)]
-    stocks = [s for s in symbols if _is_stock(s)]
-    if crypto:
-        if BROKER_TYPE == "binance" or not ALPACA_AVAILABLE:
-            result.update(_fetch_binance_tickers(crypto))
-        else:
-            result.update(_fetch_combined_crypto_prices(crypto))
-    if stocks:
-        if ALPACA_AVAILABLE:
-            result.update(_fetch_alpaca_stock_prices(stocks))
-        else:
-            result.update(_fetch_yahoo_stock_prices(stocks))
-    others = [s for s in symbols if s not in result and s not in crypto and s not in stocks]
-    for sym in others:
-        if _is_crypto(sym):
-            continue
-        result[sym] = {"price": fetch_current_price(sym), "change_24h": 0, "volume_24h": 0, "type": "other"}
-    return result
+    if not crypto:
+        return {}
+    if BROKER_TYPE == "binance" or not ALPACA_AVAILABLE:
+        return _fetch_binance_tickers(crypto)
+    return _fetch_combined_crypto_prices(crypto)
 
 
 def _fetch_binance_tickers(symbols):
@@ -392,33 +213,6 @@ def _fetch_binance_tickers(symbols):
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "bid": float(t.get("bidPrice", 0)),
                     "ask": float(t.get("askPrice", 0)),
-                }
-        return result
-    except Exception:
-        return {}
-
-
-def _fetch_alpaca_stock_prices(symbols):
-    client = _get_alpaca()
-    if not client:
-        return {}
-    try:
-        from alpaca.data.requests import StockLatestQuoteRequest
-        req = StockLatestQuoteRequest(symbol_or_symbols=symbols, feed="iex")
-        quotes = client["stock"].get_stock_latest_quote(req)
-        result = {}
-        for sym in symbols:
-            q = quotes.get(sym)
-            if q:
-                price = (q.ask_price + q.bid_price) / 2 if q.ask_price and q.bid_price else (q.ask_price or q.bid_price)
-                result[sym] = {
-                    "price": float(price) if price else 0,
-                    "change_24h": 0,
-                    "volume_24h": 0,
-                    "type": "stock",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "bid": float(q.bid_price) if q.bid_price else 0,
-                    "ask": float(q.ask_price) if q.ask_price else 0,
                 }
         return result
     except Exception:
@@ -451,30 +245,4 @@ def _fetch_combined_crypto_prices(symbols):
     remaining = [s for s in symbols if s not in result]
     if remaining:
         result.update(_fetch_binance_tickers(remaining))
-    return result
-
-
-def _fetch_yahoo_stock_prices(symbols):
-    result = {}
-    for sym in symbols:
-        try:
-            r = requests.get(
-                f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}",
-                params={"range": "1d", "interval": "1d"},
-                headers={"User-Agent": "Mozilla/5.0"},
-                timeout=10,
-            )
-            meta = r.json().get("chart", {}).get("result", [{}])[0].get("meta", {})
-            price = meta.get("regularMarketPrice", 0)
-            prev_close = meta.get("chartPreviousClose", 0)
-            change_pct = ((price - prev_close) / prev_close * 100) if prev_close else 0
-            result[sym] = {
-                "price": price,
-                "change_24h": change_pct,
-                "volume_24h": meta.get("regularMarketVolume", 0),
-                "type": "stock",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-        except Exception:
-            pass
     return result

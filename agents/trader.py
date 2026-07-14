@@ -1,11 +1,9 @@
 ﻿import time
 
-from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN
+from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET
 from agents.base_agent import BaseAgent
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
-from core.live_broker import MetaQuotesBroker
-from core.dxtrade_broker import DXTradeBroker
 from core.positions import PositionManager
 from core.database import update_plan_status
 from core import pending_orders
@@ -21,12 +19,8 @@ class Trader(BaseAgent):
 
     def __init__(self):
         super().__init__()
-        if BROKER_TYPE == "mt5":
-            self.broker = MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
-        elif BROKER_TYPE == "binance":
+        if BROKER_TYPE == "binance":
             self.broker = BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
-        elif BROKER_TYPE == "dxtrade":
-            self.broker = DXTradeBroker(DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN)
         else:
             self.broker = PaperBroker()
         self.pos_mgr = PositionManager()

@@ -49,10 +49,8 @@ _ASSET_TERMS = {
     "AVAX/USD": ["avalanche"], "LINK/USD": ["chainlink"],
     "UNI/USD": ["uniswap"], "ATOM/USD": ["cosmos"], "LTC/USD": ["litecoin"],
     "BCH/USD": ["bitcoin cash"], "TRX/USD": ["tron"], "AAVE/USD": ["aave"],
-    "AAPL": ["apple"], "MSFT": ["microsoft"], "NVDA": ["nvidia"],
-    "TSLA": ["tesla"], "AMZN": ["amazon"], "GOOGL": ["google", "alphabet"],
-    "META": ["meta platforms", "facebook"],
-    "XAUUSD": ["gold"], "XAGUSD": ["silver"],
+    "MATIC/USD": ["polygon", "matic"], "APT/USD": ["aptos"],
+    "ARB/USD": ["arbitrum"], "OP/USD": ["optimism"],
 }
 
 

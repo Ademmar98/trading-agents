@@ -190,10 +190,10 @@ class TestCorrelatedSelloffDefenses:
         from core.risk import count_group_positions, symbol_group
         assert symbol_group("AAVE/USD") == "crypto_alts"
         assert symbol_group("BTC/USD") == "crypto_majors"
-        held = ["AAVE/USD", "UNI/USD", "BTC/USD", "AAPL"]
+        held = ["AAVE/USD", "UNI/USD", "BTC/USD", "FOO/USD"]
         assert count_group_positions("ADA/USD", held) == 2   # two alts held
         assert count_group_positions("ETH/USD", held) == 1   # one major held
-        assert count_group_positions("XAUUSD", held) == 0
+        assert count_group_positions("FOO/USD", held) == 0   # ungrouped symbol
 
     def test_session_multiplier(self):
         from datetime import datetime, timezone
@@ -212,7 +212,7 @@ class TestCorrelatedSelloffDefenses:
         assert macro_dip_alert("crypto", {"crypto": -1.4}) is True
         assert macro_dip_alert("crypto", {"crypto": -0.6}) is False
         assert macro_dip_alert("crypto", {}) is False
-        assert macro_dip_alert("stock", {"crypto": -2.0}) is False
+        assert macro_dip_alert("unknown", {"crypto": -2.0}) is False
 
     def test_vol_aware_stop_atr_first(self, monkeypatch):
         import core.risk as risk

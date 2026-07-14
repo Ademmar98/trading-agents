@@ -14,11 +14,9 @@ HEADLESS = "--headless" in sys.argv or os.getenv("HEADLESS", "").lower() == "tru
 # Reset flag: delete all data and start fresh
 RESET = "--reset" in sys.argv
 
-from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT
+from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
-from core.live_broker import MetaQuotesBroker
-from core.dxtrade_broker import DXTradeBroker
 from core.portfolio import load_portfolio, save_portfolio, Portfolio
 from core.memory import SharedMemory
 from core.database import init_db, fetchall, set_meta
@@ -103,12 +101,8 @@ def acquire_instance_lock():
 
 
 def make_broker():
-    if BROKER_TYPE == "mt5":
-        return MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
     if BROKER_TYPE == "binance":
         return BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
-    if BROKER_TYPE == "dxtrade":
-        return DXTradeBroker(DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN)
     return PaperBroker()
 
 
@@ -385,8 +379,6 @@ def main():
     console.print(f"[dim]DATA_DIR: {DATA_DIR}[/dim]")
     console.print(f"[dim]BROKER_TYPE: {BROKER_TYPE}[/dim]")
     console.print(f"[dim]PLATFORM: {sys.platform}[/dim]")
-    if BROKER_TYPE == "mt5" and sys.platform != "win32":
-        console.print("[bold yellow]WARNING: MT5 requires Windows — broker will fall back to paper[/bold yellow]")
     memory.log("system", f"startup: DATA_DIR={DATA_DIR} BROKER_TYPE={BROKER_TYPE} platform={sys.platform}")
 
     init_db()
@@ -402,36 +394,12 @@ def main():
     else:
         console.print("[dim]Dashboard unavailable[/dim]")
 
-    if BROKER_TYPE == "mt5":
-        live_broker = MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
-        if live_broker.connected:
-            info = live_broker.get_account_info()
-            memory.log("system", f"MT5 connected: {info['name']}, ${info['balance']} {info['currency']}")
-            portfolio = load_portfolio()
-            if portfolio.initial_balance == 0:
-                portfolio.initial_balance = info['balance']
-                portfolio.cash = info['balance']
-                save_portfolio(portfolio)
-        else:
-            memory.log("system", "MT5 not connected — using paper fallback")
-    elif BROKER_TYPE == "binance":
+    if BROKER_TYPE == "binance":
         live_broker = BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
         if live_broker.connected:
             memory.log("system", "Binance testnet connected")
         else:
             memory.log("system", "Binance not connected — using paper fallback")
-    elif BROKER_TYPE == "dxtrade":
-        live_broker = DXTradeBroker(DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN)
-        if live_broker.connected:
-            info = live_broker.get_account_info()
-            memory.log("system", f"DXtrade connected: account {info.get('account') or info.get('accountId', '?')}, balance ${info.get('balance', 0)}")
-            portfolio = load_portfolio()
-            if portfolio.initial_balance == 0:
-                portfolio.initial_balance = info.get('balance', INITIAL_BALANCE)
-                portfolio.cash = info.get('balance', INITIAL_BALANCE)
-                save_portfolio(portfolio)
-        else:
-            memory.log("system", "DXtrade not connected — using paper fallback")
     portfolio = load_portfolio()
     if portfolio.initial_balance == 0:
         portfolio.initial_balance = INITIAL_BALANCE

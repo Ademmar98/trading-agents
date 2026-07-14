@@ -147,9 +147,9 @@ def test_scaled_exit_counts_as_one_trade_in_stats(pos_mgr):
 
 
 def test_sell_side_partial_and_trail(pos_mgr):
-    pos_mgr.open_position("XAUUSD", "SELL", 1.0, 100.0, sl=105.0, tp=85.0)
+    pos_mgr.open_position("BTC/USD", "SELL", 1.0, 100.0, sl=105.0, tp=85.0)
     # risk = 5; partial target = 100 - 7.5 = 92.5
-    triggered = pos_mgr.update_prices({"XAUUSD": {"price": 92.5}})
+    triggered = pos_mgr.update_prices({"BTC/USD": {"price": 92.5}})
     assert triggered[0]["reason"] == "partial_tp"
     open_pos = pos_mgr.get_open_positions()[0]
     assert open_pos["stop_loss"] == pytest.approx(100.0 * (1 - BUFFER))
