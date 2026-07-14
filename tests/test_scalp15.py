@@ -139,6 +139,7 @@ class TestExecutionGate:
         import agents.execution_agent as ea
         monkeypatch.setattr(ea, "SCALP_MIN_WIN_PROB", 0.5)
         monkeypatch.setattr(ea, "session_risk_mult", lambda: 1.0)  # pin session
+        monkeypatch.setattr(ea, "POSITION_SIZE_MULT", 1.0)  # isolate the skill formula
         memory = SharedMemory()
         save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
         _seed_scalp_execution(memory, win_prob=0.60)

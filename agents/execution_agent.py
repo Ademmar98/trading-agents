@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 from config import (
     SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT,
     SCALP_MIN_WIN_PROB, SCALP_ATR_SL_MULT, MAX_SL_PCT, MAX_TP_PCT,
-    BROKEN_SL_PCT, SWING_MAX_SL_PCT,
+    BROKEN_SL_PCT, SWING_MAX_SL_PCT, MIN_TP_PROFIT_USD, POSITION_SIZE_MULT,
+    MAX_GROSS_LEVERAGE,
 )
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
@@ -161,13 +162,39 @@ class ExecutionAgent(BaseAgent):
 
             # Session-aware sizing: Asian-session moves are sharper and fills
             # worse — risk half size there (SESSION_RISK_MULTS)
-            risk_amount = load_portfolio().equity * (risk_pct / 100) * session_risk_mult()
+            portfolio = load_portfolio()
+            risk_amount = portfolio.equity * (risk_pct / 100) * session_risk_mult()
             if sl_price and entry_price:
                 risk_per_unit = abs(entry_price - sl_price)
                 if risk_per_unit > 0:
                     risk_capped_qty = risk_amount / risk_per_unit
                     if risk_capped_qty < qty:
                         qty = round(risk_capped_qty, 8)
+
+            # Position-size multiplier: scale up for larger absolute P&L, but
+            # stay cash-only — clamp so this position plus everything already
+            # open never exceeds equity x MAX_GROSS_LEVERAGE (no leverage,
+            # halal) and never costs more than available cash.
+            if POSITION_SIZE_MULT != 1.0 and qty > 0 and entry_price > 0:
+                scaled = qty * POSITION_SIZE_MULT
+                open_notional = sum(
+                    (p.get("current_price") or p.get("entry_price") or 0) * p["quantity"]
+                    for p in self._pos_mgr.get_open_positions())
+                lev_budget = max(0.0, portfolio.equity * MAX_GROSS_LEVERAGE - open_notional)
+                cost_per_unit = entry_price * (1 + TRADE_FEE_PCT / 100)
+                affordable_qty = min(lev_budget, portfolio.cash) / cost_per_unit if cost_per_unit else scaled
+                qty = round(max(0.0, min(scaled, affordable_qty)), 8)
+
+            # Minimum absolute profit at TP: a win must earn at least
+            # MIN_TP_PROFIT_USD at the final size, or the setup isn't worth a
+            # slot. Computed AFTER sizing (incl. the multiplier), so it reflects
+            # the real dollar target.
+            est_tp_profit = qty * abs(tp_price - entry_price)
+            if est_tp_profit < MIN_TP_PROFIT_USD:
+                rejected.append({**opp, "execution_reasons": [
+                    f"TP profit ${est_tp_profit:.2f} < ${MIN_TP_PROFIT_USD:.2f} minimum "
+                    f"(qty {qty:g} x ${abs(tp_price - entry_price):g} move)"]})
+                continue
 
             action = opp.get("action", "BUY")
             plan_id = f"plan_{symbol}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S%f')}"

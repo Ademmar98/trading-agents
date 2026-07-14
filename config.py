@@ -168,6 +168,16 @@ MAX_TP_PCT = float(os.getenv("MAX_TP_PCT", "6.0"))
 # Must clear the round-trip fee (2 x TRADE_FEE_PCT = 0.2%) with real margin,
 # or trades that hit minimum TP still lose money after costs.
 MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "0.5"))
+# Minimum absolute profit at TP (USD): skip setups whose take-profit, at the
+# final position size, would earn less than this. Tiny sub-dollar scalps burn
+# a position slot and fees for pennies — not worth taking.
+MIN_TP_PROFIT_USD = float(os.getenv("MIN_TP_PROFIT_USD", "1.0"))
+# Position-size multiplier: scale each order's quantity for larger absolute
+# P&L. 2.0 = double the buy value. Still spot/cash — execution clamps so
+# total open notional never exceeds equity (no leverage, halal invariant),
+# so on a fully-invested book the full multiple may not apply. Doubling size
+# doubles BOTH profit and loss per trade — it amplifies edge, it doesn't add it.
+POSITION_SIZE_MULT = float(os.getenv("POSITION_SIZE_MULT", "2.0"))
 # Broken-geometry bound: a stop farther than this from entry means the
 # volatility inputs are corrupt (the 29.5%-SL class of bug), not a trade.
 # Distinct from MAX_SL_PCT: that caps normal pricing, this rejects garbage.
