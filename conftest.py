@@ -28,5 +28,8 @@ os.environ["SWING_ENABLED"] = "false"
 # covering the classic plumbing the backtester still uses; the OFF policy and
 # the regime cash-dial have their own tests in tests/test_signal_policy.py.
 os.environ["CLASSIC_STRATEGIES_ENABLED"] = "true"
+# Scalp stack is OFF in production (Phase 1b: net-negative on every timeframe).
+# Pin ON here so the scalp module tests keep covering it.
+os.environ["SCALP_15M_ENABLED"] = "true"
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

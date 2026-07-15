@@ -86,7 +86,12 @@ REGIME_DEPLOYMENT = {
 }
 TREND_STRENGTH_ADX_THRESHOLD = float(os.getenv("TREND_STRENGTH_ADX_THRESHOLD", "35"))
 
-SCALP_15M_ENABLED = os.getenv("SCALP_15M_ENABLED", "true").lower() == "true"
+# Phase 1b evidence (analysis/scalp_swing_expectancy.py, 3097 trades): the
+# scalp stack is net-negative on EVERY timeframe (1m-4h), t-stats -1.3 to -10,
+# negative in every regime — the 0.16% round-trip cost is ~1/3 R on tight
+# intraday stops and buries it, exactly like the classics. Disabled as a live
+# source; the module stays for research. Re-enable with SCALP_15M_ENABLED=true.
+SCALP_15M_ENABLED = os.getenv("SCALP_15M_ENABLED", "false").lower() == "true"
 # The same EMA/MACD/RSI stack runs independently on every listed timeframe;
 # each gets its own strategy tag (scalp_1m ... scalp_4h) so the learning
 # loop judges them separately.
