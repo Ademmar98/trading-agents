@@ -203,12 +203,13 @@ MIN_TP_PCT = float(os.getenv("MIN_TP_PCT", "0.5"))
 # final position size, would earn less than this. Tiny sub-dollar scalps burn
 # a position slot and fees for pennies — not worth taking.
 MIN_TP_PROFIT_USD = float(os.getenv("MIN_TP_PROFIT_USD", "1.0"))
-# Position-size multiplier: scale each order's quantity for larger absolute
-# P&L. 2.0 = double the buy value. Still spot/cash — execution clamps so
-# total open notional never exceeds equity (no leverage, halal invariant),
-# so on a fully-invested book the full multiple may not apply. Doubling size
-# doubles BOTH profit and loss per trade — it amplifies edge, it doesn't add it.
-POSITION_SIZE_MULT = float(os.getenv("POSITION_SIZE_MULT", "2.0"))
+# Position-size multiplier. Back to 1.0 (plain fractional risk) 2026-07-15:
+# with no signal yet proven to have edge (classics + scalp proven negative,
+# swing statistically flat), doubling size would only double the losses.
+# Sizing is now pure fractional risk (RISK_PER_TRADE_PCT) under the regime
+# cash-dial. Raise POSITION_SIZE_MULT only once a signal proves positive
+# expectancy on forward data.
+POSITION_SIZE_MULT = float(os.getenv("POSITION_SIZE_MULT", "1.0"))
 # Broken-geometry bound: a stop farther than this from entry means the
 # volatility inputs are corrupt (the 29.5%-SL class of bug), not a trade.
 # Distinct from MAX_SL_PCT: that caps normal pricing, this rejects garbage.
