@@ -45,7 +45,17 @@ HEAD_TRADER_INTERVAL_MIN = int(os.getenv("HEAD_TRADER_INTERVAL_MIN", "60"))
 # open long is unaffected (that SELL is an exit, not a position).
 BUY_ONLY = os.getenv("BUY_ONLY", "true").lower() == "true"
 
-# ── News agent ──
+# ── Optimizer ──
+# Disabled 2026-07-15. It fits parameters to the classic strategies (proven
+# net-negative and now switched off) using a COST-FREE backtest on BTC only,
+# then mutates live risk params (RISK_PER_TRADE_PCT, SL_VOL_MULT, ...) that
+# size real trades. Tuning dead signals on a cost-free model is worse than not
+# tuning at all — it silently moves live risk based on noise.
+OPTIMIZER_ENABLED = os.getenv("OPTIMIZER_ENABLED", "false").lower() == "true"
+
+# ── News agent (advisory only) ──
+# The scan still runs and publishes a memo for the dashboard/Telegram, but it
+# no longer nudges confidence — nothing unproven touches ranking or routing.
 NEWS_AGENT_ENABLED = os.getenv("NEWS_AGENT_ENABLED", "true").lower() == "true"
 NEWS_INTERVAL_MIN = int(os.getenv("NEWS_INTERVAL_MIN", "15"))
 

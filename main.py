@@ -14,7 +14,7 @@ HEADLESS = "--headless" in sys.argv or os.getenv("HEADLESS", "").lower() == "tru
 # Reset flag: delete all data and start fresh
 RESET = "--reset" in sys.argv
 
-from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT
+from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT, OPTIMIZER_ENABLED
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
 from core.portfolio import load_portfolio, save_portfolio, Portfolio
@@ -463,8 +463,16 @@ def main():
                 memory.log_error("optimizer", str(e))
             time.sleep(7200)  # every 2 hours
 
-    opt_thread = threading.Thread(target=optimizer_loop, daemon=True)
-    opt_thread.start()
+    # Optimizer is off by default: it tunes live risk params from a cost-free
+    # backtest of the (now disabled, proven net-negative) classic strategies on
+    # BTC alone. Tuning dead signals on a cost-free model moves real risk on noise.
+    if OPTIMIZER_ENABLED:
+        opt_thread = threading.Thread(target=optimizer_loop, daemon=True)
+        opt_thread.start()
+        console.print("[dim]Optimizer thread started[/dim]")
+    else:
+        console.print("[dim]Optimizer disabled (OPTIMIZER_ENABLED=false)[/dim]")
+        memory.log("system", "Optimizer disabled — no live param mutation")
 
     try:
         if HEADLESS:

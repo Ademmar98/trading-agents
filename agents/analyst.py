@@ -30,12 +30,11 @@ class ResearchAnalyst(BaseAgent):
 
     def _apply_priority_boosts(self, opportunities, analyses):
         """Focus effort where it pays: uptrending and high-liquidity pairs
-        get a confidence edge; bid-heavy order books add a little more; news
-        sentiment nudges both ways. Boosts are small — evidence, not fiat."""
+        get a confidence edge; bid-heavy order books add a little more.
+        The news sentiment nudge was removed 2026-07-15 — the NewsAgent memo is
+        read-only now; unproven keyword scores must not move confidence."""
         vols = sorted((a.get("volume_24h") or 0) for a in analyses.values())
         top_q = vols[int(len(vols) * 0.75)] if vols else 0
-        news = self.memory.read("reports", "news_scan") or {}
-        news_syms = news.get("symbols", {}) if time.time() - (news.get("timestamp") or 0) < 3600 else {}
         # Order-book depth is a REST call per symbol — spend it only on the
         # strongest candidates
         booked = {}
@@ -61,12 +60,6 @@ class ResearchAnalyst(BaseAgent):
                     o["reasons"].append(f"bid-heavy book {imb:+.2f}")
                 elif imb < -0.4:
                     boost -= 0.03
-            n = news_syms.get(o["symbol"]) or {}
-            score = n.get("score")
-            if score is not None and o["action"] == "BUY":
-                boost += max(-0.05, min(0.05, score * 0.05))
-                if abs(score) >= 0.5:
-                    o["reasons"].append(f"news {'+' if score > 0 else '-'}")
             if boost:
                 o["confidence"] = round(min(o["confidence"] + boost, 0.95), 4)
 

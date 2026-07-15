@@ -121,7 +121,10 @@ def _seed_pm_inputs(memory, strategy, ht_timestamp):
     })
 
 
-def test_portfolio_manager_applies_fresh_head_confidence():
+def test_head_trader_memo_never_touches_confidence():
+    """The LLM memo is read-only (AUDIT.md sec. 7). Even a FRESH memo with a
+    strategy_confidence multiplier must not move confidence, ranking, or
+    routing — nothing unproven may touch the decision path."""
     from agents.portfolio_manager import PortfolioManagerAgent
 
     memory = SharedMemory()
@@ -130,11 +133,12 @@ def test_portfolio_manager_applies_fresh_head_confidence():
 
     report = PortfolioManagerAgent().run()
     item = report["approved_opportunities"][0]
-    assert any("Head trader ht_strat" in r for r in item["reasons"])
-    assert item["confidence"] == pytest.approx(0.9 * 0.8, abs=0.01)
+    assert not any("Head trader" in r for r in item["reasons"])
+    # 0.9 seed confidence survives untouched by the memo's 0.8 multiplier
+    assert item["confidence"] == pytest.approx(0.9, abs=0.01)
 
 
-def test_portfolio_manager_ignores_stale_memo():
+def test_stale_memo_also_ignored():
     from agents.portfolio_manager import PortfolioManagerAgent
 
     memory = SharedMemory()
