@@ -9,7 +9,7 @@ from config import (
 from agents.base_agent import BaseAgent
 from core.market import MarketData
 from core.positions import PositionManager
-from core.microstructure import vwap as vwap_fn, book_imbalance
+from core.microstructure import vwap as vwap_fn
 from core.strategies import scan_symbol
 from core.multiframe import analyze_symbol_multiframe
 from core.scalping_signals import analyze_symbol_mtf
@@ -28,40 +28,11 @@ class ResearchAnalyst(BaseAgent):
         self.market = MarketData()
         self.pos_mgr = PositionManager()
 
-    def _apply_priority_boosts(self, opportunities, analyses):
-        """Focus effort where it pays: uptrending and high-liquidity pairs
-        get a confidence edge; bid-heavy order books add a little more.
-        The news sentiment nudge was removed 2026-07-15 — the NewsAgent memo is
-        read-only now; unproven keyword scores must not move confidence."""
-        vols = sorted((a.get("volume_24h") or 0) for a in analyses.values())
-        top_q = vols[int(len(vols) * 0.75)] if vols else 0
-        # Order-book depth is a REST call per symbol — spend it only on the
-        # strongest candidates
-        booked = {}
-        for o in sorted(opportunities, key=lambda x: x["confidence"], reverse=True)[:10]:
-            sym = o["symbol"]
-            if "/" in sym and sym not in booked:
-                try:
-                    booked[sym] = book_imbalance(sym)
-                except Exception:
-                    booked[sym] = None
-        for o in opportunities:
-            a = analyses.get(o["symbol"], {})
-            boost = 0.0
-            if top_q and (a.get("volume_24h") or 0) >= top_q:
-                boost += 0.03
-                o.setdefault("reasons", []).append("high liquidity")
-            if o.get("regime") in ("trending_up", "trending") and o["action"] == "BUY":
-                boost += 0.02
-            imb = booked.get(o["symbol"])
-            if imb is not None and o["action"] == "BUY":
-                if imb > 0.2:
-                    boost += 0.03
-                    o["reasons"].append(f"bid-heavy book {imb:+.2f}")
-                elif imb < -0.4:
-                    boost -= 0.03
-            if boost:
-                o["confidence"] = round(min(o["confidence"] + boost, 0.95), 4)
+    # _apply_priority_boosts was removed 2026-07-15. It inflated confidence for
+    # high-liquidity pairs (+0.03), trending regimes (+0.02) and bid-heavy order
+    # books (+0.03) — all unproven, and confidence decides the compliance bar,
+    # ranking, and the correlation-group / macro-dip overrides. Nothing unproven
+    # may raise conviction. (It also cost a REST order-book call per candidate.)
 
     def _steward_open_trades(self, analyses):
         """Re-analyze open trades each cycle: tighten stops (never widen)
@@ -352,7 +323,6 @@ class ResearchAnalyst(BaseAgent):
                     },
                 })
 
-        self._apply_priority_boosts(opportunities, analyses)
         opportunities.sort(key=lambda o: o["confidence"], reverse=True)
         summary = f"Analyzed {len(analyses)} symbols, found {len(opportunities)} opportunities"
         # List is sorted by confidence desc, so setdefault keeps the strongest
