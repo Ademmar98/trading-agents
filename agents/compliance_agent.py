@@ -146,6 +146,18 @@ class ComplianceAgent(BaseAgent):
         bellwether_moves = scan.get("bellwether_moves") or {}
         held_symbols = [p["symbol"] for p in open_positions]
 
+        # Regime deployment dial: the firm sits in cash in bad regimes. If the
+        # equity already deployed meets the regime's target, block new entries
+        # (exits always run). Volatile/downtrend target is 0 -> full cash.
+        regime_scan = self.memory.read("analyses", "regime_scan") or {}
+        deploy_target = regime_scan.get("deployment_target")
+        deployed_pct = (portfolio.positions_value / equity) if equity else 0
+        regime_full = deploy_target is not None and deployed_pct >= deploy_target
+        if regime_full:
+            warnings.append(
+                f"Regime '{regime_scan.get('firm_regime', '?')}' deployment cap "
+                f"{deploy_target:.0%} reached (deployed {deployed_pct:.0%}) — no new entries")
+
         approved = []
         rejected = []
         for opp in candidates:
@@ -164,6 +176,9 @@ class ComplianceAgent(BaseAgent):
                 reasons.append("Market closed for this symbol")
             if heat_full:
                 reasons.append(f"Portfolio heat {heat_pct:.1f}% at cap")
+            if regime_full:
+                reasons.append(
+                    f"Regime '{regime_scan.get('firm_regime', '?')}' deployment cap reached — sitting in cash")
             if MAX_POSITIONS_PER_CLUSTER > 0:
                 cluster = classify_symbol(opp.get("symbol", ""))
                 if cluster_counts.get(cluster, 0) >= MAX_POSITIONS_PER_CLUSTER:

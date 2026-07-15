@@ -1,0 +1,940 @@
+{
+  "generated_at_utc": "2026-07-15T07:00:02.551519+00:00",
+  "config": {
+    "symbols": [
+      "BTC/USD",
+      "ETH/USD",
+      "SOL/USD",
+      "BNB/USD",
+      "XRP/USD",
+      "ADA/USD",
+      "DOGE/USD",
+      "DOT/USD",
+      "AVAX/USD",
+      "LINK/USD",
+      "UNI/USD",
+      "ATOM/USD",
+      "LTC/USD",
+      "BCH/USD",
+      "TRX/USD",
+      "AAVE/USD"
+    ],
+    "tf": "15m",
+    "bars": 8000,
+    "round_trip_cost_pct": 0.16,
+    "atr_sl_mult": 1.5,
+    "target_r": 2.0,
+    "max_hold": 48,
+    "min_meaningful_n": 200
+  },
+  "results": [
+    {
+      "strategy": "ICT - Order Block",
+      "n": 26,
+      "win_rate": 34.61538461538461,
+      "mean_r": -0.2671222188325619,
+      "mean_pct": -0.043991195533448275,
+      "sd": 1.42628913755652,
+      "t": -0.95496864589103,
+      "ci_lo": -0.8153701127969923,
+      "ci_hi": 0.28112567513186865,
+      "low_sample": true
+    },
+    {
+      "strategy": "Classic - Keltner Channel",
+      "n": 2002,
+      "win_rate": 34.065934065934066,
+      "mean_r": -0.3072195346829211,
+      "mean_pct": -0.15557795004864633,
+      "sd": 1.3936633830566874,
+      "t": -9.863316608256344,
+      "ci_lo": -0.36826900839387144,
+      "ci_hi": -0.2461700609719708,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - Bollinger",
+      "n": 2516,
+      "win_rate": 34.22098569157392,
+      "mean_r": -0.3223323203849263,
+      "mean_pct": -0.15910477799947298,
+      "sd": 1.40244478477685,
+      "t": -11.528515854554376,
+      "ci_lo": -0.3771330732246661,
+      "ci_hi": -0.26753156754518653,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - VWAP",
+      "n": 2112,
+      "win_rate": 33.90151515151515,
+      "mean_r": -0.33261375810429805,
+      "mean_pct": -0.17332201204279232,
+      "sd": 1.395540911246925,
+      "t": -10.95329018379458,
+      "ci_lo": -0.3921322183062331,
+      "ci_hi": -0.273095297902363,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - MFI",
+      "n": 418,
+      "win_rate": 34.688995215311,
+      "mean_r": -0.33557618606952344,
+      "mean_pct": -0.1819202635285308,
+      "sd": 1.3922387214625005,
+      "t": -4.927941758006572,
+      "ci_lo": -0.4690455647665492,
+      "ci_hi": -0.2021068073724977,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - Stochastic RSI",
+      "n": 2812,
+      "win_rate": 33.392603129445234,
+      "mean_r": -0.33935997378074084,
+      "mean_pct": -0.19070268906011142,
+      "sd": 1.375283632979591,
+      "t": -13.085068522135185,
+      "ci_lo": -0.3901923822992799,
+      "ci_hi": -0.2885275652622018,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - SMA Crossover",
+      "n": 1037,
+      "win_rate": 33.94406943105111,
+      "mean_r": -0.3499259781135602,
+      "mean_pct": -0.19405738469043043,
+      "sd": 1.382815648999763,
+      "t": -8.148942956483411,
+      "ci_lo": -0.4340908717402731,
+      "ci_hi": -0.26576108448684727,
+      "low_sample": false
+    },
+    {
+      "strategy": "ICT - OTE",
+      "n": 1883,
+      "win_rate": 33.457249070631974,
+      "mean_r": -0.350849981777488,
+      "mean_pct": -0.2000393078808929,
+      "sd": 1.3862643180270302,
+      "t": -10.982483855801053,
+      "ci_lo": -0.41346477578154606,
+      "ci_hi": -0.28823518777342994,
+      "low_sample": false
+    },
+    {
+      "strategy": "ICT - BOS/CHoCH",
+      "n": 1304,
+      "win_rate": 33.12883435582822,
+      "mean_r": -0.3575226423395956,
+      "mean_pct": -0.21552246763019067,
+      "sd": 1.3818480519689453,
+      "t": -9.342907658147546,
+      "ci_lo": -0.4325254578040638,
+      "ci_hi": -0.28251982687512733,
+      "low_sample": false
+    },
+    {
+      "strategy": "PA - Pivot Reversal",
+      "n": 3422,
+      "win_rate": 31.472822910578607,
+      "mean_r": -0.3603266945174534,
+      "mean_pct": -0.24997259734997848,
+      "sd": 1.3460641927368602,
+      "t": -15.659239581670946,
+      "ci_lo": -0.40542724474345926,
+      "ci_hi": -0.3152261442914476,
+      "low_sample": false
+    },
+    {
+      "strategy": "PA - Volume Breakout",
+      "n": 3343,
+      "win_rate": 32.66527071492671,
+      "mean_r": -0.36909970438259754,
+      "mean_pct": -0.21650158955993926,
+      "sd": 1.3722926371415973,
+      "t": -15.551244606290803,
+      "ci_lo": -0.4156191591854142,
+      "ci_hi": -0.3225802495797809,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - EMA Cross 9/21",
+      "n": 1953,
+      "win_rate": 33.07731694828469,
+      "mean_r": -0.3703710301192249,
+      "mean_pct": -0.22339456948026076,
+      "sd": 1.374114713159614,
+      "t": -11.911463967059632,
+      "ci_lo": -0.43131460691559387,
+      "ci_hi": -0.3094274533228559,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - ATR Breakout",
+      "n": 4355,
+      "win_rate": 32.76693455797933,
+      "mean_r": -0.37083032011488015,
+      "mean_pct": -0.20759020424778768,
+      "sd": 1.377467584058888,
+      "t": -17.76592925229784,
+      "ci_lo": -0.41174162945892456,
+      "ci_hi": -0.32991901077083574,
+      "low_sample": false
+    },
+    {
+      "strategy": "PA - Heikin-Ashi",
+      "n": 3422,
+      "win_rate": 33.10929281122151,
+      "mean_r": -0.3724082333102599,
+      "mean_pct": -0.1822080028225649,
+      "sd": 1.390609562170647,
+      "t": -15.665853653432256,
+      "ci_lo": -0.4190012982932326,
+      "ci_hi": -0.3258151683272872,
+      "low_sample": false
+    },
+    {
+      "strategy": "ICT - Liquidity Sweep",
+      "n": 3417,
+      "win_rate": 32.39683933274802,
+      "mean_r": -0.373756604780851,
+      "mean_pct": -0.21712447959582204,
+      "sd": 1.374441960420342,
+      "t": -15.895894073476041,
+      "ci_lo": -0.41984164674101515,
+      "ci_hi": -0.3276715628206868,
+      "low_sample": false
+    },
+    {
+      "strategy": "PA - Engulfing",
+      "n": 1490,
+      "win_rate": 31.812080536912752,
+      "mean_r": -0.3812884822995888,
+      "mean_pct": -0.23333254864441147,
+      "sd": 1.3656707375468744,
+      "t": -10.77707281088474,
+      "ci_lo": -0.4506324904937621,
+      "ci_hi": -0.3119444741054155,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - MACD",
+      "n": 2995,
+      "win_rate": 32.487479131886474,
+      "mean_r": -0.3823046436562431,
+      "mean_pct": -0.22316601471509054,
+      "sd": 1.37360623184597,
+      "t": -15.231607294237806,
+      "ci_lo": -0.43149952421554605,
+      "ci_hi": -0.3331097630969402,
+      "low_sample": false
+    },
+    {
+      "strategy": "PA - S/R Levels",
+      "n": 5908,
+      "win_rate": 32.48138117806364,
+      "mean_r": -0.38279616682443074,
+      "mean_pct": -0.21102906121492726,
+      "sd": 1.374879542338208,
+      "t": -21.400463210481163,
+      "ci_lo": -0.417855243798448,
+      "ci_hi": -0.34773708985041346,
+      "low_sample": false
+    },
+    {
+      "strategy": "PA - Double Top/Bot",
+      "n": 3511,
+      "win_rate": 32.44090002848191,
+      "mean_r": -0.38714618568926706,
+      "mean_pct": -0.20179965321407187,
+      "sd": 1.3809428898499658,
+      "t": -16.611723021532942,
+      "ci_lo": -0.43282516329847476,
+      "ci_hi": -0.34146720808005937,
+      "low_sample": false
+    },
+    {
+      "strategy": "ICT - Market Structure",
+      "n": 2667,
+      "win_rate": 31.871016122984624,
+      "mean_r": -0.3958668669292199,
+      "mean_pct": -0.22557214740011353,
+      "sd": 1.3579335202863743,
+      "t": -15.055048288627463,
+      "ci_lo": -0.4474043342495594,
+      "ci_hi": -0.3443293996088804,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - VPT",
+      "n": 4863,
+      "win_rate": 31.23586263623278,
+      "mean_r": -0.4008915109294608,
+      "mean_pct": -0.2384278641284943,
+      "sd": 1.362261469099999,
+      "t": -20.521945113840033,
+      "ci_lo": -0.43917966329820646,
+      "ci_hi": -0.3626033585607151,
+      "low_sample": false
+    },
+    {
+      "strategy": "PA - Inside Bar",
+      "n": 2990,
+      "win_rate": 32.274247491638796,
+      "mean_r": -0.40279771934857583,
+      "mean_pct": -0.23374750779036882,
+      "sd": 1.3678717849847486,
+      "t": -16.101902982274275,
+      "ci_lo": -0.45182816815902443,
+      "ci_hi": -0.35376727053812723,
+      "low_sample": false
+    },
+    {
+      "strategy": "PA - Pin Bar",
+      "n": 3969,
+      "win_rate": 31.368102796674226,
+      "mean_r": -0.4145831035441372,
+      "mean_pct": -0.2224321243264323,
+      "sd": 1.3599778395113291,
+      "t": -19.205265530404304,
+      "ci_lo": -0.456893525217823,
+      "ci_hi": -0.37227268187045137,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - Ichimoku",
+      "n": 3184,
+      "win_rate": 30.967336683417084,
+      "mean_r": -0.4273160556663045,
+      "mean_pct": -0.256981027710579,
+      "sd": 1.3533134593176999,
+      "t": -17.817113206561686,
+      "ci_lo": -0.4743236409802659,
+      "ci_hi": -0.38030847035234305,
+      "low_sample": false
+    },
+    {
+      "strategy": "Classic - ADX",
+      "n": 4179,
+      "win_rate": 30.725053840631727,
+      "mean_r": -0.42963415852372344,
+      "mean_pct": -0.25135274245990563,
+      "sd": 1.3535146308838837,
+      "t": -20.519748522471946,
+      "ci_lo": -0.47067184228404346,
+      "ci_hi": -0.3885964747634034,
+      "low_sample": false
+    }
+  ],
+  "survivors": [],
+  "same_bet_pairs": [
+    {
+      "a": "ICT - Liquidity Sweep",
+      "b": "Classic - MACD",
+      "r": 0.9
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "Classic - VPT",
+      "r": 0.898
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "ICT - Liquidity Sweep",
+      "r": 0.892
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "ICT - Liquidity Sweep",
+      "r": 0.889
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "Classic - ATR Breakout",
+      "r": 0.886
+    },
+    {
+      "a": "Classic - MACD",
+      "b": "Classic - VPT",
+      "r": 0.88
+    },
+    {
+      "a": "Classic - Bollinger",
+      "b": "Classic - VWAP",
+      "r": 0.875
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "Classic - MACD",
+      "r": 0.867
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "Classic - VPT",
+      "r": 0.865
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "ICT - Liquidity Sweep",
+      "r": 0.862
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "Classic - MACD",
+      "r": 0.86
+    },
+    {
+      "a": "ICT - Liquidity Sweep",
+      "b": "Classic - VPT",
+      "r": 0.855
+    },
+    {
+      "a": "ICT - Liquidity Sweep",
+      "b": "PA - Double Top/Bot",
+      "r": 0.845
+    },
+    {
+      "a": "Classic - VPT",
+      "b": "Classic - ADX",
+      "r": 0.842
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "PA - Inside Bar",
+      "r": 0.838
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "PA - S/R Levels",
+      "r": 0.837
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "PA - S/R Levels",
+      "r": 0.825
+    },
+    {
+      "a": "ICT - Liquidity Sweep",
+      "b": "PA - Engulfing",
+      "r": 0.817
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "PA - Inside Bar",
+      "r": 0.814
+    },
+    {
+      "a": "PA - Engulfing",
+      "b": "Classic - VPT",
+      "r": 0.812
+    },
+    {
+      "a": "PA - Engulfing",
+      "b": "Classic - MACD",
+      "r": 0.812
+    },
+    {
+      "a": "ICT - Liquidity Sweep",
+      "b": "PA - Inside Bar",
+      "r": 0.811
+    },
+    {
+      "a": "Classic - MACD",
+      "b": "PA - Inside Bar",
+      "r": 0.811
+    },
+    {
+      "a": "PA - Engulfing",
+      "b": "PA - Inside Bar",
+      "r": 0.81
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "Classic - ADX",
+      "r": 0.809
+    },
+    {
+      "a": "ICT - Liquidity Sweep",
+      "b": "PA - S/R Levels",
+      "r": 0.805
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "PA - Engulfing",
+      "r": 0.804
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "Classic - MACD",
+      "r": 0.804
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "PA - S/R Levels",
+      "r": 0.803
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "PA - Engulfing",
+      "r": 0.802
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "Classic - ADX",
+      "r": 0.793
+    },
+    {
+      "a": "Classic - Bollinger",
+      "b": "PA - S/R Levels",
+      "r": 0.792
+    },
+    {
+      "a": "Classic - Keltner Channel",
+      "b": "Classic - Bollinger",
+      "r": 0.791
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "PA - Pivot Reversal",
+      "r": 0.789
+    },
+    {
+      "a": "PA - S/R Levels",
+      "b": "PA - Inside Bar",
+      "r": 0.788
+    },
+    {
+      "a": "Classic - VPT",
+      "b": "PA - Inside Bar",
+      "r": 0.788
+    },
+    {
+      "a": "Classic - Bollinger",
+      "b": "Classic - Stochastic RSI",
+      "r": 0.784
+    },
+    {
+      "a": "PA - Engulfing",
+      "b": "PA - S/R Levels",
+      "r": 0.777
+    },
+    {
+      "a": "PA - S/R Levels",
+      "b": "PA - Double Top/Bot",
+      "r": 0.777
+    },
+    {
+      "a": "PA - Double Top/Bot",
+      "b": "PA - Pin Bar",
+      "r": 0.777
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "PA - Engulfing",
+      "r": 0.776
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "Classic - VPT",
+      "r": 0.773
+    },
+    {
+      "a": "Classic - VWAP",
+      "b": "PA - S/R Levels",
+      "r": 0.771
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "PA - Double Top/Bot",
+      "r": 0.765
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "PA - Inside Bar",
+      "r": 0.76
+    },
+    {
+      "a": "PA - S/R Levels",
+      "b": "Classic - ADX",
+      "r": 0.759
+    },
+    {
+      "a": "PA - Volume Breakout",
+      "b": "Classic - VPT",
+      "r": 0.755
+    },
+    {
+      "a": "PA - S/R Levels",
+      "b": "Classic - VPT",
+      "r": 0.752
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "PA - Double Top/Bot",
+      "r": 0.748
+    },
+    {
+      "a": "Classic - MACD",
+      "b": "PA - S/R Levels",
+      "r": 0.748
+    },
+    {
+      "a": "PA - Double Top/Bot",
+      "b": "Classic - VPT",
+      "r": 0.746
+    },
+    {
+      "a": "Classic - VWAP",
+      "b": "Classic - Stochastic RSI",
+      "r": 0.744
+    },
+    {
+      "a": "PA - S/R Levels",
+      "b": "PA - Pin Bar",
+      "r": 0.744
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "PA - Pin Bar",
+      "r": 0.743
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "PA - S/R Levels",
+      "r": 0.74
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "PA - Double Top/Bot",
+      "r": 0.739
+    },
+    {
+      "a": "PA - Volume Breakout",
+      "b": "Classic - ATR Breakout",
+      "r": 0.738
+    },
+    {
+      "a": "Classic - MACD",
+      "b": "Classic - ADX",
+      "r": 0.736
+    },
+    {
+      "a": "Classic - EMA Cross 9/21",
+      "b": "Classic - ADX",
+      "r": 0.734
+    },
+    {
+      "a": "Classic - MACD",
+      "b": "PA - Double Top/Bot",
+      "r": 0.73
+    },
+    {
+      "a": "PA - Inside Bar",
+      "b": "Classic - ADX",
+      "r": 0.73
+    },
+    {
+      "a": "PA - Engulfing",
+      "b": "PA - Double Top/Bot",
+      "r": 0.728
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "ICT - OTE",
+      "r": 0.727
+    },
+    {
+      "a": "ICT - Liquidity Sweep",
+      "b": "PA - Pin Bar",
+      "r": 0.725
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "Classic - ATR Breakout",
+      "r": 0.723
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "PA - Pin Bar",
+      "r": 0.722
+    },
+    {
+      "a": "Classic - MACD",
+      "b": "PA - Pin Bar",
+      "r": 0.722
+    },
+    {
+      "a": "PA - Engulfing",
+      "b": "Classic - ADX",
+      "r": 0.72
+    },
+    {
+      "a": "Classic - Bollinger",
+      "b": "ICT - OTE",
+      "r": 0.72
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "PA - Volume Breakout",
+      "r": 0.717
+    },
+    {
+      "a": "Classic - Keltner Channel",
+      "b": "Classic - Stochastic RSI",
+      "r": 0.715
+    },
+    {
+      "a": "Classic - EMA Cross 9/21",
+      "b": "Classic - ATR Breakout",
+      "r": 0.712
+    },
+    {
+      "a": "Classic - Ichimoku",
+      "b": "Classic - ADX",
+      "r": 0.711
+    },
+    {
+      "a": "Classic - EMA Cross 9/21",
+      "b": "Classic - Ichimoku",
+      "r": 0.709
+    },
+    {
+      "a": "Classic - VPT",
+      "b": "PA - Pin Bar",
+      "r": 0.707
+    },
+    {
+      "a": "ICT - Liquidity Sweep",
+      "b": "Classic - ADX",
+      "r": 0.698
+    },
+    {
+      "a": "PA - Double Top/Bot",
+      "b": "Classic - ADX",
+      "r": 0.694
+    },
+    {
+      "a": "Classic - EMA Cross 9/21",
+      "b": "Classic - VPT",
+      "r": 0.693
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "ICT - Liquidity Sweep",
+      "r": 0.689
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "PA - Inside Bar",
+      "r": 0.688
+    },
+    {
+      "a": "PA - Volume Breakout",
+      "b": "PA - Pin Bar",
+      "r": 0.675
+    },
+    {
+      "a": "PA - Volume Breakout",
+      "b": "Classic - MACD",
+      "r": 0.672
+    },
+    {
+      "a": "PA - Volume Breakout",
+      "b": "ICT - Liquidity Sweep",
+      "r": 0.664
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "Classic - EMA Cross 9/21",
+      "r": 0.662
+    },
+    {
+      "a": "PA - Volume Breakout",
+      "b": "Classic - ADX",
+      "r": 0.659
+    },
+    {
+      "a": "Classic - Bollinger",
+      "b": "ICT - Liquidity Sweep",
+      "r": 0.658
+    },
+    {
+      "a": "PA - Inside Bar",
+      "b": "PA - Pin Bar",
+      "r": 0.656
+    },
+    {
+      "a": "Classic - ATR Breakout",
+      "b": "ICT - Market Structure",
+      "r": 0.655
+    },
+    {
+      "a": "ICT - BOS/CHoCH",
+      "b": "PA - Volume Breakout",
+      "r": 0.653
+    },
+    {
+      "a": "PA - Double Top/Bot",
+      "b": "PA - Inside Bar",
+      "r": 0.652
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "Classic - ADX",
+      "r": 0.651
+    },
+    {
+      "a": "PA - Heikin-Ashi",
+      "b": "ICT - Market Structure",
+      "r": 0.651
+    },
+    {
+      "a": "PA - Engulfing",
+      "b": "PA - Pin Bar",
+      "r": 0.651
+    },
+    {
+      "a": "PA - Pin Bar",
+      "b": "Classic - ADX",
+      "r": 0.65
+    },
+    {
+      "a": "PA - Heikin-Ashi",
+      "b": "PA - S/R Levels",
+      "r": 0.646
+    },
+    {
+      "a": "ICT - BOS/CHoCH",
+      "b": "Classic - EMA Cross 9/21",
+      "r": 0.643
+    },
+    {
+      "a": "Classic - Keltner Channel",
+      "b": "Classic - VWAP",
+      "r": 0.643
+    },
+    {
+      "a": "Classic - VWAP",
+      "b": "ICT - OTE",
+      "r": 0.641
+    },
+    {
+      "a": "PA - Heikin-Ashi",
+      "b": "ICT - Liquidity Sweep",
+      "r": 0.64
+    },
+    {
+      "a": "ICT - Market Structure",
+      "b": "Classic - ADX",
+      "r": 0.637
+    },
+    {
+      "a": "Classic - Bollinger",
+      "b": "PA - Inside Bar",
+      "r": 0.636
+    },
+    {
+      "a": "PA - Heikin-Ashi",
+      "b": "PA - Double Top/Bot",
+      "r": 0.636
+    },
+    {
+      "a": "PA - S/R Levels",
+      "b": "ICT - Market Structure",
+      "r": 0.635
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "PA - Double Top/Bot",
+      "r": 0.634
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "PA - Pivot Reversal",
+      "r": 0.632
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "PA - Engulfing",
+      "r": 0.631
+    },
+    {
+      "a": "Classic - Keltner Channel",
+      "b": "PA - S/R Levels",
+      "r": 0.63
+    },
+    {
+      "a": "PA - Pivot Reversal",
+      "b": "ICT - Market Structure",
+      "r": 0.629
+    },
+    {
+      "a": "Classic - VPT",
+      "b": "Classic - Ichimoku",
+      "r": 0.621
+    },
+    {
+      "a": "Classic - EMA Cross 9/21",
+      "b": "ICT - Liquidity Sweep",
+      "r": 0.621
+    },
+    {
+      "a": "Classic - EMA Cross 9/21",
+      "b": "PA - Inside Bar",
+      "r": 0.618
+    },
+    {
+      "a": "Classic - VWAP",
+      "b": "PA - Inside Bar",
+      "r": 0.617
+    },
+    {
+      "a": "PA - Volume Breakout",
+      "b": "Classic - EMA Cross 9/21",
+      "r": 0.617
+    },
+    {
+      "a": "ICT - OTE",
+      "b": "PA - Pin Bar",
+      "r": 0.615
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "PA - Pin Bar",
+      "r": 0.614
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "Classic - ATR Breakout",
+      "r": 0.612
+    },
+    {
+      "a": "PA - Volume Breakout",
+      "b": "PA - Double Top/Bot",
+      "r": 0.61
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "Classic - MACD",
+      "r": 0.606
+    },
+    {
+      "a": "Classic - VWAP",
+      "b": "ICT - Liquidity Sweep",
+      "r": 0.605
+    },
+    {
+      "a": "PA - Volume Breakout",
+      "b": "PA - Engulfing",
+      "r": 0.601
+    },
+    {
+      "a": "Classic - Stochastic RSI",
+      "b": "ICT - Market Structure",
+      "r": 0.6
+    }
+  ]
+}

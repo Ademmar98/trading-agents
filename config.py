@@ -60,6 +60,32 @@ LIMIT_ORDER_TTL_MIN = int(os.getenv("LIMIT_ORDER_TTL_MIN", "60"))
 # Entry: price above/below EMA (trend filter) + MACD crossover in the trend
 # direction + RSI guard against buying tops / selling bottoms.
 # Exits: SL = SCALP_ATR_SL_MULT x ATR(14); TP from the win-rate/R:R matrix.
+# ── Signal policy (Phase 1 evidence, 2026-07-15) ──
+# The 28-strategy classic battery (core/strategies.py) was proven to have
+# NEGATIVE net expectancy after costs on EVERY strategy and in EVERY regime —
+# analysis/strategy_expectancy.py: 0 of 24 survivors, t-stats -5 to -21 over
+# ~70k trades. They (and the multiframe aggregator + the scalping_signals
+# scorer built on the same signals) are disabled as live sources. The library
+# stays for backtesting/analysis; the firm now trades only scalp15 + swing.
+CLASSIC_STRATEGIES_ENABLED = os.getenv("CLASSIC_STRATEGIES_ENABLED", "false").lower() == "true"
+
+# ── Regime deployment dial ──
+# Target fraction of equity deployed, driven by the firm regime (BTC leads
+# crypto). At/above target -> no new entries (sit in cash). Volatile or
+# downtrend -> 0.0 = full cash. This is how the firm survives chop to catch
+# the good days, instead of bleeding fees in every regime.
+REGIME_DEPLOYMENT = {
+    "strong_trending_up": 0.85,
+    "trending_up": 0.70,
+    "trending": 0.50,
+    "weak_trending_up": 0.40,
+    "ranging": 0.20,
+    "volatile": 0.0,
+    "trending_down": 0.0,
+    "unknown": 0.20,
+}
+TREND_STRENGTH_ADX_THRESHOLD = float(os.getenv("TREND_STRENGTH_ADX_THRESHOLD", "35"))
+
 SCALP_15M_ENABLED = os.getenv("SCALP_15M_ENABLED", "true").lower() == "true"
 # The same EMA/MACD/RSI stack runs independently on every listed timeframe;
 # each gets its own strategy tag (scalp_1m ... scalp_4h) so the learning

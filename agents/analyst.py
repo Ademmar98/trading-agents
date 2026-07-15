@@ -4,7 +4,7 @@ import concurrent.futures
 from config import (
     WATCHED_SYMBOLS, TRADING_TIMEFRAME, BACKTEST_BARS, SCALP_15M_ENABLED,
     SCALP_TIMEFRAMES, BUY_ONLY, MAX_TP_PCT, MACRO_BELLWETHERS,
-    SWING_ENABLED, SWING_SCAN_INTERVAL_MIN,
+    SWING_ENABLED, SWING_SCAN_INTERVAL_MIN, CLASSIC_STRATEGIES_ENABLED,
 )
 from agents.base_agent import BaseAgent
 from core.market import MarketData
@@ -168,8 +168,15 @@ class ResearchAnalyst(BaseAgent):
                             indicators["vwap"] = v
                 except Exception:
                     pass  # daily values stay; the MAX_SL_PCT cap still guards
-                mtf_signal = analyze_symbol_multiframe(symbol)
-                scalping_signal = analyze_symbol_mtf(symbol)
+                # The classic 28-strategy battery + its multiframe/scoring
+                # aggregators were proven net-negative in every regime
+                # (Phase 1). Off by default; the library remains for backtests.
+                if CLASSIC_STRATEGIES_ENABLED:
+                    mtf_signal = analyze_symbol_multiframe(symbol)
+                    scalping_signal = analyze_symbol_mtf(symbol)
+                else:
+                    mtf_signal = None
+                    scalping_signal = None
                 regime = symbol_regimes.get(symbol, {}).get("regime") if symbol_regimes else None
                 scalp_sigs = []
                 if SCALP_15M_ENABLED:
@@ -193,10 +200,13 @@ class ResearchAnalyst(BaseAgent):
                         swing_sig = swing_signal(symbol, d1 or None, h4 or None, regime=regime)
                     except Exception:
                         swing_sig = None
-                signals = scan_symbol(ohlc, regime=regime, exclude_strategies=bad_strats) if ohlc and len(ohlc) >= 30 else []
-                if BUY_ONLY:
-                    # Firm policy: all analytical effort goes into longs
-                    signals = [s for s in signals if s.get("action") == "BUY"]
+                if CLASSIC_STRATEGIES_ENABLED and ohlc and len(ohlc) >= 30:
+                    signals = scan_symbol(ohlc, regime=regime, exclude_strategies=bad_strats)
+                    if BUY_ONLY:
+                        # Firm policy: all analytical effort goes into longs
+                        signals = [s for s in signals if s.get("action") == "BUY"]
+                else:
+                    signals = []
                 # 30d daily returns so the RiskManager can correlate pairs
                 # from shared memory without its own data fetches
                 closes = [h.get("close") for h in (hist or []) if h.get("close")]
