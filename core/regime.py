@@ -118,5 +118,8 @@ def _bb(closes, period=20):
         v = sum((c - s) ** 2 for c in closes[i - period:i]) / period
         sd = v ** 0.5
         all_bb.append(2 * sd / s * 100 if s > 0 else 0)
-    avg_width = sum(all_bb[-20:]) / min(len(all_bb[-20:]), 1) if all_bb else bb_width
+    # max(), not min(): min(n, 1) is always 1, which made this a SUM rather than
+    # a mean (~20x too large), so the `bb_width > bb_avg_width * 1.5` volatile
+    # trigger in detect_regime could never fire. Found in AUDIT.md sec. 4.
+    avg_width = sum(all_bb[-20:]) / max(len(all_bb[-20:]), 1) if all_bb else bb_width
     return bb_width, avg_width

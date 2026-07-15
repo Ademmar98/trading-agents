@@ -1,0 +1,112 @@
+{
+  "generated_at_utc": "2026-07-15T11:17:34.100941+00:00",
+  "days": 2422,
+  "symbols": [
+    "BTC/USD",
+    "ETH/USD",
+    "LTC/USD",
+    "BNB/USD",
+    "BCH/USD",
+    "ADA/USD",
+    "XRP/USD"
+  ],
+  "cost_per_side_pct": 0.08,
+  "results": [
+    {
+      "strategy": "A. buy&hold BNB/USD",
+      "total_pct": 3623.7418964418375,
+      "cagr_pct": 72.4843137189815,
+      "sharpe": 1.0628721056738586,
+      "max_dd_pct": 70.86445315388596,
+      "trades": 1
+    },
+    {
+      "strategy": "A. buy&hold ETH/USD",
+      "total_pct": 1148.314755838641,
+      "cagr_pct": 46.29117383897607,
+      "sharpe": 0.881307799585268,
+      "max_dd_pct": 79.30253453633334,
+      "trades": 1
+    },
+    {
+      "strategy": "A. buy&hold BASKET(eq-wt)",
+      "total_pct": 895.4871770178279,
+      "cagr_pct": 41.38582522594343,
+      "sharpe": 0.8494770819440443,
+      "max_dd_pct": 77.32203825388251,
+      "trades": 7
+    },
+    {
+      "strategy": "A. buy&hold BTC/USD",
+      "total_pct": 772.3933855291939,
+      "cagr_pct": 38.60124772445326,
+      "sharpe": 0.847962119785878,
+      "max_dd_pct": 76.62925431645935,
+      "trades": 1
+    },
+    {
+      "strategy": "B. trend SMA200 BASKET",
+      "total_pct": 710.7190011411793,
+      "cagr_pct": 37.07823005251958,
+      "sharpe": 0.8748259747634284,
+      "max_dd_pct": 57.085534562133525,
+      "trades": 236
+    },
+    {
+      "strategy": "B. trend SMA200 BTC only",
+      "total_pct": 623.462768590739,
+      "cagr_pct": 34.74592853913245,
+      "sharpe": 0.9292490198964446,
+      "max_dd_pct": 63.9272864739211,
+      "trades": 26
+    },
+    {
+      "strategy": "C. golden 50/200 BASKET",
+      "total_pct": 593.7791734920769,
+      "cagr_pct": 33.89786164766664,
+      "sharpe": 0.8193489421665833,
+      "max_dd_pct": 62.130567738809496,
+      "trades": 52
+    },
+    {
+      "strategy": "A. buy&hold XRP/USD",
+      "total_pct": 396.7507730919195,
+      "cagr_pct": 27.323744340845412,
+      "sharpe": 0.7249828392268138,
+      "max_dd_pct": 83.23958401465106,
+      "trades": 1
+    },
+    {
+      "strategy": "A. buy&hold ADA/USD",
+      "total_pct": 321.943091514996,
+      "cagr_pct": 24.230132182903375,
+      "sharpe": 0.7042037168702978,
+      "max_dd_pct": 95.15171948752527,
+      "trades": 1
+    },
+    {
+      "strategy": "D. XS momentum top3 (90d, 30d rebal)",
+      "total_pct": 82.83166222129404,
+      "cagr_pct": 9.51954852845953,
+      "sharpe": 0.49618750906889064,
+      "max_dd_pct": 90.7324614918613,
+      "trades": 65
+    },
+    {
+      "strategy": "A. buy&hold BCH/USD",
+      "total_pct": 8.044708155098679,
+      "cagr_pct": 1.1728796579062228,
+      "sharpe": 0.4881321237165086,
+      "max_dd_pct": 94.24882553262984,
+      "trades": 1
+    },
+    {
+      "strategy": "A. buy&hold LTC/USD",
+      "total_pct": -2.7783714468903487,
+      "cagr_pct": -0.42373220080699214,
+      "sharpe": 0.43749730014844246,
+      "max_dd_pct": 89.44816915936049,
+      "trades": 1
+    }
+  ]
+}

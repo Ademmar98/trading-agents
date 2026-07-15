@@ -79,22 +79,23 @@ LIMIT_ORDER_TTL_MIN = int(os.getenv("LIMIT_ORDER_TTL_MIN", "60"))
 # stays for backtesting/analysis; the firm now trades only scalp15 + swing.
 CLASSIC_STRATEGIES_ENABLED = os.getenv("CLASSIC_STRATEGIES_ENABLED", "false").lower() == "true"
 
-# ── Regime deployment dial ──
-# Target fraction of equity deployed, driven by the firm regime (BTC leads
-# crypto). At/above target -> no new entries (sit in cash). Volatile or
-# downtrend -> 0.0 = full cash. This is how the firm survives chop to catch
-# the good days, instead of bleeding fees in every regime.
-REGIME_DEPLOYMENT = {
-    "strong_trending_up": 0.85,
-    "trending_up": 0.70,
-    "trending": 0.50,
-    "weak_trending_up": 0.40,
-    "ranging": 0.20,
-    "volatile": 0.0,
-    "trending_down": 0.0,
-    "unknown": 0.20,
-}
-TREND_STRENGTH_ADX_THRESHOLD = float(os.getenv("TREND_STRENGTH_ADX_THRESHOLD", "35"))
+# ── Deployment dial: the ONE mechanism this firm has evidence for ──
+# Rule: deploy while the bellwether (BTC) closes above its SMA200; sit in cash
+# below it. Validated over 6.6 years incl. the 2022 bear (analysis/edge_hunt.py,
+# 2019-11 -> 2026-07): vs buy & hold BTC it cut max drawdown 76.6% -> 63.9% at a
+# HIGHER Sharpe (0.93 vs 0.85), costing ~19% of return across 26 trades.
+#
+# This is NOT alpha — it is drawdown insurance, and it is the only mechanism in
+# the codebase the data endorses. It replaces the previous ADX/regime-label dial,
+# which was never validated and sat on a arithmetic bug in core/regime.py.
+SMA200_PERIOD = int(os.getenv("SMA200_PERIOD", "200"))
+# Deployed fraction while risk-on. The backtest was fully invested; 0.85 keeps a
+# cash buffer for costs and the no-leverage (gross <= equity) invariant.
+SMA200_DEPLOY_TARGET = float(os.getenv("SMA200_DEPLOY_TARGET", "0.85"))
+# Deployment when there isn't enough history to compute the SMA200 — minimal,
+# because an unknown state is not a licence to deploy.
+SMA200_UNKNOWN_TARGET = float(os.getenv("SMA200_UNKNOWN_TARGET", "0.20"))
+FIRM_BELLWETHER = os.getenv("FIRM_BELLWETHER", "BTC/USD")
 
 # Phase 1b evidence (analysis/scalp_swing_expectancy.py, 3097 trades): the
 # scalp stack is net-negative on EVERY timeframe (1m-4h), t-stats -1.3 to -10,

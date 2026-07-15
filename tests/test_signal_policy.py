@@ -26,15 +26,41 @@ def sandbox(monkeypatch):
 
 
 class TestFirmDeployment:
-    def test_regime_to_target(self):
+    """The SMA200 dial — the only mechanism with evidence behind it
+    (analysis/edge_hunt.py, 6.6y incl. the 2022 bear)."""
+
+    def test_above_sma200_deploys(self):
         from agents.regime_agent import firm_deployment
-        assert firm_deployment("trending_up", 40) == ("strong_trending_up", 0.85)
-        assert firm_deployment("trending_up", 28) == ("trending_up", 0.70)
-        assert firm_deployment("trending_up", 10) == ("weak_trending_up", 0.40)
-        assert firm_deployment("ranging", 0)[1] == 0.20
-        assert firm_deployment("volatile", 0)[1] == 0.0
-        assert firm_deployment("trending_down", 0)[1] == 0.0
-        assert firm_deployment("unknown", 0)[1] == 0.20
+        closes = [100.0] * 199 + [120.0]        # SMA200 = 100.1, price 120
+        assert firm_deployment(closes) == ("risk_on", 0.85)
+
+    def test_below_sma200_is_full_cash(self):
+        from agents.regime_agent import firm_deployment
+        closes = [100.0] * 199 + [80.0]         # SMA200 = 99.9, price 80
+        assert firm_deployment(closes) == ("risk_off", 0.0)
+
+    def test_insufficient_history_is_minimal_not_permissive(self):
+        from agents.regime_agent import firm_deployment
+        regime, target = firm_deployment([100.0] * 50)
+        assert regime == "unknown"
+        assert target == 0.20
+
+    def test_no_data_does_not_deploy_freely(self):
+        from agents.regime_agent import firm_deployment
+        assert firm_deployment([])[1] == 0.20
+        assert firm_deployment(None)[1] == 0.20
+
+
+class TestBollingerWidthBug:
+    """AUDIT.md sec. 4: _bb divided by min(n,1)==1, making avg_width a SUM ~20x
+    too large, so detect_regime's volatile trigger could never fire."""
+
+    def test_avg_width_is_a_mean_not_a_sum(self):
+        from core.regime import _bb
+        closes = [100 + (i % 7) for i in range(120)]
+        width, avg_width = _bb(closes, 20)
+        assert avg_width < width * 5, "avg_width still looks like a sum"
+        assert avg_width > 0
 
 
 def _run(deploy_target, firm_regime="ranging", positions_value=0.0):

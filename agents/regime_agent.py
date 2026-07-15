@@ -1,25 +1,29 @@
 ﻿import time
 
 from config import (
-    WATCHED_SYMBOLS, REGIME_DEPLOYMENT, TREND_STRENGTH_ADX_THRESHOLD,
+    WATCHED_SYMBOLS, SMA200_PERIOD, SMA200_DEPLOY_TARGET,
+    SMA200_UNKNOWN_TARGET, FIRM_BELLWETHER,
 )
 from agents.base_agent import BaseAgent
 from core.market import MarketData
 from core.regime import detect_regime
 
 
-def firm_deployment(regime, adx):
-    """Map a firm regime + trend strength to a capital-deployment target.
-    Trending-up is graded by ADX: strong (>=threshold), normal (>=25), weak."""
-    key = regime or "unknown"
-    if regime == "trending_up":
-        if (adx or 0) >= TREND_STRENGTH_ADX_THRESHOLD:
-            key = "strong_trending_up"
-        elif (adx or 0) >= 25:
-            key = "trending_up"
-        else:
-            key = "weak_trending_up"
-    return key, REGIME_DEPLOYMENT.get(key, 0.20)
+def firm_deployment(bellwether_closes):
+    """The firm's capital-deployment dial — the one rule with evidence behind it.
+
+    Deploy while the bellwether closes above its SMA200; sit in cash below it.
+    Validated over 6.6 years including the 2022 bear (analysis/edge_hunt.py):
+    max drawdown 76.6% -> 63.9% at a higher Sharpe (0.93 vs 0.85) than holding.
+    Insurance, not alpha. Returns (firm_regime, deployment_target).
+    """
+    closes = [c for c in (bellwether_closes or []) if c]
+    if len(closes) < SMA200_PERIOD:
+        return "unknown", SMA200_UNKNOWN_TARGET
+    sma200 = sum(closes[-SMA200_PERIOD:]) / SMA200_PERIOD
+    if closes[-1] > sma200:
+        return "risk_on", SMA200_DEPLOY_TARGET
+    return "risk_off", 0.0
 
 
 class RegimeAgent(BaseAgent):
@@ -54,23 +58,34 @@ class RegimeAgent(BaseAgent):
             regimes[symbol] = result
             counts[result.get("regime", "unknown")] = counts.get(result.get("regime", "unknown"), 0) + 1
 
-        # Firm-wide regime + deployment target: BTC leads crypto; fall back to
-        # the most common regime if BTC is missing.
-        btc = regimes.get("BTC/USD") if isinstance(regimes.get("BTC/USD"), dict) else {}
-        base_regime = btc.get("regime")
-        if not base_regime and counts:
-            base_regime = max(counts, key=counts.get)
-        firm_regime, deployment_target = firm_deployment(base_regime, btc.get("adx", 0))
+        # Firm-wide dial: the validated SMA200 rule on the bellwether. Needs
+        # 200+ daily closes, so it is fetched independently of the per-symbol
+        # regime labels above (which remain advisory only).
+        bell_closes = []
+        try:
+            bars = self.market.get_ohlc(FIRM_BELLWETHER, days=SMA200_PERIOD + 60,
+                                        interval="1d")
+            bell_closes = [b["close"] for b in (bars or [])]
+        except Exception as e:
+            self.log(f"Bellwether fetch failed ({FIRM_BELLWETHER}): {e}")
+        firm_regime, deployment_target = firm_deployment(bell_closes)
+        sma200 = (sum(bell_closes[-SMA200_PERIOD:]) / SMA200_PERIOD
+                  if len(bell_closes) >= SMA200_PERIOD else None)
 
         report = {"symbols": regimes, "summary": counts,
                   "firm_regime": firm_regime, "deployment_target": deployment_target,
+                  "bellwether": FIRM_BELLWETHER,
+                  "bellwether_price": bell_closes[-1] if bell_closes else None,
+                  "bellwether_sma200": round(sma200, 2) if sma200 else None,
                   "timestamp": time.time()}
         self.memory.write("analyses", "regime_scan", report)
-        self.log(f"Regime scan complete: {counts} | firm={firm_regime} "
-                 f"deploy<={deployment_target:.0%}")
+        detail = (f"{FIRM_BELLWETHER} {bell_closes[-1]:,.0f} vs SMA200 {sma200:,.0f}"
+                  if sma200 else f"{FIRM_BELLWETHER} history too short")
+        self.log(f"Regime scan: {counts} | firm={firm_regime} "
+                 f"deploy<={deployment_target:.0%} ({detail})")
         if deployment_target <= 0:
             self.notifier.on_agent_action(
-                "regime", f"CASH — firm regime '{firm_regime}', no new entries")
+                "regime", f"CASH — {detail}; no new entries until it reclaims SMA200")
         dominant = max(counts, key=counts.get) if counts else "unknown"
         found_volatile = any(r.get("regime") == "volatile" for r in regimes.values() if isinstance(r, dict))
         if found_volatile:
