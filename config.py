@@ -39,6 +39,23 @@ HERMES_MODEL = os.getenv("HERMES_MODEL", "nousresearch/hermes-4-70b")
 HERMES_FALLBACK_MODEL = os.getenv("HERMES_FALLBACK_MODEL", "stepfun/step-3.7-flash:free")
 HEAD_TRADER_INTERVAL_MIN = int(os.getenv("HEAD_TRADER_INTERVAL_MIN", "60"))
 
+# ── Debate agent (adversarial bull/bear/arbiter review of the portfolio plan) ──
+# Runs after PortfolioManager and before Compliance: the top DEBATE_TOP_N
+# candidates by confidence each get a bull argument FOR, a bear argument
+# AGAINST, and an arbiter verdict in {APPROVE, DOWNGRADE, REJECT}.
+# HARD SAFETY BOUNDS: the arbiter can never create a trade, never raise
+# confidence, and never widen size — APPROVE passes through unchanged,
+# DOWNGRADE multiplies confidence by DEBATE_DOWNGRADE_MULT, REJECT removes
+# the candidate. All existing deterministic gates (compliance, execution,
+# risk) stay downstream and unchanged. Any LLM trouble fails OPEN: the plan
+# passes through untouched. DEBATE_ENABLED=false makes the agent a no-op.
+DEBATE_ENABLED = os.getenv("DEBATE_ENABLED", "true").lower() == "true"
+DEBATE_TOP_N = int(os.getenv("DEBATE_TOP_N", "3"))
+DEBATE_DOWNGRADE_MULT = float(os.getenv("DEBATE_DOWNGRADE_MULT", "0.85"))
+# Total wall-clock budget for one cycle's debates (all candidates, all
+# rounds). Per-request timeouts shrink to fit inside this budget.
+DEBATE_TIMEOUT_SEC = int(os.getenv("DEBATE_TIMEOUT_SEC", "90"))
+
 # ── Firm direction policy ──
 # BUY-only: all sell-side signal generation, analysis, and routing is
 # disabled — agents spend their entire effort on long setups. Closing an

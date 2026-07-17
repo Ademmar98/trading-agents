@@ -38,6 +38,7 @@ from agents.regime_agent import RegimeAgent
 from agents.risk_manager import RiskManager
 from agents.position_sizer import PositionSizer
 from agents.portfolio_manager import PortfolioManagerAgent
+from agents.debate_agent import DebateAgent
 from agents.compliance_agent import ComplianceAgent
 from agents.execution_agent import ExecutionAgent
 from agents.trader import Trader
@@ -197,6 +198,7 @@ CYCLE_AGENTS = (
     RiskManager,
     PositionSizer,
     PortfolioManagerAgent,
+    DebateAgent,  # adversarial bull/bear/arbiter review of the plan; bounded verdicts only
     ComplianceAgent,
     ExecutionAgent,
     Trader,
