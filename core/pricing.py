@@ -12,12 +12,17 @@ def round_sig(x, sig=6):
     return round(x, max(0, sig - 1 - floor(log10(abs(x)))))
 
 
+# risk_mult parked at 1.0 in EVERY regime until regime detection is
+# re-validated: the old ADX/regime dial was never validated and sat on an
+# arithmetic bug in core/regime.py (see config.py's SMA200 note), so letting
+# it scale position risk up or down multiplied noise. Structure kept — only
+# the sizing multipliers are neutralized; sl/tp/entry_slip are unchanged.
 REGIME_PRICING = {
-    "trending_up":   {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.10},
-    "trending_down": {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.10},
-    "trending":      {"sl_mult": 1.5, "tp_mult": 2.0, "entry_slip": 0.002, "risk_mult": 1.00},
-    "volatile":      {"sl_mult": 2.0, "tp_mult": 2.5, "entry_slip": 0.003, "risk_mult": 0.85},
-    "ranging":       {"sl_mult": 1.5, "tp_mult": 1.5, "entry_slip": 0.002, "risk_mult": 0.90},
+    "trending_up":   {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.0},
+    "trending_down": {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.0},
+    "trending":      {"sl_mult": 1.5, "tp_mult": 2.0, "entry_slip": 0.002, "risk_mult": 1.0},
+    "volatile":      {"sl_mult": 2.0, "tp_mult": 2.5, "entry_slip": 0.003, "risk_mult": 1.0},
+    "ranging":       {"sl_mult": 1.5, "tp_mult": 1.5, "entry_slip": 0.002, "risk_mult": 1.0},
 }
 
 DEFAULT_PRICING = {"sl_mult": 1.5, "tp_mult": 2.0, "entry_slip": 0.002, "risk_mult": 0.90}

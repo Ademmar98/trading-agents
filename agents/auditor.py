@@ -26,11 +26,17 @@ class Auditor(BaseAgent):
         """)
         strat_stats = {}
         for r in trade_rows:
-            s = strat_stats.setdefault(r["strategy"], {"pnls": [], "wins": 0, "total": 0})
-            s["pnls"].append(r["pnl"])
-            s["total"] += 1
-            if r["pnl"] > 0:
-                s["wins"] += 1
+            # Positions opened from a combined signal carry ALL contributing
+            # strategies pipe-joined ("a|b"). Credit the position's pnl to
+            # each contributor (contribution, not allocation) so every
+            # strategy that helped trigger the trade builds a track record —
+            # and the unprofitable-strategy exclusion can see it.
+            for strat_name in (r["strategy"] or "unknown").split("|"):
+                s = strat_stats.setdefault(strat_name, {"pnls": [], "wins": 0, "total": 0})
+                s["pnls"].append(r["pnl"])
+                s["total"] += 1
+                if r["pnl"] > 0:
+                    s["wins"] += 1
         for name, s in strat_stats.items():
             s["trades"] = s["total"]
             s["win_rate"] = (s["wins"] / s["total"] * 100) if s["total"] else 0
@@ -39,11 +45,23 @@ class Auditor(BaseAgent):
         if strat_stats:
             save_strategy_stats(strat_stats)
 
-        total_trades = len(portfolio.trades)
-        winning_trades = sum(1 for t in portfolio.trades
-                            if t.get("realized_pnl", 0) > 0)
-        losing_trades = sum(1 for t in portfolio.trades
-                           if t.get("realized_pnl", 0) < 0)
+        # Headline win rate comes from the same position-grouped SQL rows as
+        # analytics, NOT from portfolio.trades: main.sync_position_stores()
+        # (main.py:303-304) fills that list with SQL trade rows keyed `pnl`,
+        # while the paper broker appends order dicts keyed `realized_pnl`
+        # (core/broker.py:53,86). Reading only `realized_pnl` scored every
+        # synced trade as 0 and reported a 0% win rate on a book analytics
+        # measured at ~87%. Fallback keeps ledger-only deployments working.
+        if trade_rows:
+            total_trades = len(trade_rows)
+            winning_trades = sum(1 for r in trade_rows if (r["pnl"] or 0) > 0)
+            losing_trades = sum(1 for r in trade_rows if (r["pnl"] or 0) < 0)
+        else:
+            total_trades = len(portfolio.trades)
+            winning_trades = sum(1 for t in portfolio.trades
+                                if t.get("realized_pnl", t.get("pnl", 0)) > 0)
+            losing_trades = sum(1 for t in portfolio.trades
+                               if t.get("realized_pnl", t.get("pnl", 0)) < 0)
         win_rate = (winning_trades / total_trades * 100
                    ) if total_trades > 0 else 0
 

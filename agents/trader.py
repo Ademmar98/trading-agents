@@ -1,4 +1,4 @@
-﻿import time
+import time
 
 from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET
 from agents.base_agent import BaseAgent
@@ -94,7 +94,8 @@ class Trader(BaseAgent):
                     and not pending_orders.open_pending(symbol)):
                 pending_orders.place_limit(
                     symbol, vwap_v, qty, sl=sl_price, tp=tp_price,
-                    strategy=(planned.get("strategies") or [""])[0])
+                    # All contributors to the signal, pipe-joined (see below).
+                    strategy="|".join(planned.get("strategies") or [""]))
                 self.log(f"BUY {symbol}: extended {((market_price/vwap_v)-1)*100:.2f}% over VWAP — resting limit @ ${vwap_v}")
                 continue
 
@@ -102,7 +103,12 @@ class Trader(BaseAgent):
             orders_executed.append(order)
             plan_id = planned.get("plan_id")
             strategies = planned.get("strategies") or []
-            strategy = strategies[0] if strategies else ""
+            # Tag the position with EVERY strategy that contributed to the
+            # winning combined signal (pipe-joined — one position per symbol
+            # stays intact; the auditor/analytics split on "|" to score each
+            # contributor). Previously only strategies[0] was recorded, so
+            # co-contributors never accumulated a track record.
+            strategy = "|".join(strategies)
             fill_price = order.get("price") or fill_ref
             fill_qty = order.get("quantity") or qty
             if order.get("status") == "filled":

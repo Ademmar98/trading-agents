@@ -1,5 +1,5 @@
 """Tests for the firm-upgrade batch: backtester scaled-exit alignment,
-correlation de-risking, the strategy scorecard, and data-source fallbacks.
+correlation gating, the strategy scorecard, and data-source fallbacks.
 """
 import tempfile
 import time
@@ -45,7 +45,10 @@ class TestCorrelation:
 
 
 class TestCorrelationDeRisk:
-    def test_correlated_candidate_size_halved(self):
+    def test_correlated_candidate_blocked(self):
+        """A candidate >= MAX_PAIR_CORRELATION with an open position is
+        BLOCKED (max_qty=0, risk_ok=False) — halving still let the same
+        cluster through (post-mortem 2026-07-12)."""
         from agents.risk_manager import RiskManager
 
         memory = SharedMemory()
@@ -69,9 +72,8 @@ class TestCorrelationDeRisk:
 
         report = RiskManager().run()
         opp = report["approved_opportunities"][0]
-        assert opp["risk_ok"] is True  # de-risked, not blocked
-        uncorrelated_qty = min(10000 * 0.15, 10000 * 0.15) / 150.0
-        assert opp["max_qty"] == pytest.approx(uncorrelated_qty * 0.5, rel=0.01)
+        assert opp["risk_ok"] is False  # blocked, not merely de-risked
+        assert opp["max_qty"] == 0
         assert any("correlated" in r for r in report["risks"])
 
     def test_uncorrelated_candidate_untouched(self):
@@ -176,6 +178,20 @@ class TestScorecard:
         assert rows["good"]["avg_win"] == pytest.approx(5.0)
         assert rows["bad"]["avg_loss"] == pytest.approx(2.0)
 
+    def test_pipe_joined_contributors_scored_individually(self):
+        """Combined-signal trades carry every contributor pipe-joined
+        ("a|b"); each must build its own record (contribution, not allocation)."""
+        from core.analytics import _compute_strategy_stats
+
+        trades = ([{"strategy": "good|helper", "pnl": 5.0}] * 4 +
+                  [{"strategy": "good", "pnl": 5.0}] * 8 +
+                  [{"strategy": "helper", "pnl": -2.0}])
+        rows = {r["strategy"]: r for r in _compute_strategy_stats(trades)}
+        assert rows["good"]["trades"] == 12
+        assert rows["helper"]["trades"] == 5
+        assert rows["helper"]["pnl"] == pytest.approx(4 * 5.0 - 2.0)
+        assert rows["helper"]["win_rate"] == pytest.approx(80.0)
+
 
 class TestDataFallbacks:
     def test_cryptocom_timeframe_mapping(self):
@@ -226,13 +242,15 @@ class TestScalpGeometryCaps:
         assert p["sl_pct"] <= app_config.MAX_SL_PCT + 0.01
         assert p["tp_pct"] <= app_config.MAX_TP_PCT + 0.01
 
-    def test_intraday_inputs_pass_untouched(self):
-        """Realistic 15m inputs (ATR ~0.3%) produce sub-1% scalp stops."""
+    def test_intraday_inputs_floored_at_fee_safe_stop(self):
+        """Realistic 15m inputs (ATR ~0.3%) once produced sub-1% scalp stops
+        whose whole 1R was eaten by the 0.3% round-trip cost — the MIN_SL_PCT
+        fee floor now lifts them to 1.0% (geometry and R:R preserved)."""
         from core.pricing import compute_pricing
         p = compute_pricing("BTC/USD", "BUY", 60000.0,
                             {"volatility": 0.4, "bid": 59995.0, "ask": 60005.0},
-                            "trending_up", 180.0)  # ATR = 0.3%
-        assert p["sl_pct"] < 1.0
+                            "trending_up", 180.0)  # ATR = 0.3% -> raw stop 0.45%
+        assert p["sl_pct"] == pytest.approx(app_config.MIN_SL_PCT, abs=0.05)
         assert p["tp_pct"] < 2.0
         assert p["stop_loss"] < p["entry_price"] < p["take_profit"]
 
@@ -317,3 +335,44 @@ class TestNoLeveragePolicy:
         assert len(report["rejected_opportunities"]) == 1
         assert any("No-leverage policy" in r
                    for r in report["rejected_opportunities"][0]["compliance_reasons"])
+
+
+class TestPeakDrawdownHalt:
+    """The drawdown halt is anchored at PEAK equity (high-water mark from the
+    equity snapshots), not the initial balance: a book that ran up then bled
+    back past -10% from the peak must halt even while above its starting
+    capital."""
+
+    def _plan(self, memory):
+        memory.write("decisions", "portfolio_plan", {
+            "approved_opportunities": [], "timestamp": time.time(),
+        })
+
+    def test_halts_past_10pct_from_peak(self):
+        from agents.compliance_agent import ComplianceAgent
+        from core.database import execute
+
+        memory = SharedMemory()
+        self._plan(memory)
+        # Equity $10,500 (above the $10k start) vs a $12,000 high-water mark
+        # snapshotted two days ago -> -12.5% from peak. The old from-INITIAL
+        # check saw +5% and waved it through.
+        save_portfolio(Portfolio(cash=10500.0, initial_balance=10000.0))
+        execute("INSERT INTO equity_history (equity, cash, positions_value, "
+                "exposure_pct, snapped_at) VALUES (12000, 12000, 0, 0, "
+                "datetime('now', '-2 days'))")
+
+        report = ComplianceAgent().run()
+        assert report["halted"] is True
+        assert any("peak" in b for b in report["blockers"])
+
+    def test_no_halt_within_10pct_of_peak(self):
+        from agents.compliance_agent import ComplianceAgent
+
+        memory = SharedMemory()
+        self._plan(memory)
+        save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+
+        report = ComplianceAgent().run()
+        assert report["halted"] is False
+        assert report["blockers"] == []

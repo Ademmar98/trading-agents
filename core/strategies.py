@@ -235,13 +235,19 @@ def detect_rsi_divergence(ohlc):
         rsi_vals.append(v if v is not None else 50)
     if len(rsi_vals) < 10:
         return None
-    price_lows = [min(closes[i:i + 5]) for i in range(len(closes) - 10, len(closes))]
-    rsi_lows = [min(rsi_vals[i:i + 3]) for i in range(len(rsi_vals) - 10, len(rsi_vals))]
-    if len(price_lows) >= 2 and len(rsi_lows) >= 2:
-        if price_lows[-1] < price_lows[-2] and rsi_lows[-1] > rsi_lows[-2]:
-            return {"action": "BUY", "confidence": 0.7, "reasons": ["Bullish RSI divergence"]}
-        if price_lows[-1] > price_lows[-2] and rsi_lows[-1] < rsi_lows[-2]:
-            return {"action": "SELL", "confidence": 0.7, "reasons": ["Bearish RSI divergence"]}
+    # Non-overlapping pivot windows: compare the prior 5-bar window against
+    # the latest 5-bar window. The old sliding windows overlapped by 4 bars,
+    # so consecutive "lows" were nearly identical and the divergence check
+    # was comparing a window with itself.
+    win = 5
+    price_low_prior = min(closes[-win * 2:-win])
+    price_low_recent = min(closes[-win:])
+    rsi_low_prior = min(rsi_vals[-win * 2:-win])
+    rsi_low_recent = min(rsi_vals[-win:])
+    if price_low_recent < price_low_prior and rsi_low_recent > rsi_low_prior:
+        return {"action": "BUY", "confidence": 0.7, "reasons": ["Bullish RSI divergence"]}
+    if price_low_recent > price_low_prior and rsi_low_recent < rsi_low_prior:
+        return {"action": "SELL", "confidence": 0.7, "reasons": ["Bearish RSI divergence"]}
     return None
 
 
@@ -378,7 +384,8 @@ def _vwap(ohlc):
     vol_sum = sum(c["volume"] for c in ref)
     if vol_sum == 0:
         return None
-    pv_sum = sum(c["close"] * c["volume"] for c in ref)
+    # VWAP must use the typical price (H+L+C)/3, not the close.
+    pv_sum = sum(((c["high"] + c["low"] + c["close"]) / 3) * c["volume"] for c in ref)
     vwap = pv_sum / vol_sum
     current = ohlc[-1]["close"]
     bands = (max(c["high"] for c in ref) - min(c["low"] for c in ref)) / vwap
@@ -436,16 +443,23 @@ def detect_stochastic_rsi(ohlc):
 
 
 def _ichimoku(ohlc):
-    if len(ohlc) < 52:
+    # Senkou spans are displaced 26 bars FORWARD: the cloud value seen at the
+    # latest bar was computed 26 bars ago from data ending then. The old code
+    # used current-bar values for the spans (no displacement), so "price vs
+    # cloud" compared price against a cloud from the wrong time. Senkou B at
+    # the latest bar therefore needs 52 + 26 = 78 bars of history.
+    if len(ohlc) < 78:
         return None, None, None, None, None
     highs = [c["high"] for c in ohlc]
     lows = [c["low"] for c in ohlc]
     closes = [c["close"] for c in ohlc]
     tenkan = (max(highs[-9:]) + min(lows[-9:])) / 2
     kijun = (max(highs[-26:]) + min(lows[-26:])) / 2
-    senkou_a = (tenkan + kijun) / 2
-    senkou_b = (max(highs[-52:]) + min(lows[-52:])) / 2
-    chikou = closes[-26] if len(closes) > 26 else closes[-1]
+    tenkan_then = (max(highs[-35:-26]) + min(lows[-35:-26])) / 2
+    kijun_then = (max(highs[-52:-26]) + min(lows[-52:-26])) / 2
+    senkou_a = (tenkan_then + kijun_then) / 2
+    senkou_b = (max(highs[-78:-26]) + min(lows[-78:-26])) / 2
+    chikou = closes[-1]  # current close, plotted 26 bars back
     return tenkan, kijun, senkou_a, senkou_b, chikou
 
 
@@ -517,9 +531,11 @@ def detect_support_resistance(ohlc):
 def detect_donchian(ohlc, period=20):
     if len(ohlc) < period + 3:
         return None
-    recent = ohlc[-period:]
-    upper = max(c["high"] for c in recent)
-    lower = min(c["low"] for c in recent)
+    # Channel from PRIOR bars only: including the current bar puts its own
+    # high/low inside the channel, so a breakout close can never fire.
+    prior = ohlc[-period - 1:-1]
+    upper = max(c["high"] for c in prior)
+    lower = min(c["low"] for c in prior)
     current = ohlc[-1]["close"]
     if current > upper and ohlc[-2]["close"] <= upper:
         return {"action": "BUY", "confidence": 0.6, "reasons": ["Donchian breakout upper"]}
@@ -528,17 +544,25 @@ def detect_donchian(ohlc, period=20):
     return None
 
 
-def detect_heikin_ashi(ohlc):
-    if len(ohlc) < 10:
-        return None
+def _heikin_ashi(ohlc):
+    """Proper Heikin-Ashi recursion: ha_open = (prev_ha_open + prev_ha_close)/2.
+    (The old code carried only the previous ha_open forward, so the HA open
+    stayed frozen near bar 0 and the trend read was meaningless.)"""
     ha = []
     for i in range(len(ohlc)):
         c = ohlc[i]
         ha_close = (c["open"] + c["high"] + c["low"] + c["close"]) / 4
-        ha_open = ha[-1]["open"] if ha else (c["open"] + c["close"]) / 2
+        ha_open = (ha[-1]["open"] + ha[-1]["close"]) / 2 if ha else (c["open"] + c["close"]) / 2
         ha_high = max(c["high"], ha_open, ha_close)
         ha_low = min(c["low"], ha_open, ha_close)
         ha.append({"open": ha_open, "close": ha_close, "high": ha_high, "low": ha_low})
+    return ha
+
+
+def detect_heikin_ashi(ohlc):
+    if len(ohlc) < 10:
+        return None
+    ha = _heikin_ashi(ohlc)
     last5 = ha[-5:]
     green = sum(1 for c in last5 if c["close"] > c["open"])
     bodies = [abs(c["close"] - c["open"]) for c in last5]
@@ -604,10 +628,19 @@ def _adx_single(ohlc, period=14):
             minus_dm.append(down_move)
         else:
             minus_dm.append(0)
-    wilder = lambda vals: sum(vals[:period]) / period
-    atr = wilder(trs)
-    di_p = wilder(plus_dm) / atr * 100 if atr > 0 else 0
-    di_n = wilder(minus_dm) / atr * 100 if atr > 0 else 0
+    # Wilder smoothing: seed with the SMA of the first `period` values, then
+    # smooth across the WHOLE series via prev*(n-1)/n + cur/n. The old code
+    # only ever averaged the FIRST `period` values and ignored everything
+    # after, so the DX barely moved regardless of the latest price action.
+    atr = sum(trs[:period]) / period
+    sm_plus = sum(plus_dm[:period]) / period
+    sm_minus = sum(minus_dm[:period]) / period
+    for i in range(period, len(trs)):
+        atr = (atr * (period - 1) + trs[i]) / period
+        sm_plus = (sm_plus * (period - 1) + plus_dm[i]) / period
+        sm_minus = (sm_minus * (period - 1) + minus_dm[i]) / period
+    di_p = sm_plus / atr * 100 if atr > 0 else 0
+    di_n = sm_minus / atr * 100 if atr > 0 else 0
     dx = abs(di_p - di_n) / (di_p + di_n) * 100 if (di_p + di_n) > 0 else 0
     return dx
 
@@ -666,6 +699,51 @@ def detect_volume_price_trend(ohlc):
     return None
 
 
+# ---------------------------------------------------------------------------
+# New strategy families (core/strats/*), merged into ALL_STRATEGIES below.
+# Two registry conventions exist in those modules:
+#   * (display_name, fn) tuples mirroring ALL_STRATEGIES —
+#     trend_momentum.STRATEGIES, mean_reversion.MEAN_REVERSION_STRATEGIES,
+#     breakout_volatility.STRATEGIES, volume_orderflow.STRATEGIES,
+#     quant_forex_specific.STRATEGIES
+#   * (machine_tag, fn) tuples —
+#     ict_smc_priceaction.ICT_SMC_PRICEACTION_STRATEGIES; the tag itself is
+#     kept as the strategy name so per-tag attribution survives scan_symbol's
+#     combining (its own scan_ict_smc_priceaction attributes by the same tag).
+# NOTE: core/strats/volume_orderflow.py imports _swing_highs/_swing_lows from
+# this module, so these imports must stay BELOW the helper definitions, and
+# the merge is retried lazily on first use if the first attempt happened in
+# the middle of that circular import.
+# ---------------------------------------------------------------------------
+
+_FAMILY_REGISTRY_SPECS = (
+    ("core.strats.trend_momentum", "STRATEGIES"),
+    ("core.strats.mean_reversion", "MEAN_REVERSION_STRATEGIES"),
+    ("core.strats.breakout_volatility", "STRATEGIES"),
+    ("core.strats.volume_orderflow", "STRATEGIES"),
+    ("core.strats.ict_smc_priceaction", "ICT_SMC_PRICEACTION_STRATEGIES"),
+    ("core.strats.quant_forex_specific", "STRATEGIES"),
+)
+
+
+def _family_strategy_entries():
+    """Import the six core/strats family registries and normalise both
+    registry shapes into (name, fn) entries."""
+    import importlib
+    entries = []
+    for mod_name, reg_name in _FAMILY_REGISTRY_SPECS:
+        mod = importlib.import_module(mod_name)
+        for name, fn in getattr(mod, reg_name):
+            entries.append((name, fn))
+    return entries
+
+
+try:
+    _FAMILY_ENTRIES = _family_strategy_entries()
+except (ImportError, AttributeError):  # circular import in progress; retry lazily
+    _FAMILY_ENTRIES = None
+
+
 ALL_STRATEGIES = [
     ("ICT - FVG", detect_fvg),
     ("ICT - Order Block", detect_order_block),
@@ -695,34 +773,147 @@ ALL_STRATEGIES = [
     ("Classic - ADX", detect_adx),
     ("PA - Pivot Reversal", detect_pivot_reversal),
     ("Classic - VPT", detect_volume_price_trend),
+] + (_FAMILY_ENTRIES or [])
+
+
+def _ensure_family_merged():
+    """Return ALL_STRATEGIES, retrying the family merge once if the module
+    level attempt ran mid circular-import (idempotent)."""
+    global _FAMILY_ENTRIES
+    if _FAMILY_ENTRIES is None:
+        try:
+            _FAMILY_ENTRIES = _family_strategy_entries()
+        except (ImportError, AttributeError):
+            _FAMILY_ENTRIES = []
+        ALL_STRATEGIES.extend(_FAMILY_ENTRIES)
+    return ALL_STRATEGIES
+
+# Regime map. Legacy lists are preserved exactly; every new family strategy
+# is added under sensible regimes (trend families -> trending*, mean
+# reversion -> ranging, breakout/volatility -> volatile, volume/orderflow and
+# ICT/quant split by setup type, with cross-listed subsets where a strategy
+# genuinely fits two regimes). strategies_for_regime FAILS OPEN (with a
+# logged note) for any ALL_STRATEGIES name not listed in ANY regime, so
+# future additions are never silently dropped by the filter.
+# ---------------------------------------------------------------------------
+
+_TRENDING_LEGACY = [
+    "ICT - BOS/CHoCH", "ICT - Market Structure", "ICT - Order Block",
+    "Classic - SMA Crossover", "Classic - EMA Cross 9/21",
+    "Classic - MACD", "Classic - Ichimoku",
+    "Classic - Donchian Channel", "PA - Heikin-Ashi",
+    "ICT - Liquidity Sweep", "Classic - ADX",
+]
+
+_TREND_FAMILY = [n for n, _ in ALL_STRATEGIES if n.startswith("Trend - ")]
+_MR_FAMILY = [n for n, _ in ALL_STRATEGIES if n.startswith("MR - ")]
+_BREAKOUT_FAMILY = [n for n, _ in ALL_STRATEGIES
+                    if n.startswith(("Breakout - ", "Volatility - "))]
+_VO_FAMILY = [n for n, _ in ALL_STRATEGIES if n.startswith("VO - ")]
+_ICT_PA_FAMILY = [n for n, _ in ALL_STRATEGIES if n.startswith("ict_pa_")]
+
+
+def _pick(pool, names):
+    """Subset of `pool` matching `names`, in pool order."""
+    wanted = set(names)
+    return [n for n in pool if n in wanted]
+
+
+# Trend-family strategies whose logic is breakout/continuation — they also
+# belong in volatile regimes.
+_TREND_BREAKOUT_SUBSET = _pick(_TREND_FAMILY, [
+    "Trend - Turtle S1 Donchian 20/10",
+    "Trend - Turtle S2 Donchian 55/20",
+    "Trend - Ichimoku Kumo Breakout",
+    "Trend - Keltner Breakout 20/2ATR",
+    "Trend - Dual Thrust Opening Range",
+])
+
+# Breakout-family entries that are really trend-continuation setups.
+_BREAKOUT_TREND_SUBSET = _pick(_BREAKOUT_FAMILY, [
+    "Breakout - Donchian 20 (Turtle S1)",
+    "Breakout - Donchian 55 (Turtle S2)",
+    "Breakout - N-Day High Trend-Filtered",
+    "Breakout - Retest Continuation",
+    "Breakout - Volume-Confirmed Donchian",
+    "Breakout - VCP",
+    "Breakout - Keltner Channel",
+    "Volatility - Bollinger Band Walk",
+    "Volatility - TTM Squeeze",
+    "Volatility - ATR Expansion",
+])
+
+# Volume/orderflow split: trend-confirming vs mean-reverting vs breakout.
+_VO_TREND_SUBSET = _pick(_VO_FAMILY, [
+    "VO - OBV Trend Confirm", "VO - OBV Divergence", "VO - CVD Proxy Trend",
+    "VO - VWAP Pullback", "VO - AVWAP Reclaim", "VO - Volume Dry-Up",
+    "VO - Force Index Pullback", "VO - Klinger Cross", "VO - EMV Zero Cross",
+    "VO - Chaikin ADL Divergence",
+])
+_VO_RANGE_SUBSET = _pick(_VO_FAMILY, [
+    "VO - VWAP Mean Reversion", "VO - MFI Extremes", "VO - CMF Filter",
+    "VO - Climactic Reversal", "VO - POC Retest",
+])
+_VO_BREAKOUT_SUBSET = _pick(_VO_FAMILY, [
+    "VO - OBV Breakout Lead", "VO - VWAP Squeeze Break",
+    "VO - Value Area Break", "VO - LVN Vacuum", "VO - CVD Proxy Divergence",
+    "VO - RVOL Breakout", "VO - Climactic Reversal", "VO - MFI Extremes",
+])
+
+# ICT/SMC price-action split (registry names are the machine tags).
+_ICT_PA_TREND_SUBSET = _pick(_ICT_PA_FAMILY, [
+    "ict_pa_order_block", "ict_pa_breaker", "ict_pa_mitigation",
+    "ict_pa_bos_pullback", "ict_pa_choch_reversal", "ict_pa_ote",
+    "ict_pa_premium_discount", "ict_pa_unicorn", "ict_pa_power_of_three",
+    "ict_pa_silver_bullet", "ict_pa_killzone_orb", "ict_pa_engulfing",
+    "ict_pa_morning_star", "ict_pa_three_soldiers", "ict_pa_harami",
+    "ict_pa_sr_flip", "ict_pa_supply_demand",
+])
+_ICT_PA_RANGE_SUBSET = _pick(_ICT_PA_FAMILY, [
+    "ict_pa_fvg_retrace", "ict_pa_ifvg", "ict_pa_ote",
+    "ict_pa_premium_discount", "ict_pa_pin_bar", "ict_pa_doji_extreme",
+    "ict_pa_tweezer", "ict_pa_inside_bar", "ict_pa_sr_flip",
+    "ict_pa_supply_demand", "ict_pa_engulfing", "ict_pa_harami",
+])
+_ICT_PA_VOL_SUBSET = _pick(_ICT_PA_FAMILY, [
+    "ict_pa_liquidity_sweep", "ict_pa_turtle_soup", "ict_pa_judas_swing",
+    "ict_pa_fvg_retrace", "ict_pa_ifvg", "ict_pa_silver_bullet",
+    "ict_pa_killzone_orb", "ict_pa_choch_reversal", "ict_pa_doji_extreme",
+    "ict_pa_pin_bar", "ict_pa_engulfing", "ict_pa_morning_star",
+    "ict_pa_three_soldiers",
+])
+
+# Quant/forex-specific split. The three regime-switchers adapt internally,
+# so they are listed under every regime.
+_QUANT_TREND = ["Quant - TSMOM Classic", "Quant - TSMOM Ensemble"]
+_QUANT_RANGE = [
+    "Quant - OU Mean Reversion", "Quant - Range Grid", "Quant - Infinity Grid",
+    "Quant - Weekend Drift", "Quant - Turn of Month", "Quant - Time of Day",
+    "Quant - NY Close Reversion", "Quant - Post-Event Drift",
+]
+_QUANT_VOL = ["Quant - London Breakout", "Quant - Overlap ORB"]
+_QUANT_REGIME_SWITCHERS = [
+    "Quant - ADX Regime Switch", "Quant - Vol Percentile Regime",
+    "Quant - Hurst Regime",
 ]
 
 REGIME_STRATEGIES = {
-    "trending_up": [
-        "ICT - BOS/CHoCH", "ICT - Market Structure", "ICT - Order Block",
-        "Classic - SMA Crossover", "Classic - EMA Cross 9/21",
-        "Classic - MACD", "Classic - Ichimoku",
-        "Classic - Donchian Channel", "PA - Heikin-Ashi",
-        "ICT - Liquidity Sweep", "Classic - ATR Breakout",
-        "Classic - ADX",
-    ],
-    "trending_down": [
-        "ICT - BOS/CHoCH", "ICT - Market Structure", "ICT - Order Block",
-        "Classic - SMA Crossover", "Classic - EMA Cross 9/21",
-        "Classic - MACD", "Classic - Ichimoku",
-        "Classic - Donchian Channel", "PA - Heikin-Ashi",
-        "ICT - Liquidity Sweep", "Classic - ATR Breakout",
-        "Classic - ADX",
-    ],
-    "trending": [
-        "ICT - BOS/CHoCH", "ICT - Market Structure", "ICT - Order Block",
-        "Classic - SMA Crossover", "Classic - EMA Cross 9/21",
-        "Classic - MACD", "Classic - Ichimoku",
-        "Classic - Donchian Channel", "PA - Heikin-Ashi",
-        "ICT - Liquidity Sweep", "Classic - ADX",
-        "Classic - VPT",
-    ],
-    "ranging": [
+    "trending_up": (
+        _TRENDING_LEGACY + ["Classic - ATR Breakout"]
+        + _TREND_FAMILY + _BREAKOUT_TREND_SUBSET + _VO_TREND_SUBSET
+        + _ICT_PA_TREND_SUBSET + _QUANT_TREND + _QUANT_REGIME_SWITCHERS
+    ),
+    "trending_down": (
+        _TRENDING_LEGACY + ["Classic - ATR Breakout"]
+        + _TREND_FAMILY + _BREAKOUT_TREND_SUBSET + _VO_TREND_SUBSET
+        + _ICT_PA_TREND_SUBSET + _QUANT_TREND + _QUANT_REGIME_SWITCHERS
+    ),
+    "trending": (
+        _TRENDING_LEGACY + ["Classic - VPT"]
+        + _TREND_FAMILY + _BREAKOUT_TREND_SUBSET + _VO_TREND_SUBSET
+        + _ICT_PA_TREND_SUBSET + _QUANT_TREND + _QUANT_REGIME_SWITCHERS
+    ),
+    "ranging": ([
         "ICT - OTE", "ICT - FVG", "ICT - Order Block",
         "Classic - Bollinger", "Classic - RSI Divergence",
         "Classic - Stochastic RSI", "Classic - Keltner Channel",
@@ -730,28 +921,62 @@ REGIME_STRATEGIES = {
         "PA - Double Top/Bot", "PA - S/R Levels",
         "Classic - VWAP", "Classic - MFI",
         "PA - Pivot Reversal", "Classic - VPT",
-    ],
-    "volatile": [
+    ]
+        + _MR_FAMILY + _VO_RANGE_SUBSET + _ICT_PA_RANGE_SUBSET
+        + _QUANT_RANGE + _QUANT_REGIME_SWITCHERS
+    ),
+    "volatile": ([
         "ICT - FVG", "ICT - Liquidity Sweep",
         "Classic - ATR Breakout", "PA - Volume Breakout",
         "Classic - VWAP", "Classic - Bollinger",
         "PA - Double Top/Bot", "PA - Engulfing", "PA - Pin Bar",
         "ICT - Order Block", "PA - Pivot Reversal",
         "Classic - VPT",
-    ],
+    ]
+        + _BREAKOUT_FAMILY + _TREND_BREAKOUT_SUBSET + _VO_BREAKOUT_SUBSET
+        + _ICT_PA_VOL_SUBSET + _QUANT_VOL + _QUANT_REGIME_SWITCHERS
+    ),
 }
+
+_REGIME_KNOWN_NAMES = None
+_fail_open_noted = set()
+
+
+def _regime_known_names():
+    global _REGIME_KNOWN_NAMES
+    if _REGIME_KNOWN_NAMES is None:
+        known = set()
+        for names in REGIME_STRATEGIES.values():
+            known.update(names)
+        _REGIME_KNOWN_NAMES = known
+    return _REGIME_KNOWN_NAMES
 
 
 def strategies_for_regime(regime):
+    _ensure_family_merged()
     names = REGIME_STRATEGIES.get(regime)
     if not names:
         return ALL_STRATEGIES
     name_set = set(names)
-    return [(n, fn) for n, fn in ALL_STRATEGIES if n in name_set]
+    known = _regime_known_names()
+    selected = []
+    for n, fn in ALL_STRATEGIES:
+        if n in name_set:
+            selected.append((n, fn))
+        elif n not in known:
+            # Fail OPEN: a strategy not listed in ANY regime still runs, so
+            # future additions are never silently dropped by the filter.
+            if n not in _fail_open_noted:
+                _log.warning(
+                    "Strategy %r is not listed in REGIME_STRATEGIES; "
+                    "failing open (it runs in every regime)", n)
+                _fail_open_noted.add(n)
+            selected.append((n, fn))
+    return selected
 
 
 def scan_symbol(ohlc, regime=None, exclude_strategies=None):
-    strategies = strategies_for_regime(regime) if regime else ALL_STRATEGIES
+    strategies = strategies_for_regime(regime) if regime else _ensure_family_merged()
     if exclude_strategies:
         exclude = set(exclude_strategies)
         strategies = [(n, fn) for n, fn in strategies if n not in exclude]
@@ -760,6 +985,14 @@ def scan_symbol(ohlc, regime=None, exclude_strategies=None):
         try:
             sig = fn(ohlc)
             if sig:
+                # Per-tag attribution: the registry name stays the canonical
+                # "strategy" (regime filtering and the unprofitable-strategy
+                # exclusion loop match on it, and signals of different
+                # strategy names are never merged into one name); a family
+                # module's embedded machine tag is preserved under "tag".
+                embedded = sig.get("strategy")
+                if embedded and embedded != name:
+                    sig.setdefault("tag", embedded)
                 sig["strategy"] = name
                 signals.append(sig)
         except Exception as e:

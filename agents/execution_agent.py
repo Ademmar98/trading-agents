@@ -1,4 +1,4 @@
-﻿import time
+import time
 from datetime import datetime, timezone
 
 from config import (
@@ -199,6 +199,10 @@ class ExecutionAgent(BaseAgent):
             action = opp.get("action", "BUY")
             plan_id = f"plan_{symbol}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S%f')}"
             rr = round(tp_pct / sl_pct, 2) if sl_pct > 0 else 0
+            # Per-strategy attribution: keep EVERY contributor to the combined
+            # signal (pipe-joined), not just the first — post-cycle analysis
+            # (auditor/analytics) splits on "|" to score each strategy.
+            contributors = "|".join(opp.get("strategies") or [])
             plan_entry = {
                 "plan_id": plan_id,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -210,7 +214,7 @@ class ExecutionAgent(BaseAgent):
                 "position_size_usd": round(entry_price * qty, 2),
                 "position_size_units": qty,
                 "confidence": opp.get("confidence", 0),
-                "strategy": (opp.get("strategies") or [None])[0] if opp.get("strategies") else "",
+                "strategy": contributors,
                 "regime": opp.get("regime", ""),
                 "rationale": ", ".join(opp.get("reasons", [])[:3]),
                 "risk_reward_ratio": rr,

@@ -270,11 +270,13 @@ class TestCorrelatedSelloffDefenses:
 
     def test_pricing_uses_atr_not_cap(self, monkeypatch):
         import core.risk as risk
+        from config import MIN_SL_PCT
         monkeypatch.setattr(risk, "MAX_SL_PCT", 5.0)
         from core.pricing import compute_pricing
-        # ATR 0.5% x trending sl_mult 1.5 = 0.75% stop — nowhere near any cap
+        # ATR 0.5% x trending sl_mult 1.5 = 0.75% stop — nowhere near the 5%
+        # cap, but below the MIN_SL_PCT noise floor, so the floor binds.
         p = compute_pricing("BTC/USD", "BUY", 60000.0,
                             {"volatility": 4.0, "bid": 59995.0, "ask": 60005.0},
                             "trending_up", 300.0)
-        assert p["sl_pct"] == pytest.approx(0.8, abs=0.1)
+        assert p["sl_pct"] == pytest.approx(max(0.75, MIN_SL_PCT), abs=0.05)
         assert p["sl_pct"] < 2.0  # the old formula would have clamped at the cap

@@ -19,7 +19,10 @@ from core.dashboard import (
 
 
 def _render(renderable):
-    console = Console(width=200, force_terminal=True, color_system=None)
+    # rich >= 14 only honors an explicit width when BOTH width and height are
+    # given (Console.size falls back to 80x25 terminal detection otherwise),
+    # which silently collapses table columns to "...".
+    console = Console(width=200, height=100, force_terminal=True, color_system=None)
     with console.capture() as cap:
         console.print(renderable)
     return cap.get()

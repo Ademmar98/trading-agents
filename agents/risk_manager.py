@@ -56,13 +56,19 @@ class RiskManager(BaseAgent):
                 max_cost = min(max_trade_size, remaining_capacity)
                 adjusted["max_qty"] = round(max_cost / opp["price"], 6) if opp["price"] > 0 else 0
                 adjusted["risk_ok"] = True
-                # Correlation de-risk: candidates moving in lockstep with an
-                # open position add beta, not diversification — halve, never block.
+                # Correlation gate: candidates moving in lockstep with an
+                # open position add beta, not diversification. Halving size
+                # still let the same cluster through the door (post-mortem
+                # 2026-07-12: six correlated alts stopped together in one
+                # dip), so past the threshold the entry is BLOCKED outright.
                 corr_hit = self._max_correlation(sym, analysis, portfolio)
                 if corr_hit:
                     other, corr = corr_hit
-                    adjusted["max_qty"] = round(adjusted["max_qty"] * 0.5, 6)
-                    risks.append(f"{sym}: {corr:.2f} correlated with open {other} — size halved")
+                    adjusted["max_qty"] = 0
+                    adjusted["risk_ok"] = False
+                    risks.append(
+                        f"SKIPPED {sym}: {corr:.2f} correlated with open {other} "
+                        f"— blocked (beta, not diversification)")
             filtered.append(adjusted)
 
         pnl = portfolio.total_pnl_pct

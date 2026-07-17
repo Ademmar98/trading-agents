@@ -31,21 +31,33 @@ def sandbox_data_dir(monkeypatch):
 
 
 def test_paper_broker_charges_fees_both_sides():
-    from core.broker import PaperBroker
+    from core.broker import PaperBroker, SLIPPAGE_PCT
 
     save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
     broker = PaperBroker()
 
+    # Market orders fill at the quote plus adverse slippage, and the fee is
+    # charged on the slipped cost basis (BUY: 50000 x 1.0005 = 50025).
+    slip = SLIPPAGE_PCT / 100.0
+    buy_fill = 50000.0 * (1 + slip)
+    sell_fill = 50000.0 * (1 - slip)
+    buy_cost = 0.1 * buy_fill
+    sell_proceeds = 0.1 * sell_fill
+
     buy = broker.place_order("BTC/USD", "BUY", 0.1, 50000.0)
     assert buy["status"] == "filled"
-    assert buy["fee"] == pytest.approx(5000.0 * FEE)
-    assert broker.portfolio.cash == pytest.approx(10000.0 - 5000.0 * (1 + FEE))
+    assert buy["price"] == pytest.approx(buy_fill)
+    assert buy["fee"] == pytest.approx(buy_cost * FEE)
+    assert broker.portfolio.cash == pytest.approx(10000.0 - buy_cost * (1 + FEE))
 
     sell = broker.place_order("BTC/USD", "SELL", 0.1, 50000.0)
-    assert sell["fee"] == pytest.approx(5000.0 * FEE)
-    # Flat-price round trip must cost exactly the two fees
-    assert broker.portfolio.cash == pytest.approx(10000.0 - 2 * 5000.0 * FEE)
-    assert sell["realized_pnl"] == pytest.approx(-5000.0 * FEE, abs=0.01)
+    assert sell["price"] == pytest.approx(sell_fill)
+    assert sell["fee"] == pytest.approx(sell_proceeds * FEE)
+    # Flat-quote round trip costs both fees plus both sides' slippage
+    assert broker.portfolio.cash == pytest.approx(
+        10000.0 - buy_cost * (1 + FEE) + sell_proceeds * (1 - FEE))
+    assert sell["realized_pnl"] == pytest.approx(
+        (sell_fill - buy_fill) * 0.1 - sell_proceeds * FEE, abs=0.01)
 
 
 def test_position_pnl_is_net_of_fees():

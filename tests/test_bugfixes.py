@@ -10,17 +10,30 @@ Covers:
   even when every strategy has negative PnL.
 - Trader: orders fill at the current market price, not the hypothetical
   pullback entry price; trades are skipped when the market drifted too far.
+- Execution realism (audit fix): broker fills slip adverse to the side on top
+  of the spread-crossing quote; SL fills at the stop or worse; TP fills at
+  exactly the limit; no exit fills less than 1 bar after entry (tests that
+  exercise SL/TP triggers backdate opened_at accordingly).
 """
 import tempfile
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 import config as app_config
+from core.broker import SLIPPAGE_PCT
 from core.database import init_db, execute
 from core.memory import SharedMemory
 from core.portfolio import Portfolio, save_portfolio, load_portfolio
+
+
+def _age_open_positions(seconds=3600):
+    """Backdate opened_at past the 1-bar minimum-hold guard so SL/TP triggers
+    may fill (the guard blocks exits seconds after entry)."""
+    past = (datetime.now(timezone.utc) - timedelta(seconds=seconds)).strftime("%Y-%m-%d %H:%M:%S")
+    execute("UPDATE positions SET opened_at=? WHERE status='open'", [past])
 
 
 @pytest.fixture(autouse=True)
@@ -49,6 +62,7 @@ def test_price_trigger_credits_cash_through_broker(monkeypatch):
     order = broker.place_order("BTC/USD", "BUY", 0.1, 50000.0, sl=48000.0, tp=55000.0)
     assert order["status"] == "filled"
     main.pos_mgr.open_position("BTC/USD", "BUY", 0.1, 50000.0, sl=48000.0, tp=55000.0)
+    _age_open_positions()  # the 1-bar minimum-hold guard must not block the SL
 
     triggered = main.process_price_triggers({"BTC/USD": {"price": 47500.0}})
 
@@ -56,9 +70,17 @@ def test_price_trigger_credits_cash_through_broker(monkeypatch):
     assert triggered[0]["reason"] == "stop_loss"
     assert main.pos_mgr.get_open_positions() == []
     p = load_portfolio()
-    # 10000 - 5000 entry - fee + 4750 exit - fee; before the fix the exit credit was lost
+    # Cash chain with execution realism: the entry slips adverse at the
+    # broker; the SL exit fills at min(gap price, stop) less adverse slippage
+    # in the ledger, and the broker's closing market order slips adverse
+    # again on top of that exit price (two ledgers, each costed honestly).
+    slip = SLIPPAGE_PCT / 100.0
     fee = app_config.TRADE_FEE_PCT / 100.0
-    expected = 10000.0 - 5000.0 * (1 + fee) + 4750.0 * (1 - fee)
+    entry_fill = 50000.0 * (1 + slip)
+    exit_recorded = min(47500.0, 48000.0) * (1 - slip)
+    assert triggered[0]["exit_price"] == pytest.approx(exit_recorded)
+    broker_exit = exit_recorded * (1 - slip)
+    expected = 10000.0 - 0.1 * entry_fill * (1 + fee) + 0.1 * broker_exit * (1 - fee)
     assert p.cash == pytest.approx(expected)
     assert "BTC/USD" not in p.positions
 
@@ -163,7 +185,8 @@ def _seed_trader_inputs(memory, market_price, plan_price):
 
 
 def test_trader_fills_at_market_price():
-    """Paper fills must use the real market price, not the pullback target."""
+    """Paper fills must use the real market price, not the pullback target —
+    plus adverse slippage on top of it (audit fix: zero-slippage fills)."""
     from agents.trader import Trader
 
     init_db()
@@ -174,16 +197,18 @@ def test_trader_fills_at_market_price():
     trader = Trader()
     executed = trader.run()
     filled = [o for o in executed if o.get("status") == "filled"]
-    assert filled and filled[0]["price"] == 50000.0
+    expected_fill = 50000.0 * (1 + SLIPPAGE_PCT / 100.0)
+    assert filled and filled[0]["price"] == pytest.approx(expected_fill)
     positions = trader.pos_mgr.get_open_positions()
-    assert positions[0]["entry_price"] == 50000.0
+    assert positions[0]["entry_price"] == pytest.approx(expected_fill)
     p = load_portfolio()
     fee = app_config.TRADE_FEE_PCT / 100.0
-    assert p.cash == pytest.approx(10000.0 - 0.05 * 50000.0 * (1 + fee))
+    assert p.cash == pytest.approx(10000.0 - 0.05 * expected_fill * (1 + fee))
 
 
 def test_trader_fills_cross_the_spread():
-    """BUY must fill at the ask, not the mid — half the spread is a real cost."""
+    """BUY must fill at the ask, not the mid — half the spread is a real cost —
+    and still slips adverse beyond the ask (audit fix: zero-slippage fills)."""
     from agents.trader import Trader
 
     init_db()
@@ -206,8 +231,41 @@ def test_trader_fills_cross_the_spread():
     trader = Trader()
     executed = trader.run()
     filled = [o for o in executed if o.get("status") == "filled"]
-    assert filled and filled[0]["price"] == 50010.0  # ask, not mid
-    assert trader.pos_mgr.get_open_positions()[0]["entry_price"] == 50010.0
+    expected_fill = 50010.0 * (1 + SLIPPAGE_PCT / 100.0)  # ask + adverse slip
+    assert filled and filled[0]["price"] == pytest.approx(expected_fill)
+    assert trader.pos_mgr.get_open_positions()[0]["entry_price"] == pytest.approx(expected_fill)
+
+
+def test_trader_tags_position_with_all_contributing_strategies():
+    """A position opened from a combined signal must carry EVERY contributing
+    strategy (pipe-joined), so post-cycle per-strategy analysis can see all
+    contributors. Position-per-symbol dedup stays: still one position."""
+    from agents.trader import Trader
+
+    init_db()
+    memory = SharedMemory()
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    memory.write("analyses", "market_scan", {
+        "all_analyses": {"BTC/USD": {"price": 50000.0}},
+        "timestamp": time.time(),
+    })
+    memory.write("orders", "execution_plan", {
+        "status": "ready",
+        "orders": [{
+            "symbol": "BTC/USD", "action": "BUY", "qty": 0.05,
+            "price": 50000.0, "stop_loss": 48000.0, "take_profit": 56000.0,
+            "execution_ok": True, "strategies": ["mom_burst", "fvg_entry"],
+            "plan_id": None,
+        }],
+        "timestamp": time.time(),
+    })
+
+    trader = Trader()
+    executed = trader.run()
+    assert any(o.get("status") == "filled" for o in executed)
+    positions = trader.pos_mgr.get_open_positions()
+    assert len(positions) == 1
+    assert positions[0]["strategy"] == "mom_burst|fvg_entry"
 
 
 def test_trader_skips_on_price_drift():

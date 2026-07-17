@@ -1,4 +1,4 @@
-﻿import time
+import time
 
 from config import (
     WATCHED_SYMBOLS, SMA200_PERIOD, SMA200_DEPLOY_TARGET,
@@ -16,6 +16,9 @@ def firm_deployment(bellwether_closes):
     Validated over 6.6 years including the 2022 bear (analysis/edge_hunt.py):
     max drawdown 76.6% -> 63.9% at a higher Sharpe (0.93 vs 0.85) than holding.
     Insurance, not alpha. Returns (firm_regime, deployment_target).
+
+    `bellwether_closes` must be CLOSED daily closes only — comparing the
+    forming bar against SMA200 would flip the firm in and out of cash intraday.
     """
     closes = [c for c in (bellwether_closes or []) if c]
     if len(closes) < SMA200_PERIOD:
@@ -65,7 +68,13 @@ class RegimeAgent(BaseAgent):
         try:
             bars = self.market.get_ohlc(FIRM_BELLWETHER, days=SMA200_PERIOD + 60,
                                         interval="1d")
-            bell_closes = [b["close"] for b in (bars or [])]
+            # The SMA200 dial must compare the last CLOSED daily bar, never
+            # the forming one (an intraday dip below SMA200 is not a regime
+            # change). The data provider drops forming bars at fetch level;
+            # this filter is the second line of defense (e.g. stale cache).
+            now = time.time()
+            bell_closes = [b["close"] for b in (bars or [])
+                           if "ts" not in b or b["ts"] + 86400 <= now]
         except Exception as e:
             self.log(f"Bellwether fetch failed ({FIRM_BELLWETHER}): {e}")
         firm_regime, deployment_target = firm_deployment(bell_closes)

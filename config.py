@@ -76,8 +76,13 @@ LIMIT_ORDER_TTL_MIN = int(os.getenv("LIMIT_ORDER_TTL_MIN", "60"))
 # analysis/strategy_expectancy.py: 0 of 24 survivors, t-stats -5 to -21 over
 # ~70k trades. They (and the multiframe aggregator + the scalping_signals
 # scorer built on the same signals) are disabled as live sources. The library
-# stays for backtesting/analysis; the firm now trades only scalp15 + swing.
-CLASSIC_STRATEGIES_ENABLED = os.getenv("CLASSIC_STRATEGIES_ENABLED", "false").lower() == "true"
+# ── TEST CYCLE (2026-07-17): full pool re-enabled for the 1-week forward
+# experiment. The registry now carries 174 strategies (28 legacy + 146 new in
+# core/strats/) with corrected indicator math (Donchian/HA/ADX/RSI-div/Ichimoku/
+# VWAP were broken when the negative-expectancy verdict was measured). The
+# week's forward record + a fresh harness re-run decide what stays; the
+# per-strategy auto-cull (get_unprofitable_strategies) removes live losers.
+CLASSIC_STRATEGIES_ENABLED = os.getenv("CLASSIC_STRATEGIES_ENABLED", "true").lower() == "true"
 
 # ── Deployment dial: the ONE mechanism this firm has evidence for ──
 # Rule: deploy while the bellwether (BTC) closes above its SMA200; sit in cash
@@ -102,7 +107,10 @@ FIRM_BELLWETHER = os.getenv("FIRM_BELLWETHER", "BTC/USD")
 # negative in every regime — the 0.16% round-trip cost is ~1/3 R on tight
 # intraday stops and buries it, exactly like the classics. Disabled as a live
 # source; the module stays for research. Re-enable with SCALP_15M_ENABLED=true.
-SCALP_15M_ENABLED = os.getenv("SCALP_15M_ENABLED", "false").lower() == "true"
+# TEST CYCLE (2026-07-17): re-enabled for the 1-week experiment; the fresh DB
+# starts its win-prob estimates neutral (Laplace), no circular-confidence
+# carryover from the old record.
+SCALP_15M_ENABLED = os.getenv("SCALP_15M_ENABLED", "true").lower() == "true"
 # The same EMA/MACD/RSI stack runs independently on every listed timeframe;
 # each gets its own strategy tag (scalp_1m ... scalp_4h) so the learning
 # loop judges them separately.
@@ -160,6 +168,12 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 LEVERAGE_ENABLED = False  # spot-only, no margin
 MAX_POSITION_SIZE_PCT = float(os.getenv("MAX_POSITION_SIZE_PCT", "15"))
 MAX_PORTFOLIO_RISK_PCT = float(os.getenv("MAX_PORTFOLIO_RISK_PCT", "15"))
+# Peak-relative drawdown halt (compliance gate): entries stop when equity
+# falls this % below its high-water mark. The old check anchored at INITIAL
+# balance — a book that ran up then bled back still looked "inside limit",
+# and a slow grind down from a peak never fired (readiness audit §4 lists it
+# as a kill-switch; it must measure from the peak to work as one).
+MAX_PEAK_DRAWDOWN_PCT = float(os.getenv("MAX_PEAK_DRAWDOWN_PCT", "10"))
 TRADE_FEE_PCT = float(os.getenv("TRADE_FEE_PCT", "0.1"))
 TRADING_TIMEFRAME = os.getenv("TRADING_TIMEFRAME", "5m")
 # Half-spread cost per side applied in backtests, mirroring live fills that
@@ -175,6 +189,19 @@ MAX_CONSECUTIVE_LOSSES = int(os.getenv("MAX_CONSECUTIVE_LOSSES", "3"))
 STREAK_LOSS_HALT_PCT = float(os.getenv("STREAK_LOSS_HALT_PCT", "1.2"))
 STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "2.0"))
 DAILY_LOSS_LIMIT_PCT = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "3"))
+# ── Paper-cycle loss rails (added for the 1-week expanded-pool paper test) ──
+# Absolute daily loss floor alongside the %-based breaker above: on a $10k
+# book 3% is $300; the USD cap keeps the same bite if TRADING_CAPITAL is
+# raised for the cycle, so a bigger bankroll can't lose more per day.
+MAX_DAILY_LOSS_USD = float(os.getenv("MAX_DAILY_LOSS_USD", "300"))
+# Weekly loss budget (% of equity): a judged cycle must survive to its
+# verdict — past -5% on the week the firm stops entering and lets the open
+# book play out rather than bleeding the sample to zero.
+MAX_WEEKLY_LOSS_PCT = float(os.getenv("MAX_WEEKLY_LOSS_PCT", "5"))
+# Per-strategy concurrency cap (open positions per strategy tag): with an
+# expanded pool one hot strategy must not fill every slot — capping each tag
+# keeps the cycle's per-strategy samples comparable.
+PER_STRATEGY_MAX_OPEN = int(os.getenv("PER_STRATEGY_MAX_OPEN", "2"))
 TRAILING_STOP_PCT = float(os.getenv("TRAILING_STOP_PCT", "0.5"))
 TRAILING_ACTIVATION_PCT = float(os.getenv("TRAILING_ACTIVATION_PCT", "0.8"))
 # Scaled exits: bank part of a winner at a multiple of initial risk (R), move
@@ -228,10 +255,14 @@ BROKEN_SL_PCT = float(os.getenv("BROKEN_SL_PCT", "20"))
 # Quiet Telegram: only trade opens/closes, daily summary, halts/errors and
 # rejected-signal alerts. Per-agent chatter stays in the logs/dashboard.
 TELEGRAM_QUIET = os.getenv("TELEGRAM_QUIET", "true").lower() == "true"
-# Trade-frequency caps. 0 = unlimited (default). Set a positive number to
-# cap entries per UTC day / per rolling hour — risk data says overtrading
-# loses, but the caps also idle the bot once hit, so they are opt-in.
-MAX_TRADES_PER_DAY = int(os.getenv("MAX_TRADES_PER_DAY", "150"))
+# Trade-frequency caps. 0 = unlimited. Set a positive number to cap entries
+# per UTC day / per rolling hour — risk data says overtrading loses, but the
+# caps also idle the bot once hit.
+# 150/day was no cap at all for a swing-only firm (readiness audit 1.8): a
+# 30-minute swing scan over ~20 symbols cannot legitimately produce 150
+# entries. 20/day still leaves headroom for the expanded pool's paper cycle
+# (~1 entry per symbol per day) while bounding overtrading.
+MAX_TRADES_PER_DAY = int(os.getenv("MAX_TRADES_PER_DAY", "20"))
 MAX_TRADES_PER_HOUR = int(os.getenv("MAX_TRADES_PER_HOUR", "0"))
 # Portfolio heat: total open risk (distance to stop x qty, summed over open
 # positions) as % of equity. Blocks new entries only while above the cap —
@@ -241,8 +272,11 @@ MAX_OPEN_RISK_PCT = float(os.getenv("MAX_OPEN_RISK_PCT", "10"))
 # 15 crypto longs are one BTC-beta bet, not 15 independent trades. 0 = off.
 MAX_POSITIONS_PER_CLUSTER = int(os.getenv("MAX_POSITIONS_PER_CLUSTER", "8"))
 # When a candidate's 30d returns correlate >= this with an already-open
-# position, its size is halved (soft de-risk, never a block). 0 = off.
-MAX_PAIR_CORRELATION = float(os.getenv("MAX_PAIR_CORRELATION", "0.9"))
+# position, the risk manager BLOCKS the entry — it adds beta, not
+# diversification. 0.9 never fired: alt pairs run 0.7-0.85 in a BTC-led tape
+# (post-mortem 2026-07-12: six correlated alts stopped at the cap in one
+# dip), and merely halving size still let the cluster through. 0 = off.
+MAX_PAIR_CORRELATION = float(os.getenv("MAX_PAIR_CORRELATION", "0.7"))
 # ── Correlated-selloff defenses (post-mortem 2026-07-12: 6 alt BUYs all
 # stopped at the cap during one Asian-session BTC dip) ──
 # Correlation groups: assets that move as one. Cap simultaneous positions
@@ -265,8 +299,12 @@ SESSION_RISK_MULTS = os.getenv("SESSION_RISK_MULTS", "0.5,0.8,1.0,0.5")
 MACRO_DIP_PCT = float(os.getenv("MACRO_DIP_PCT", "1.0"))
 MACRO_DIP_OVERRIDE_CONF = float(os.getenv("MACRO_DIP_OVERRIDE_CONF", "0.9"))
 MACRO_BELLWETHERS = {"crypto": "BTC/USD"}
-# SL floor: ATR-first placement may never be tighter than this (noise floor)
-MIN_SL_PCT = float(os.getenv("MIN_SL_PCT", "0.3"))
+# SL floor: ATR-first placement may never be tighter than this (noise floor).
+# 0.3% was a fee trap: the round trip costs 2x0.1% fee + 2x0.05% spread =
+# 0.3%, so a minimum-distance stop spent its entire 1R on costs before any
+# slippage. 1.0% keeps worst-case costs near 1/3 of risk and matches the
+# swing desk's own SWING_MIN_SL_PCT floor.
+MIN_SL_PCT = float(os.getenv("MIN_SL_PCT", "1.0"))
 
 # Hard no-leverage rule (halal requirement): total open notional may never
 # exceed equity x this factor. 1.0 = strict cash-only trading — no margin,

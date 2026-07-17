@@ -4,8 +4,23 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime, timezone
 
+import config
 from config import DATA_DIR, INITIAL_BALANCE, TRADE_FEE_PCT
 from core.portfolio import Portfolio, Position, save_portfolio, load_portfolio
+
+# Adverse fill slippage per side, percent. Audit 2026-07: every paper order
+# filled at exactly the caller's price — zero spread, zero slippage — which
+# booked entries and exits a live market never allows. A market BUY pays the
+# ask and a SELL hits the bid (the Trader already passes that quote in as
+# `price`); this models the extra slippage beyond the quote, always adverse
+# to the side. getattr fallback: config.py predates this knob.
+SLIPPAGE_PCT = float(getattr(config, "SLIPPAGE_PCT", 0.05))
+
+
+def _slipped_price(side, price):
+    """A market order never fills at a better price than quoted."""
+    slip = SLIPPAGE_PCT / 100.0
+    return price * (1 + slip) if side.upper() == "BUY" else price * (1 - slip)
 
 
 class PaperBroker:
@@ -21,11 +36,17 @@ class PaperBroker:
     def place_order(self, symbol: str, side: str, quantity: float,
                     price: float, order_type: str = "market",
                     sl: float = 0, tp: float = 0) -> dict:
+        # Fill at the quote (`price`, already the ask for BUY / bid for SELL)
+        # plus adverse slippage — never at the bare quote. requested_price is
+        # kept so fills stay auditable against the signal price.
+        fill_price = round(_slipped_price(side, price), 8)
         order = {
             "symbol": symbol,
             "side": side.upper(),
             "quantity": quantity,
-            "price": price,
+            "price": fill_price,
+            "requested_price": price,
+            "slippage_pct": SLIPPAGE_PCT,
             "type": order_type,
             "status": "filled",
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -36,15 +57,15 @@ class PaperBroker:
         if tp:
             order["take_profit"] = tp
         fee_ratio = TRADE_FEE_PCT / 100.0
-        cost = quantity * price
+        cost = quantity * fill_price
         if side.upper() == "BUY":
             if symbol in self.portfolio.positions and self.portfolio.positions[symbol].quantity < 0:
                 pos = self.portfolio.positions[symbol]
                 cover_qty = min(quantity, abs(pos.quantity))
-                cost = cover_qty * price
+                cost = cover_qty * fill_price
                 fee = cost * fee_ratio
                 self.portfolio.cash -= cost + fee
-                realized_pnl = (pos.entry_price - price) * cover_qty - fee
+                realized_pnl = (pos.entry_price - fill_price) * cover_qty - fee
                 pos.quantity += cover_qty
                 if pos.quantity >= 0:
                     del self.portfolio.positions[symbol]
@@ -66,18 +87,18 @@ class PaperBroker:
                     pos.entry_price = avg_cost
                 else:
                     self.portfolio.positions[symbol] = Position(
-                        symbol=symbol, entry_price=price, quantity=quantity,
-                        current_price=price
+                        symbol=symbol, entry_price=fill_price, quantity=quantity,
+                        current_price=fill_price
                     )
                 self.portfolio.trades.append(order)
         elif side.upper() == "SELL":
             if symbol in self.portfolio.positions and self.portfolio.positions[symbol].quantity > 0:
                 pos = self.portfolio.positions[symbol]
                 sell_qty = min(quantity, pos.quantity)
-                cost = sell_qty * price
+                cost = sell_qty * fill_price
                 fee = cost * fee_ratio
                 self.portfolio.cash += cost - fee
-                realized_pnl = (price - pos.entry_price) * sell_qty - fee
+                realized_pnl = (fill_price - pos.entry_price) * sell_qty - fee
                 pos.quantity -= sell_qty
                 if pos.quantity <= 0:
                     del self.portfolio.positions[symbol]
@@ -86,12 +107,12 @@ class PaperBroker:
                 order["realized_pnl"] = round(realized_pnl, 2)
                 self.portfolio.trades.append(order)
             else:
-                cost = quantity * price
+                cost = quantity * fill_price
                 fee = cost * fee_ratio
                 self.portfolio.cash += cost - fee
                 self.portfolio.positions[symbol] = Position(
-                    symbol=symbol, entry_price=price, quantity=-quantity,
-                    current_price=price
+                    symbol=symbol, entry_price=fill_price, quantity=-quantity,
+                    current_price=fill_price
                 )
                 order["action"] = "SHORT"
                 order["fee"] = round(fee, 4)

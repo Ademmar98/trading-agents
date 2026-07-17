@@ -137,16 +137,19 @@ def _trade_duration_stats(trades):
 def _compute_strategy_stats(trades):
     by_strategy = {}
     for t in trades:
-        strat_name = t.get("strategy") or t.get("reason", "unknown")
-        s = by_strategy.setdefault(strat_name, {"trades": 0, "won": 0, "pnl": 0,
-                                                "win_pnl": 0.0, "loss_pnl": 0.0})
-        s["trades"] += 1
-        s["pnl"] += t["pnl"]
-        if t["pnl"] > 0:
-            s["won"] += 1
-            s["win_pnl"] += t["pnl"]
-        elif t["pnl"] < 0:
-            s["loss_pnl"] += abs(t["pnl"])
+        # Combined signals tag the trade with every contributor pipe-joined
+        # ("a|b") — score the trade under EACH contributing strategy so
+        # co-contributors accumulate their own expectancy record.
+        for strat_name in (t.get("strategy") or t.get("reason", "unknown")).split("|"):
+            s = by_strategy.setdefault(strat_name, {"trades": 0, "won": 0, "pnl": 0,
+                                                    "win_pnl": 0.0, "loss_pnl": 0.0})
+            s["trades"] += 1
+            s["pnl"] += t["pnl"]
+            if t["pnl"] > 0:
+                s["won"] += 1
+                s["win_pnl"] += t["pnl"]
+            elif t["pnl"] < 0:
+                s["loss_pnl"] += abs(t["pnl"])
 
     result = []
     for strategy, s in sorted(by_strategy.items(), key=lambda x: x[1]["pnl"], reverse=True):

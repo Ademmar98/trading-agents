@@ -1,7 +1,7 @@
-﻿import time
+import time
 
 from config import (
-    BROKER_TYPE, LEVERAGE_ENABLED, MAX_PORTFOLIO_RISK_PCT, DAILY_LOSS_LIMIT_PCT,
+    BROKER_TYPE, LEVERAGE_ENABLED, MAX_PEAK_DRAWDOWN_PCT, DAILY_LOSS_LIMIT_PCT,
     STREAK_LOSS_HALT_PCT, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR,
     MAX_OPEN_RISK_PCT, MAX_POSITIONS_PER_CLUSTER, MAX_GROSS_LEVERAGE,
     MAX_GROUP_POSITIONS, GROUP_OVERRIDE_CONF, MACRO_DIP_OVERRIDE_CONF,
@@ -57,9 +57,23 @@ class ComplianceAgent(BaseAgent):
         if risk.get("verdict") == "critical":
             halted = True
             blockers.append("Risk verdict is critical")
-        if portfolio.total_pnl_pct < -MAX_PORTFOLIO_RISK_PCT:
+        # Drawdown halt anchored at PEAK equity, not INITIAL balance: measured
+        # from the starting bankroll, a book that ran up +40% then bled back
+        # -14% still looked "inside limit", and a slow grind down from a
+        # high-water mark never fired at all. The peak comes from the
+        # per-cycle equity snapshots, with current equity and initial balance
+        # as fallbacks so a fresh DB (no snapshots yet) can't divide by zero.
+        peak_row = fetchone("SELECT MAX(equity) AS peak FROM equity_history")
+        peak_equity = max(
+            portfolio.equity or 0, portfolio.initial_balance or 0,
+            (peak_row["peak"] if peak_row else 0) or 0)
+        drawdown_pct = ((portfolio.equity - peak_equity) / peak_equity * 100
+                        ) if peak_equity else 0.0
+        if drawdown_pct < -MAX_PEAK_DRAWDOWN_PCT:
             halted = True
-            blockers.append(f"Portfolio drawdown {portfolio.total_pnl_pct:.2f}% exceeds risk limit")
+            blockers.append(
+                f"Drawdown {drawdown_pct:.2f}% from peak equity ${peak_equity:,.2f} "
+                f"breached the -{MAX_PEAK_DRAWDOWN_PCT:g}% high-water halt")
         day_pnl = daily_loss_pct()
         if day_pnl < -DAILY_LOSS_LIMIT_PCT:
             halted = True
