@@ -14,7 +14,7 @@ HEADLESS = "--headless" in sys.argv or os.getenv("HEADLESS", "").lower() == "tru
 # Reset flag: delete all data and start fresh
 RESET = "--reset" in sys.argv
 
-from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT, OPTIMIZER_ENABLED
+from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT, OPTIMIZER_ENABLED, STARTUP_BACKTESTS_ENABLED
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
 from core.portfolio import load_portfolio, save_portfolio, Portfolio
@@ -433,20 +433,23 @@ def main():
         else:
             notifier.send("[Trading Agent Firm started]")
 
-    console.print("[dim]Running backtests on key symbols...[/dim]")
-    try:
-        bt_symbols = [s for s in WATCHED_SYMBOLS if "/" in s][:10]
-        bt_results = run_all_backtests(bt_symbols)
-        console.print(f"[dim]Backtested {len(bt_results)} symbols[/dim]")
-        for r in bt_results[:10]:
-            c = "green" if r["total_return"] >= 0 else "red"
-            console.print(f"  {r['symbol']:8s}  [{c}]{r['total_return']:+.1f}%[/{c}]  "
-                          f"{r['total_trades']}t  WR:{r['win_rate']:.0f}%  "
-                          f"S:{r['sharpe_ratio']}  DD:{r['max_drawdown']:.1f}%")
-    except Exception as e:
-        # Backtests are informational — never let them kill the bot
-        memory.log("system", f"Startup backtests failed: {e}")
-        memory.log_error("backtester", str(e), traceback.format_exc())
+    if STARTUP_BACKTESTS_ENABLED:
+        console.print("[dim]Running backtests on key symbols...[/dim]")
+        try:
+            bt_symbols = [s for s in WATCHED_SYMBOLS if "/" in s][:10]
+            bt_results = run_all_backtests(bt_symbols)
+            console.print(f"[dim]Backtested {len(bt_results)} symbols[/dim]")
+            for r in bt_results[:10]:
+                c = "green" if r["total_return"] >= 0 else "red"
+                console.print(f"  {r['symbol']:8s}  [{c}]{r['total_return']:+.1f}%[/{c}]  "
+                              f"{r['total_trades']}t  WR:{r['win_rate']:.0f}%  "
+                              f"S:{r['sharpe_ratio']}  DD:{r['max_drawdown']:.1f}%")
+        except Exception as e:
+            # Backtests are informational — never let them kill the bot
+            memory.log("system", f"Startup backtests failed: {e}")
+            memory.log_error("backtester", str(e), traceback.format_exc())
+    else:
+        console.print("[dim]Startup backtests skipped (STARTUP_BACKTESTS_ENABLED=false)[/dim]")
 
     def cycle_loop():
         while True:

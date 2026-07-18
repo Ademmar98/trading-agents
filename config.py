@@ -353,6 +353,13 @@ else:
 
 TRADING_INTERVAL_MINUTES = int(os.getenv("TRADING_INTERVAL_MINUTES", "1"))
 
+# Startup backtests (informational only). With the 174-strategy registry the
+# per-bar legacy battery scan takes HOURS of CPU at 100% and blocks the entire
+# trading loop (found 2026-07-18: bot sat in run_all_backtests for 4.5h after
+# restart, zero cycles). Default OFF — the service must start trading within
+# seconds; the same harness runs offline via analysis/ scripts when wanted.
+STARTUP_BACKTESTS_ENABLED = os.getenv("STARTUP_BACKTESTS_ENABLED", "false").lower() == "true"
+
 # Tunable parameters — each entry defines a range and step for the optimizer
 TUNABLE_PARAMS = {
     "SL_VOL_MULT":       {"default": 1.5, "min": 0.3,  "max": 3.0, "increment": 0.3},
