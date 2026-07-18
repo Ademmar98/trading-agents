@@ -147,7 +147,8 @@ class DebateAgent(BaseAgent):
             self._journal(record)
             return record
 
-        evidence_json = json.dumps(self._evidence_pack(cand), default=str)
+        ev = self._evidence_pack(cand)
+        evidence_json = json.dumps(ev, default=str)
         try:
             bull, model = self._llm(
                 BULL_SYSTEM,
@@ -180,13 +181,19 @@ class DebateAgent(BaseAgent):
             record["verdict"] = verdict
             record["arbiter_rationale"] = rationale
         except Exception as e:
-            # Fail open on ANY LLM trouble: the candidate passes through to
-            # the unchanged deterministic gates exactly as if no debate ran.
-            record["verdict"] = "APPROVE"
-            record["arbiter_rationale"] = (
-                f"debate unavailable ({type(e).__name__}: {e}) "
-                "— fail-open pass-through")
-            self.log(f"Debate failed open for {symbol}: {e}")
+            # LLM debate unavailable → fall back to the deterministic engine
+            # so the firm still has a real "brain" judging every candidate
+            # instead of a blind fail-open. Only if the engine itself breaks
+            # do we pass through untouched.
+            self.log(f"LLM debate unavailable for {symbol} "
+                     f"({type(e).__name__}: {e}) — deterministic engine")
+            try:
+                self._deterministic_debate(cand, ev, record)
+            except Exception as e2:
+                record["verdict"] = "APPROVE"
+                record["arbiter_rationale"] = (
+                    f"debate unavailable ({type(e2).__name__}: {e2}) "
+                    "— fail-open pass-through")
 
         if record["verdict"] == "DOWNGRADE":
             # The fixed multiplier is the ONLY confidence move the arbiter
@@ -257,6 +264,11 @@ class DebateAgent(BaseAgent):
                     ],
                     "max_tokens": 2000,
                     "temperature": 0.3,
+                    # The free fallback (stepfun) is a reasoning model: without
+                    # this it burns the whole token budget on hidden reasoning
+                    # and returns content=null. Excluding reasoning makes it
+                    # fast, cheap, and reliable for structured debate calls.
+                    "reasoning": {"exclude": True},
                 },
                 # Per-request timeout shrinks to fit the cycle's total
                 # DEBATE_TIMEOUT_SEC wall-clock budget.
@@ -292,7 +304,97 @@ class DebateAgent(BaseAgent):
                 return verdict, rationale or "(no rationale given)"
         return "APPROVE", "arbiter reply unparseable — fail-open pass-through"
 
-    # ── Deterministic evidence pack ──
+    # ── Deterministic debate engine (zero-LLM fallback brain) ──
+    #
+    # Judges a candidate from the same evidence pack the LLM sees: price
+    # geometry vs. fees, live per-strategy track record, regime and
+    # sentiment. Produces real bull/bear text and a verdict so the journal
+    # shows an actual decision process even with no LLM access at all.
+
+    def _deterministic_debate(self, cand, ev, record):
+        record["model"] = "deterministic-engine"
+        action = record["action"]
+        symbol = record["symbol"]
+
+        entry = ev.get("price") or 0
+        sl = ev.get("stop_loss") or 0
+        tp = ev.get("take_profit") or 0
+        sl_pct = tp_pct = None
+        if entry and sl:
+            sl_pct = abs(entry - sl) / entry * 100
+        if entry and tp:
+            tp_pct = abs(tp - entry) / entry * 100
+        rr = ev.get("risk_reward")
+        if rr is None and sl_pct:
+            rr = round((tp_pct or 0) / sl_pct, 2)
+
+        stats = ev.get("strategy_stats") or {}
+        n_trades = sum(s.get("trades") or 0 for s in stats.values())
+        pnl = sum(s.get("pnl") or 0 for s in stats.values())
+        wins = sum((s.get("win_rate") or 0) * (s.get("trades") or 0)
+                   for s in stats.values())
+        win_rate = wins / n_trades if n_trades else None
+
+        cost_rt = (ev.get("round_trip_fee_pct") or 0) + 0.2  # fees + slippage
+        fee_burden = (cost_rt / tp_pct) if tp_pct else None
+
+        regime = (ev.get("regime") or {}).get("regime")
+        sent = ev.get("sentiment") or {}
+        conf = record["confidence_before"] or 0
+
+        strats = ", ".join(record["strategies"]) or "n/a"
+        stats_txt = (f"{n_trades} live trades, win-rate {win_rate:.0%}, "
+                     f"PnL ${pnl:+.2f}" if n_trades
+                     else "no live track record yet")
+        rr_txt = f"R:R {rr:.2f}" if rr is not None else "R:R unknown"
+
+        record["bull_argument"] = (
+            f"{strats} signal(s) aligned on {symbol} ({rr_txt}; {stats_txt}; "
+            f"regime {regime or 'unknown'}); entry geometry "
+            + (f"targets {tp_pct:.2f}% vs ~{cost_rt:.2f}% round-trip cost"
+               if tp_pct else "not measurable"))
+        record["bear_argument"] = (
+            (f"Round-trip cost ~{cost_rt:.2f}% eats "
+             f"{fee_burden:.0%} of the {tp_pct:.2f}% target; " if fee_burden
+             else "Fee impact unmeasurable; ")
+            + f"live evidence thin ({stats_txt}); "
+            + (f"regime {regime} " if regime else "regime unknown ")
+            + ("and sentiment blocks longs" if sent.get("block_buy")
+               else f"sentiment {sent.get('label', 'neutral')}"))
+
+        if rr is None and tp_pct is None:
+            record["verdict"] = "APPROVE"
+            record["arbiter_rationale"] = (
+                "no geometry to judge — deterministic pass-through")
+            return
+        if ((rr is not None and rr < 1.2)
+                or (fee_burden is not None and fee_burden > 0.5)
+                or (n_trades >= 10 and pnl < 0)):
+            record["verdict"] = "REJECT"
+            record["arbiter_rationale"] = (
+                f"deterministic reject: {rr_txt}"
+                + (f", fees eat {fee_burden:.0%} of target" if fee_burden
+                   is not None else "")
+                + (f", live PnL ${pnl:+.2f} over {n_trades} trades"
+                   if n_trades else ""))
+            return
+        if (n_trades < 10
+                or (fee_burden is not None and fee_burden > 1 / 3)
+                or regime == "volatile"
+                or (action == "BUY" and (sent.get("block_buy")
+                                         or sent.get("label") == "risk_off"))
+                or conf < 0.65):
+            record["verdict"] = "DOWNGRADE"
+            record["arbiter_rationale"] = (
+                f"deterministic downgrade: thin/adverse evidence "
+                f"({stats_txt}; regime {regime or 'unknown'}; {rr_txt})")
+            return
+        record["verdict"] = "APPROVE"
+        record["arbiter_rationale"] = (
+            f"deterministic approve: {rr_txt}, {stats_txt}, "
+            f"fee burden {(fee_burden or 0):.0%} acceptable")
+
+
 
     def _evidence_pack(self, cand):
         symbol = cand.get("symbol", "")

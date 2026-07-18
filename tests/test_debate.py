@@ -2,8 +2,8 @@
 
 The agent debates the top-N portfolio candidates each cycle but its power is
 strictly bounded: it can never create a trade, never raise confidence, and
-never widen size. Any LLM trouble fails open — the plan passes through
-unchanged to the existing deterministic gates.
+never widen size. LLM trouble falls back to a deterministic judging engine;
+only if that engine itself breaks does the plan fail open unchanged.
 """
 import json
 import tempfile
@@ -145,27 +145,90 @@ def test_downgrade_lowers_confidence_and_gates_see_it(monkeypatch):
     assert gate["approved_opportunities"][0]["confidence"] == pytest.approx(new_conf)
 
 
-# (c) LLM exception -> pass-through unchanged
-def test_llm_failure_passes_through_unchanged(monkeypatch):
+# (c) LLM exception -> deterministic engine takes over (no blind fail-open)
+def test_llm_failure_falls_back_to_deterministic_engine(monkeypatch):
     da, agent = _agent(monkeypatch)
     monkeypatch.setattr(da.requests, "post",
                         MagicMock(side_effect=OSError("credits exhausted")))
     memory = SharedMemory()
     opps = [_opp("BTC/USD", 0.9), _opp("ETH/USD", 0.8)]
     _seed_plan(memory, opps)
+
+    plan = agent.run()
+    report = memory.read("reports", "debate")
+    assert report["candidates_debated"] == 2
+    # The engine judged them: model is stamped, real bull/bear text exists,
+    # and a thin (zero-trade) track record means DOWNGRADE, not blind approve.
+    for rec in report["debates"]:
+        assert rec["model"] == "deterministic-engine"
+        assert rec["verdict"] == "DOWNGRADE"
+        assert "deterministic" in rec["arbiter_rationale"]
+        assert rec["bull_argument"] and rec["bear_argument"]
+        assert rec["confidence_after"] < rec["confidence_before"]
+    # Downgraded confidence is what the plan (and downstream gates) see.
+    for opp in plan["approved_opportunities"]:
+        assert opp["confidence"] == pytest.approx(
+            round((0.9 if opp["symbol"] == "BTC/USD" else 0.8) * 0.85, 4))
+
+
+# (c2) deterministic engine REJECTs bad geometry (R:R below the 1.2 floor)
+def test_engine_rejects_poor_risk_reward(monkeypatch):
+    da, agent = _agent(monkeypatch)
+    monkeypatch.setattr(da.requests, "post",
+                        MagicMock(side_effect=OSError("llm down")))
+    memory = SharedMemory()
+    bad = _opp("BTC/USD", 0.9)
+    bad.update({"stop_loss": 59500.0, "take_profit": 60500.0,
+                "entry_price": 60000.0, "price": 60000.0})  # R:R = 1.0
+    _seed_plan(memory, [bad, _opp("ETH/USD", 0.8)])
+
+    plan = agent.run()
+    symbols = [o["symbol"] for o in plan["approved_opportunities"]]
+    assert "BTC/USD" not in symbols
+    assert "ETH/USD" in symbols
+    report = memory.read("reports", "debate")
+    rec = report["debates"][0]
+    assert rec["verdict"] == "REJECT"
+    assert rec["model"] == "deterministic-engine"
+    assert "deterministic reject" in rec["arbiter_rationale"]
+
+
+# (c3) engine itself broken -> true fail-open pass-through
+def test_engine_failure_is_true_fail_open(monkeypatch):
+    da, agent = _agent(monkeypatch)
+    monkeypatch.setattr(da.requests, "post",
+                        MagicMock(side_effect=OSError("llm down")))
+    monkeypatch.setattr(da.DebateAgent, "_deterministic_debate",
+                        MagicMock(side_effect=RuntimeError("engine broken")))
+    memory = SharedMemory()
+    opps = [_opp("BTC/USD", 0.9)]
+    _seed_plan(memory, opps)
     before = memory.read("decisions", "portfolio_plan")["approved_opportunities"]
 
     plan = agent.run()
     assert plan["approved_opportunities"] == before
-    stored = memory.read("decisions", "portfolio_plan")
-    assert stored["approved_opportunities"] == before
-
     report = memory.read("reports", "debate")
-    assert report["candidates_debated"] == 2
-    assert all(r["verdict"] == "APPROVE" for r in report["debates"])
-    assert "fail-open" in report["debates"][0]["arbiter_rationale"]
-    assert all(r["confidence_after"] == r["confidence_before"]
-               for r in report["debates"])
+    rec = report["debates"][0]
+    assert rec["verdict"] == "APPROVE"
+    assert "fail-open" in rec["arbiter_rationale"]
+    assert rec["confidence_after"] == rec["confidence_before"]
+
+
+# (c4) every LLM request excludes hidden reasoning (free-model fix)
+def test_llm_payload_excludes_reasoning(monkeypatch):
+    import types
+    da, agent = _agent(monkeypatch)
+    payloads = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        payloads.append(json)
+        return types.SimpleNamespace(json=lambda: {
+            "choices": [{"message": {"content": "ok"}}]})
+
+    monkeypatch.setattr(da.requests, "post", fake_post)
+    agent._llm("sys", "user", time.time() + 30)
+    assert payloads and all(
+        p.get("reasoning") == {"exclude": True} for p in payloads)
 
 
 # (d) disabled flag -> no-op pass-through, zero LLM calls

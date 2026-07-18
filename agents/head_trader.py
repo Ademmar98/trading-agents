@@ -123,6 +123,9 @@ class HeadTrader(BaseAgent):
                     # Reasoning models spend most of this thinking before the
                     # visible answer; too small a budget yields empty content.
                     "max_tokens": 6000,
+                    # Free models (stepfun) burn the whole budget on hidden
+                    # reasoning otherwise; exclude it so content is populated.
+                    "reasoning": {"exclude": True},
                     "temperature": 0.3,
                 },
                 timeout=90,
