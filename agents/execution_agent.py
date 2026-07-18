@@ -189,10 +189,17 @@ class ExecutionAgent(BaseAgent):
             # MIN_TP_PROFIT_USD at the final size, or the setup isn't worth a
             # slot. Computed AFTER sizing (incl. the multiplier), so it reflects
             # the real dollar target.
+            # Scout probes are deliberately tiny (risk clamped to 0.1%) — the
+            # $1 floor would reject every one of them. Scout floor: the TP
+            # must clear 1.5x round-trip fees (min $0.10).
+            min_tp_usd = MIN_TP_PROFIT_USD
+            if opp.get("scout"):
+                rt_fees = qty * entry_price * (2 * TRADE_FEE_PCT / 100)
+                min_tp_usd = max(0.10, rt_fees * 1.5)
             est_tp_profit = qty * abs(tp_price - entry_price)
-            if est_tp_profit < MIN_TP_PROFIT_USD:
+            if est_tp_profit < min_tp_usd:
                 rejected.append({**opp, "execution_reasons": [
-                    f"TP profit ${est_tp_profit:.2f} < ${MIN_TP_PROFIT_USD:.2f} minimum "
+                    f"TP profit ${est_tp_profit:.2f} < ${min_tp_usd:.2f} minimum "
                     f"(qty {qty:g} x ${abs(tp_price - entry_price):g} move)"]})
                 continue
 

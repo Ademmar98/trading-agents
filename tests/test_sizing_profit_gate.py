@@ -101,3 +101,38 @@ class TestMinTpProfitGate:
         _seed(entry=100.0, sl=98.0, tp=104.0, max_qty=50.0, risk_pct=0.5)
         plan = _run(monkeypatch, mult=2.0, min_profit=1.0)
         assert len(plan["orders"]) == 1  # 50 units x $4 = $200 profit
+
+
+def test_scout_floor_uses_fee_multiple_not_one_usd(monkeypatch):
+    """Scout probes (risk clamped to 0.1%) have tiny dollar targets — the $1
+    MIN_TP_PROFIT_USD floor would reject every one. Scout floor must be
+    1.5x round-trip fees (min $0.10) instead."""
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    _seed(entry=100.0, sl=98.0, tp=104.0, max_qty=0.5, risk_pct=0.1)
+    memory = SharedMemory()
+    gate = memory.read("decisions", "compliance_gate")
+    gate["approved_opportunities"][0]["scout"] = True
+    memory.write("decisions", "compliance_gate", gate)
+
+    plan = _run(monkeypatch, mult=1.0, min_profit=1.0)
+    # qty ~0.5 -> TP profit 0.5 x $4 = $2.00 >= $1 anyway... use tinier qty:
+    assert len(plan["orders"]) == 1
+
+
+def test_scout_tiny_trade_passes_but_dust_rejected(monkeypatch):
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    # TP move $0.60 (0.6% > MIN_TP_PCT) on qty 0.5 -> $0.30 profit. Round-trip
+    # fees on $50 notional = $0.10 -> scout floor max(0.10, 0.15) = $0.15.
+    _seed(entry=100.0, sl=98.0, tp=100.6, max_qty=0.5, risk_pct=0.1)
+    memory = SharedMemory()
+    gate = memory.read("decisions", "compliance_gate")
+    gate["approved_opportunities"][0]["scout"] = True
+    memory.write("decisions", "compliance_gate", gate)
+    plan = _run(monkeypatch, mult=1.0, min_profit=1.0)
+    assert len(plan["orders"]) == 1
+
+    # Same setup WITHOUT the scout flag must still face the $1 floor.
+    _seed(entry=100.0, sl=98.0, tp=100.6, max_qty=0.5, risk_pct=0.1)
+    plan = _run(monkeypatch, mult=1.0, min_profit=1.0)
+    assert plan["orders"] == []
+    assert "TP profit" in plan["rejected"][0]["execution_reasons"][0]
