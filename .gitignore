@@ -33,3 +33,6 @@ htmlcov/
 
 data_migrated_to_vps_20260711/
 
+
+# local ops scripts (may contain credentials)
+/_*.py
