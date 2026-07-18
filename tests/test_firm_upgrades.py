@@ -376,3 +376,77 @@ class TestPeakDrawdownHalt:
         report = ComplianceAgent().run()
         assert report["halted"] is False
         assert report["blockers"] == []
+
+
+class TestScoutMode:
+    """While the SMA200 dial says risk_off, scout mode (regime_scan.scout_mode
+    + a small nonzero deployment_target) keeps approvals alive but clamps
+    per-trade risk to SCOUT_RISK_PER_TRADE_PCT so the test cycle collects
+    forward stats at trivial cost."""
+
+    def _seed(self, memory, risk_pct=0.5, deploy=0.10, scout=True):
+        memory.write("decisions", "portfolio_plan", {
+            "approved_opportunities": [{
+                "symbol": "BTC/USD", "action": "BUY", "confidence": 0.9,
+                "price": 50000.0, "max_qty": 0.01, "risk_ok": True,
+                "calculated_risk_pct": risk_pct,
+                "stop_loss": 49000.0, "take_profit": 52000.0,
+                "sizing_notes": [],
+            }],
+            "timestamp": time.time(),
+        })
+        memory.write("analyses", "regime_scan", {
+            "firm_regime": "risk_off", "deployment_target": deploy,
+            "scout_mode": scout, "symbols": {}, "timestamp": time.time()})
+        memory.write("analyses", "market_scan", {
+            "all_analyses": {}, "bellwether_moves": {}, "timestamp": time.time()})
+        memory.write("reports", "health", {
+            "halted": False, "issues": [], "timestamp": time.time()})
+        memory.write("decisions", "risk_assessment", {
+            "verdict": "low", "risks": [], "timestamp": time.time()})
+        save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+
+    def test_scout_clamps_risk_and_approves(self):
+        from agents.compliance_agent import ComplianceAgent
+        from config import SCOUT_RISK_PER_TRADE_PCT
+        memory = SharedMemory()
+        self._seed(memory, risk_pct=0.5)
+
+        report = ComplianceAgent().run()
+        assert len(report["approved_opportunities"]) == 1
+        opp = report["approved_opportunities"][0]
+        assert opp["scout"] is True
+        # 0.5% risk clamped to 0.1% -> qty x 0.2
+        assert opp["max_qty"] == pytest.approx(0.01 * SCOUT_RISK_PER_TRADE_PCT / 0.5)
+        assert any("Scout" in n for n in opp["sizing_notes"])
+
+    def test_no_scout_means_full_cash_rejection(self):
+        """Same candidate, scout off and 0% deployment -> regime cap rejects."""
+        from agents.compliance_agent import ComplianceAgent
+        memory = SharedMemory()
+        self._seed(memory, deploy=0.0, scout=False)
+
+        report = ComplianceAgent().run()
+        assert report["approved_opportunities"] == []
+        assert any("deployment cap" in r
+                   for r in report["rejected_opportunities"][0]["compliance_reasons"])
+
+    def test_regime_agent_sets_scout_floor(self, monkeypatch):
+        """risk_off + SCOUT_MODE_ENABLED -> deployment_target = SCOUT_MAX_DEPLOY_PCT/100
+        and scout_mode=True in the regime_scan report."""
+        import agents.regime_agent as ra
+
+        # risk_off tape: 260 daily bars, last close below SMA200
+        closes = [100.0] * 259 + [90.0]
+        bars = [{"open": c, "high": c * 1.01, "low": c * 0.99, "close": c,
+                 "volume": 1000.0, "ts": 1} for c in closes]  # ts=1 -> all closed
+        monkeypatch.setattr(ra.MarketData, "get_ohlc",
+                            lambda self, s, days=100, interval=None: bars)
+        monkeypatch.setattr(ra, "SCOUT_MODE_ENABLED", True)
+        monkeypatch.setattr(ra, "SCOUT_MAX_DEPLOY_PCT", 10.0)
+
+        memory = SharedMemory()
+        report = ra.RegimeAgent().run()
+        assert report["firm_regime"] == "risk_off"
+        assert report["scout_mode"] is True
+        assert report["deployment_target"] == pytest.approx(0.10)

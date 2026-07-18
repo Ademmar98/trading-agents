@@ -5,6 +5,7 @@ from config import (
     STREAK_LOSS_HALT_PCT, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR,
     MAX_OPEN_RISK_PCT, MAX_POSITIONS_PER_CLUSTER, MAX_GROSS_LEVERAGE,
     MAX_GROUP_POSITIONS, GROUP_OVERRIDE_CONF, MACRO_DIP_OVERRIDE_CONF,
+    SCOUT_RISK_PER_TRADE_PCT,
 )
 from core.risk import count_group_positions, macro_dip_alert
 from agents.base_agent import BaseAgent
@@ -165,6 +166,7 @@ class ComplianceAgent(BaseAgent):
         # (exits always run). Volatile/downtrend target is 0 -> full cash.
         regime_scan = self.memory.read("analyses", "regime_scan") or {}
         deploy_target = regime_scan.get("deployment_target")
+        scout_mode = bool(regime_scan.get("scout_mode"))
         deployed_pct = (portfolio.positions_value / equity) if equity else 0
         regime_full = deploy_target is not None and deployed_pct >= deploy_target
         if regime_full:
@@ -224,6 +226,20 @@ class ComplianceAgent(BaseAgent):
             if reasons:
                 rejected.append({**opp, "compliance_reasons": reasons})
             else:
+                # Scout mode: while the SMA200 dial says risk_off, approvals
+                # are probe-sized — per-trade risk is clamped to
+                # SCOUT_RISK_PER_TRADE_PCT so the test cycle collects forward
+                # stats at trivial cost. The dial's insurance stays intact.
+                if scout_mode:
+                    risk_pct = opp.get("calculated_risk_pct") or SCOUT_RISK_PER_TRADE_PCT
+                    if risk_pct > SCOUT_RISK_PER_TRADE_PCT:
+                        factor = SCOUT_RISK_PER_TRADE_PCT / risk_pct
+                        opp = {**opp,
+                               "max_qty": (opp.get("max_qty") or 0) * factor,
+                               "sizing_notes": (opp.get("sizing_notes") or []) + [
+                                   f"Scout: risk {risk_pct:g}% clamped to {SCOUT_RISK_PER_TRADE_PCT:g}%"]}
+                        candidate_notional = (opp.get("price") or 0) * (opp.get("max_qty") or 0)
+                    opp = {**opp, "scout": True}
                 approved.append({**opp, "compliance_ok": True})
                 approved_notional += candidate_notional
                 held_symbols.append(opp.get("symbol", ""))  # counts toward group caps this cycle

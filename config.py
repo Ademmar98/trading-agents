@@ -55,6 +55,22 @@ DEBATE_DOWNGRADE_MULT = float(os.getenv("DEBATE_DOWNGRADE_MULT", "0.85"))
 # Total wall-clock budget for one cycle's debates (all candidates, all
 # rounds). Per-request timeouts shrink to fit inside this budget.
 DEBATE_TIMEOUT_SEC = int(os.getenv("DEBATE_TIMEOUT_SEC", "90"))
+# When the SMA200 dial has the firm at 0% deployment, compliance will reject
+# every candidate anyway — skip the debate round entirely (zero LLM spend,
+# no 90s stall) and pass the plan through untouched.
+DEBATE_SKIP_WHEN_CAPPED = os.getenv("DEBATE_SKIP_WHEN_CAPPED", "true").lower() == "true"
+
+# ── Scout mode (test cycle, 2026-07-18) ──
+# The SMA200 dial says risk_off (BTC below SMA200) for possibly the whole
+# week; with the cap absolute the expanded-pool test cycle would collect ZERO
+# forward trades. Scout mode keeps the insurance but allows tiny probe
+# entries while risk_off: total deployment is still capped (SCOUT_MAX_DEPLOY_PCT
+# of equity) and per-trade risk is clamped to SCOUT_RISK_PER_TRADE_PCT, so the
+# week produces per-strategy forward stats at trivial cost. Set false to make
+# the dial absolute again (full cash in risk_off).
+SCOUT_MODE_ENABLED = os.getenv("SCOUT_MODE_ENABLED", "true").lower() == "true"
+SCOUT_MAX_DEPLOY_PCT = float(os.getenv("SCOUT_MAX_DEPLOY_PCT", "10"))
+SCOUT_RISK_PER_TRADE_PCT = float(os.getenv("SCOUT_RISK_PER_TRADE_PCT", "0.1"))
 
 # ── Firm direction policy ──
 # BUY-only: all sell-side signal generation, analysis, and routing is

@@ -7,6 +7,7 @@ import requests
 from config import (
     HERMES_API_KEY, HERMES_API_URL, HERMES_MODEL, HERMES_FALLBACK_MODEL,
     DEBATE_ENABLED, DEBATE_TOP_N, DEBATE_DOWNGRADE_MULT, DEBATE_TIMEOUT_SEC,
+    DEBATE_SKIP_WHEN_CAPPED,
     TRADE_FEE_PCT,
 )
 from agents.base_agent import BaseAgent
@@ -81,6 +82,17 @@ class DebateAgent(BaseAgent):
         if not HERMES_API_KEY:
             self.log("Debate skipped — no HERMES_API_KEY; plan passes through unchanged")
             return plan
+
+        # Zero-deployment cap: when the SMA200 dial has the firm at 0% (full
+        # cash, scout mode off), compliance will reject every candidate —
+        # debating them is wasted LLM spend and a full timeout stall.
+        if DEBATE_SKIP_WHEN_CAPPED:
+            regime_scan = self.memory.read("analyses", "regime_scan") or {}
+            if (regime_scan.get("deployment_target") is not None
+                    and regime_scan.get("deployment_target") <= 0):
+                self.log("Debate skipped — firm at 0% deployment (risk_off), "
+                         "compliance will reject all candidates anyway")
+                return plan
 
         # Debate only candidates that could actually trade (risk_ok) — blocked
         # ones are compliance's job, not worth an argument.
@@ -217,10 +229,18 @@ class DebateAgent(BaseAgent):
 
     # ── LLM call (same Hermes/OpenRouter pattern as HeadTrader) ──
 
+    # Process-level flag: once the primary model answers with a credits /
+    # balance error it will keep failing all cycle (and every cycle). Stop
+    # spending timeout budget on it and go straight to the fallback model.
+    _primary_credits_dead = False
+
     def _llm(self, system_prompt, user_msg, deadline):
         errors = []
-        for model in (HERMES_MODEL, HERMES_FALLBACK_MODEL):
+        models = (HERMES_MODEL, HERMES_FALLBACK_MODEL)
+        for model in models:
             if not model:
+                continue
+            if (model == HERMES_MODEL and type(self)._primary_credits_dead):
                 continue
             remaining = deadline - time.time()
             if remaining <= 0:
@@ -246,7 +266,13 @@ class DebateAgent(BaseAgent):
             content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
             if content:
                 return content, model
-            errors.append(f"{model}: {str(data.get('message') or data)[:150]}")
+            err_msg = str(data.get("message") or data)[:150]
+            errors.append(f"{model}: {err_msg}")
+            if (model == HERMES_MODEL
+                    and ("credit" in err_msg.lower() or "balance" in err_msg.lower())):
+                type(self)._primary_credits_dead = True
+                self.log(f"Primary model {model} out of credits — "
+                         "skipping it for the rest of this process")
         raise RuntimeError("; ".join(errors) or "no model produced a response")
 
     @staticmethod

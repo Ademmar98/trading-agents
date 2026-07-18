@@ -263,3 +263,67 @@ def test_parse_verdict_strict_and_fail_open():
     assert f('{"verdict": "NUKE_IT", "rationale": "x"}')[0] == "APPROVE"
     # Last valid JSON block wins (model may emit scratch JSON first).
     assert f('{"note": 1} then {"verdict": "APPROVE", "rationale": "ok"}')[0] == "APPROVE"
+
+
+def test_skip_when_deployment_capped(monkeypatch):
+    """SMA200 dial at 0% deployment (risk_off, scout off): compliance will
+    reject every candidate anyway — the debate must be skipped entirely with
+    zero LLM spend and the plan passed through untouched."""
+    da, agent = _agent(monkeypatch)
+    calls = _mock_llm(monkeypatch, da, '{"verdict": "REJECT", "rationale": "x"}')
+    memory = SharedMemory()
+    opps = [_opp("BTC/USD", 0.9)]
+    _seed_plan(memory, opps)
+    memory.write("analyses", "regime_scan", {
+        "firm_regime": "risk_off", "deployment_target": 0.0,
+        "symbols": {}, "timestamp": time.time()})
+
+    plan = agent.run()
+    assert calls["n"] == 0
+    assert plan["approved_opportunities"] == opps
+
+
+def test_scout_mode_nonzero_target_does_not_skip(monkeypatch):
+    """Scout mode raises the floor to 10% deployment — debates must run."""
+    da, agent = _agent(monkeypatch)
+    calls = _mock_llm(monkeypatch, da, '{"verdict": "APPROVE", "rationale": "ok"}')
+    memory = SharedMemory()
+    _seed_plan(memory, [_opp("BTC/USD", 0.9)])
+    memory.write("analyses", "regime_scan", {
+        "firm_regime": "risk_off", "deployment_target": 0.10,
+        "scout_mode": True, "symbols": {}, "timestamp": time.time()})
+
+    agent.run()
+    assert calls["n"] > 0
+
+
+def test_primary_credits_dead_skips_primary_afterwards(monkeypatch):
+    """A credits/balance failure on the primary model is sticky for the
+    process: subsequent calls go straight to the fallback instead of paying
+    the timeout for the same refusal on every bull/bear/arbiter round."""
+    import types
+    da, agent = _agent(monkeypatch)
+    da.DebateAgent._primary_credits_dead = False
+    attempted = []
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        model = json["model"]
+        attempted.append(model)
+        if model == da.HERMES_MODEL:
+            return types.SimpleNamespace(json=lambda: {
+                "message": "Model requires available credits. Your account balance is too low"})
+        return types.SimpleNamespace(json=lambda: {
+            "choices": [{"message": {"content": "ok"}}]})
+
+    monkeypatch.setattr(da.requests, "post", fake_post)
+    try:
+        _, model = agent._llm("sys", "user", time.time() + 30)
+        assert model == da.HERMES_FALLBACK_MODEL
+        assert attempted == [da.HERMES_MODEL, da.HERMES_FALLBACK_MODEL]
+
+        attempted.clear()
+        _, model = agent._llm("sys", "user", time.time() + 30)
+        assert model == da.HERMES_FALLBACK_MODEL
+        assert attempted == [da.HERMES_FALLBACK_MODEL]  # primary never retried
+    finally:
+        da.DebateAgent._primary_credits_dead = False

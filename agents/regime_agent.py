@@ -3,6 +3,7 @@ import time
 from config import (
     WATCHED_SYMBOLS, SMA200_PERIOD, SMA200_DEPLOY_TARGET,
     SMA200_UNKNOWN_TARGET, FIRM_BELLWETHER,
+    SCOUT_MODE_ENABLED, SCOUT_MAX_DEPLOY_PCT,
 )
 from agents.base_agent import BaseAgent
 from core.market import MarketData
@@ -81,8 +82,17 @@ class RegimeAgent(BaseAgent):
         sma200 = (sum(bell_closes[-SMA200_PERIOD:]) / SMA200_PERIOD
                   if len(bell_closes) >= SMA200_PERIOD else None)
 
+        # Scout mode: while the dial says risk_off, allow tiny probe entries
+        # (capped deployment + per-trade risk clamp downstream in compliance)
+        # so the expanded strategy pool collects forward stats. The dial's
+        # insurance is preserved — deployment stays far below risk_on levels.
+        scout_mode = (SCOUT_MODE_ENABLED and firm_regime == "risk_off")
+        if scout_mode:
+            deployment_target = SCOUT_MAX_DEPLOY_PCT / 100.0
+
         report = {"symbols": regimes, "summary": counts,
                   "firm_regime": firm_regime, "deployment_target": deployment_target,
+                  "scout_mode": scout_mode,
                   "bellwether": FIRM_BELLWETHER,
                   "bellwether_price": bell_closes[-1] if bell_closes else None,
                   "bellwether_sma200": round(sma200, 2) if sma200 else None,
@@ -91,10 +101,14 @@ class RegimeAgent(BaseAgent):
         detail = (f"{FIRM_BELLWETHER} {bell_closes[-1]:,.0f} vs SMA200 {sma200:,.0f}"
                   if sma200 else f"{FIRM_BELLWETHER} history too short")
         self.log(f"Regime scan: {counts} | firm={firm_regime} "
-                 f"deploy<={deployment_target:.0%} ({detail})")
+                 f"deploy<={deployment_target:.0%} ({detail})"
+                 + (" [SCOUT]" if scout_mode else ""))
         if deployment_target <= 0:
             self.notifier.on_agent_action(
                 "regime", f"CASH — {detail}; no new entries until it reclaims SMA200")
+        elif scout_mode:
+            self.notifier.on_agent_action(
+                "regime", f"SCOUT — {detail}; probe-size entries only (risk {0.1}%)")
         dominant = max(counts, key=counts.get) if counts else "unknown"
         found_volatile = any(r.get("regime") == "volatile" for r in regimes.values() if isinstance(r, dict))
         if found_volatile:
