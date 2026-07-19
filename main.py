@@ -14,35 +14,36 @@ HEADLESS = "--headless" in sys.argv or os.getenv("HEADLESS", "").lower() == "tru
 # Reset flag: delete all data and start fresh
 RESET = "--reset" in sys.argv
 
-from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT, MULTI_AGENT_MODE
+from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT, OPTIMIZER_ENABLED, STARTUP_BACKTESTS_ENABLED, MULTI_AGENT_MODE
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
-from core.live_broker import MetaQuotesBroker
-from core.dxtrade_broker import DXTradeBroker
 from core.portfolio import load_portfolio, save_portfolio, Portfolio
 from core.memory import SharedMemory
 from core.database import init_db, fetchall, set_meta
 from core.positions import PositionManager
-from core import websocket_prices
+from core import pending_orders, websocket_prices
 from core.notifier import Notifier
 from core.analytics import get_analytics, get_strategy_stats
 from core.webserver import start_webserver, get_market_prices
 from core.dashboard import make_layout
 from core.backtester import run_all_backtests, get_backtest_results, backtest_symbol
-from core.equity import snapshot_equity, pop_completed_day
+from core.equity import snapshot_equity, pop_completed_day, check_goals
 from core.reconcile import reconcile_with_exchange
 from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
 from agents.sentiment_agent import SentimentAgent
+from agents.news_agent import NewsAgent
 from agents.regime_agent import RegimeAgent
 
 from agents.risk_manager import RiskManager
 from agents.position_sizer import PositionSizer
 from agents.portfolio_manager import PortfolioManagerAgent
+from agents.debate_agent import DebateAgent
 from agents.compliance_agent import ComplianceAgent
 from agents.execution_agent import ExecutionAgent
 from agents.trader import Trader
 from agents.auditor import Auditor
+from agents.head_trader import HeadTrader
 from agents.optimizer_agent import OptimizerAgent
 from agents.health_monitor import HealthMonitor
 
@@ -101,12 +102,8 @@ def acquire_instance_lock():
 
 
 def make_broker():
-    if BROKER_TYPE == "mt5":
-        return MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
     if BROKER_TYPE == "binance":
         return BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
-    if BROKER_TYPE == "dxtrade":
-        return DXTradeBroker(DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN)
     return PaperBroker()
 
 
@@ -195,15 +192,18 @@ CYCLE_AGENTS = (
     Orchestrator,
     HealthMonitor,
     SentimentAgent,
+    NewsAgent,  # self-throttled RSS scan; no-op inside NEWS_INTERVAL_MIN
     RegimeAgent,
     ResearchAnalyst,
     RiskManager,
     PositionSizer,
     PortfolioManagerAgent,
+    DebateAgent,  # adversarial bull/bear/arbiter review of the plan; bounded verdicts only
     ComplianceAgent,
     ExecutionAgent,
     Trader,
     Auditor,
+    HeadTrader,  # self-throttled LLM review; no-op without HERMES_API_KEY
 )
 
 
@@ -230,7 +230,8 @@ def process_price_triggers(prices):
             if sym not in merged and isinstance(d, dict) and d.get("price"):
                 merged[sym] = {"price": d["price"]}
         triggered = pos_mgr.update_prices(merged)
-        if not triggered:
+        fills = pending_orders.check_fills(merged, pos_mgr.has_position)
+        if not triggered and not fills:
             return []
         broker = make_broker_with_retry()
         for tr in triggered:
@@ -238,6 +239,19 @@ def process_price_triggers(prices):
             order = broker.place_order(tr["symbol"], close_side, tr["qty"], tr["exit_price"])
             memory.log("system", f"{tr['reason']}: {tr['symbol']} ${tr['pnl']:+.2f} (exit {order.get('status', '?')})")
             notifier.on_sl_tp(tr)
+        for po in fills:
+            order = broker.place_order(po["symbol"], "BUY", po["quantity"], po["limit_price"],
+                                       sl=po["stop_loss"], tp=po["take_profit"])
+            if order.get("status") == "filled":
+                pos_mgr.open_position(po["symbol"], "BUY", order.get("quantity") or po["quantity"],
+                                      order.get("price") or po["limit_price"],
+                                      sl=po["stop_loss"], tp=po["take_profit"],
+                                      strategy=po.get("strategy", ""))
+                memory.log("system", f"limit filled: BUY {po['symbol']} x{po['quantity']:g} @ ${po['limit_price']}")
+                notifier.on_trade({"symbol": po["symbol"], "side": "BUY",
+                                   "qty": po["quantity"], "price": po["limit_price"],
+                                   "stop_loss": po["stop_loss"], "take_profit": po["take_profit"],
+                                   "status": "filled"})
         return triggered
 
 
@@ -247,12 +261,17 @@ def maintenance_cycle():
     global _cycle_count
     _cycle_count += 1
     try:
-        prices = websocket_prices.get_all_prices()
-        if prices:
-            process_price_triggers(prices)
+        # Always run: the websocket feed is Binance-only and geo-blocked on
+        # some hosts (US VPS) — the trigger processor falls back to the
+        # analyst's scan prices internally, so an empty feed must not skip it.
+        process_price_triggers(websocket_prices.get_all_prices() or {})
 
         _rebalance_positions()
         snapshot_equity()
+        try:
+            check_goals(notifier)
+        except Exception as e:
+            memory.log("system", f"Goal check warning: {e}")
         completed_day = pop_completed_day()
         if completed_day:
             # Full end-of-day report: strategies, trades, agent performance,
@@ -377,8 +396,6 @@ def main():
     console.print(f"[dim]DATA_DIR: {DATA_DIR}[/dim]")
     console.print(f"[dim]BROKER_TYPE: {BROKER_TYPE}[/dim]")
     console.print(f"[dim]PLATFORM: {sys.platform}[/dim]")
-    if BROKER_TYPE == "mt5" and sys.platform != "win32":
-        console.print("[bold yellow]WARNING: MT5 requires Windows — broker will fall back to paper[/bold yellow]")
     memory.log("system", f"startup: DATA_DIR={DATA_DIR} BROKER_TYPE={BROKER_TYPE} platform={sys.platform}")
 
     init_db()
@@ -394,36 +411,12 @@ def main():
     else:
         console.print("[dim]Dashboard unavailable[/dim]")
 
-    if BROKER_TYPE == "mt5":
-        live_broker = MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
-        if live_broker.connected:
-            info = live_broker.get_account_info()
-            memory.log("system", f"MT5 connected: {info['name']}, ${info['balance']} {info['currency']}")
-            portfolio = load_portfolio()
-            if portfolio.initial_balance == 0:
-                portfolio.initial_balance = info['balance']
-                portfolio.cash = info['balance']
-                save_portfolio(portfolio)
-        else:
-            memory.log("system", "MT5 not connected — using paper fallback")
-    elif BROKER_TYPE == "binance":
+    if BROKER_TYPE == "binance":
         live_broker = BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
         if live_broker.connected:
             memory.log("system", "Binance testnet connected")
         else:
             memory.log("system", "Binance not connected — using paper fallback")
-    elif BROKER_TYPE == "dxtrade":
-        live_broker = DXTradeBroker(DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN)
-        if live_broker.connected:
-            info = live_broker.get_account_info()
-            memory.log("system", f"DXtrade connected: account {info.get('account') or info.get('accountId', '?')}, balance ${info.get('balance', 0)}")
-            portfolio = load_portfolio()
-            if portfolio.initial_balance == 0:
-                portfolio.initial_balance = info.get('balance', INITIAL_BALANCE)
-                portfolio.cash = info.get('balance', INITIAL_BALANCE)
-                save_portfolio(portfolio)
-        else:
-            memory.log("system", "DXtrade not connected — using paper fallback")
     portfolio = load_portfolio()
     if portfolio.initial_balance == 0:
         portfolio.initial_balance = INITIAL_BALANCE
@@ -449,25 +442,29 @@ def main():
         console.print(f"[yellow]Restored {existing['count']} open position(s)[/yellow]")
 
     if notifier._enabled:
+        notifier.start_polling()
         if RESET:
             notifier.send(f"[Trading Agent Firm - Fresh Test Initialized with ${INITIAL_BALANCE:,.0f} USD Capital]")
         else:
             notifier.send("[Trading Agent Firm started]")
 
-    console.print("[dim]Running backtests on key symbols...[/dim]")
-    try:
-        bt_symbols = [s for s in WATCHED_SYMBOLS if "/" in s][:10]
-        bt_results = run_all_backtests(bt_symbols)
-        console.print(f"[dim]Backtested {len(bt_results)} symbols[/dim]")
-        for r in bt_results[:10]:
-            c = "green" if r["total_return"] >= 0 else "red"
-            console.print(f"  {r['symbol']:8s}  [{c}]{r['total_return']:+.1f}%[/{c}]  "
-                          f"{r['total_trades']}t  WR:{r['win_rate']:.0f}%  "
-                          f"S:{r['sharpe_ratio']}  DD:{r['max_drawdown']:.1f}%")
-    except Exception as e:
-        # Backtests are informational — never let them kill the bot
-        memory.log("system", f"Startup backtests failed: {e}")
-        memory.log_error("backtester", str(e), traceback.format_exc())
+    if STARTUP_BACKTESTS_ENABLED:
+        console.print("[dim]Running backtests on key symbols...[/dim]")
+        try:
+            bt_symbols = [s for s in WATCHED_SYMBOLS if "/" in s][:10]
+            bt_results = run_all_backtests(bt_symbols)
+            console.print(f"[dim]Backtested {len(bt_results)} symbols[/dim]")
+            for r in bt_results[:10]:
+                c = "green" if r["total_return"] >= 0 else "red"
+                console.print(f"  {r['symbol']:8s}  [{c}]{r['total_return']:+.1f}%[/{c}]  "
+                              f"{r['total_trades']}t  WR:{r['win_rate']:.0f}%  "
+                              f"S:{r['sharpe_ratio']}  DD:{r['max_drawdown']:.1f}%")
+        except Exception as e:
+            # Backtests are informational — never let them kill the bot
+            memory.log("system", f"Startup backtests failed: {e}")
+            memory.log_error("backtester", str(e), traceback.format_exc())
+    else:
+        console.print("[dim]Startup backtests skipped (STARTUP_BACKTESTS_ENABLED=false)[/dim]")
 
     runtime = None
     if MULTI_AGENT_MODE:
@@ -508,15 +505,22 @@ def main():
                     memory.log_error("optimizer", str(e))
                 time.sleep(7200)  # every 2 hours
 
-        opt_thread = threading.Thread(target=optimizer_loop, daemon=True)
-        opt_thread.start()
+        # Optimizer is off by default: it tunes live risk params from a
+        # cost-free backtest of the (now disabled, proven net-negative)
+        # classic strategies on BTC alone. Tuning dead signals on a cost-free
+        # model moves real risk on noise.
+        if OPTIMIZER_ENABLED:
+            opt_thread = threading.Thread(target=optimizer_loop, daemon=True)
+            opt_thread.start()
+            console.print("[dim]Optimizer thread started[/dim]")
+        else:
+            console.print("[dim]Optimizer disabled (OPTIMIZER_ENABLED=false)[/dim]")
+            memory.log("system", "Optimizer disabled — no live param mutation")
 
     try:
         if HEADLESS:
             while True:
-                prices = websocket_prices.get_all_prices()
-                if prices:
-                    process_price_triggers(prices)
+                process_price_triggers(websocket_prices.get_all_prices() or {})
                 sync_position_stores()
                 snapshot_equity()
                 time.sleep(30)
@@ -528,9 +532,8 @@ def main():
                     if analysis:
                         prices = {s: {"price": d.get("price", 0)}
                                  for s, d in (analysis.get("all_analyses", {}) or {}).items()}
-                if prices:
-                    process_price_triggers(prices)
-                    sync_position_stores()
+                process_price_triggers(prices or {})
+                sync_position_stores()
                 portfolio = load_portfolio()
                 live.update(make_layout(portfolio, pos_mgr, memory, live_broker))
                 time.sleep(2)

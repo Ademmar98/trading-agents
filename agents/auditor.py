@@ -17,14 +17,26 @@ class Auditor(BaseAgent):
         logs = self.memory.get_recent_logs(50)
         analytics = compute_analytics()
 
-        trade_rows = fetchall("SELECT COALESCE(NULLIF(strategy, ''), 'unknown') AS strategy, pnl FROM trades")
+        # One logical trade per position: scaled exits write several rows
+        # (partial_tp + runner) whose split would otherwise skew win rates
+        # and get profitable strategies auto-disabled.
+        trade_rows = fetchall("""
+            SELECT MAX(COALESCE(NULLIF(strategy, ''), 'unknown')) AS strategy, SUM(pnl) AS pnl
+            FROM trades GROUP BY COALESCE(position_id, id)
+        """)
         strat_stats = {}
         for r in trade_rows:
-            s = strat_stats.setdefault(r["strategy"], {"pnls": [], "wins": 0, "total": 0})
-            s["pnls"].append(r["pnl"])
-            s["total"] += 1
-            if r["pnl"] > 0:
-                s["wins"] += 1
+            # Positions opened from a combined signal carry ALL contributing
+            # strategies pipe-joined ("a|b"). Credit the position's pnl to
+            # each contributor (contribution, not allocation) so every
+            # strategy that helped trigger the trade builds a track record —
+            # and the unprofitable-strategy exclusion can see it.
+            for strat_name in (r["strategy"] or "unknown").split("|"):
+                s = strat_stats.setdefault(strat_name, {"pnls": [], "wins": 0, "total": 0})
+                s["pnls"].append(r["pnl"])
+                s["total"] += 1
+                if r["pnl"] > 0:
+                    s["wins"] += 1
         for name, s in strat_stats.items():
             s["trades"] = s["total"]
             s["win_rate"] = (s["wins"] / s["total"] * 100) if s["total"] else 0
@@ -33,11 +45,23 @@ class Auditor(BaseAgent):
         if strat_stats:
             save_strategy_stats(strat_stats)
 
-        total_trades = len(portfolio.trades)
-        winning_trades = sum(1 for t in portfolio.trades
-                            if t.get("realized_pnl", 0) > 0)
-        losing_trades = sum(1 for t in portfolio.trades
-                           if t.get("realized_pnl", 0) < 0)
+        # Headline win rate comes from the same position-grouped SQL rows as
+        # analytics, NOT from portfolio.trades: main.sync_position_stores()
+        # (main.py:303-304) fills that list with SQL trade rows keyed `pnl`,
+        # while the paper broker appends order dicts keyed `realized_pnl`
+        # (core/broker.py:53,86). Reading only `realized_pnl` scored every
+        # synced trade as 0 and reported a 0% win rate on a book analytics
+        # measured at ~87%. Fallback keeps ledger-only deployments working.
+        if trade_rows:
+            total_trades = len(trade_rows)
+            winning_trades = sum(1 for r in trade_rows if (r["pnl"] or 0) > 0)
+            losing_trades = sum(1 for r in trade_rows if (r["pnl"] or 0) < 0)
+        else:
+            total_trades = len(portfolio.trades)
+            winning_trades = sum(1 for t in portfolio.trades
+                                if t.get("realized_pnl", t.get("pnl", 0)) > 0)
+            losing_trades = sum(1 for t in portfolio.trades
+                               if t.get("realized_pnl", t.get("pnl", 0)) < 0)
         win_rate = (winning_trades / total_trades * 100
                    ) if total_trades > 0 else 0
 
@@ -48,6 +72,15 @@ class Auditor(BaseAgent):
             suggestions.append("Low exposure — consider deploying more capital")
         if win_rate < 40 and total_trades > 5:
             suggestions.append("Win rate below 40% — tighten entry criteria")
+        # Divergence alarm: a strategy with a real sample and negative
+        # expectancy is bleeding — surface it before the auto-exclusion
+        # filter silently disables it.
+        for name, s in strat_stats.items():
+            n = s.get("trades", 0)
+            exp = (s.get("pnl", 0) / n) if n else 0
+            if n >= 10 and exp < 0:
+                suggestions.append(
+                    f"Strategy '{name}': negative expectancy ${exp:.2f}/trade over {n} trades — review or exclude")
         if portfolio.total_pnl_pct < -5:
             suggestions.append("Drawdown exceeds 5% — review risk parameters")
             needs_rebalance = True

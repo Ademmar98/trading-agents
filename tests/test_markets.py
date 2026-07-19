@@ -1,24 +1,32 @@
-"""Tests for multi-market support: stocks and metals alongside crypto.
+"""Crypto-only firm: symbol classification, 24/7 market hours, the crypto
+watchlist, and SL/TP trigger coverage from scan prices when a symbol is
+absent from the websocket feed.
 
-Covers Yahoo symbol mapping (metals need the =X suffix), symbol
-classification, market-hours gating, the compliance closed-market check, and
-SL/TP trigger coverage for symbols absent from the crypto websocket feed.
+Stocks/metals/forex were removed 2026-07-14 — this file asserts the
+crypto-only behavior that replaced them.
 """
-import subprocess
-import sys
+import logging
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
 import config as app_config
-from core.data_provider import _yahoo_symbol
+import core.data_provider as dp
 from core.market import classify_symbol, is_market_open
-from core.database import init_db
+from core.database import init_db, execute
 from core.memory import SharedMemory
 from core.portfolio import Portfolio, save_portfolio, load_portfolio
+
+
+def _age_open_positions(seconds=3600):
+    """Backdate opened_at so the MIN_HOLD_BARS minimum-hold guard (no exits
+    less than 1 bar after entry) does not block the trigger checks below.
+    3600s >> one 5m bar. Same pattern as tests/test_exits.py."""
+    past = (datetime.now(timezone.utc) - timedelta(seconds=seconds)).strftime("%Y-%m-%d %H:%M:%S")
+    execute("UPDATE positions SET opened_at=? WHERE status='open'", [past])
 
 
 @pytest.fixture(autouse=True)
@@ -32,77 +40,37 @@ def sandbox_data_dir(monkeypatch):
     shutil.rmtree(str(tmp), ignore_errors=True)
 
 
-def test_yahoo_symbol_mapping():
-    assert _yahoo_symbol("BTC/USD") == "BTC-USD"
-    assert _yahoo_symbol("XAUUSD") == "XAUUSD=X"
-    assert _yahoo_symbol("XAGUSD") == "XAGUSD=X"
-    assert _yahoo_symbol("AAPL") == "AAPL"
-    assert _yahoo_symbol("GOOGL") == "GOOGL"
-
-
-def test_classify_symbol():
+def test_everything_classifies_as_crypto():
     assert classify_symbol("BTC/USD") == "crypto"
-    assert classify_symbol("XAUUSD") == "forex"
-    assert classify_symbol("EURUSD") == "forex"
-    assert classify_symbol("AAPL") == "stock"
-    assert classify_symbol("GOOGL") == "stock"
-
-
-# 2026-07-08 is a Wednesday, 2026-07-10 Friday, 2026-07-11 Saturday, 2026-07-12 Sunday
-WED_NOON_ET = datetime(2026, 7, 8, 15, 0, tzinfo=timezone.utc)   # 11:00 EDT
-WED_NIGHT = datetime(2026, 7, 8, 3, 0, tzinfo=timezone.utc)      # 23:00 EDT prev day
-WED_AFTER_CLOSE = datetime(2026, 7, 8, 20, 30, tzinfo=timezone.utc)  # 16:30 EDT
-SATURDAY = datetime(2026, 7, 11, 15, 0, tzinfo=timezone.utc)
-SUNDAY_EARLY = datetime(2026, 7, 12, 21, 0, tzinfo=timezone.utc)
-SUNDAY_LATE = datetime(2026, 7, 12, 23, 0, tzinfo=timezone.utc)
-FRIDAY_LATE = datetime(2026, 7, 10, 22, 0, tzinfo=timezone.utc)
+    assert classify_symbol("ETH/USD") == "crypto"
+    # even a stray legacy ticker collapses to the single crypto cluster
+    assert classify_symbol("AAPL") == "crypto"
 
 
 def test_crypto_always_open():
-    assert is_market_open("BTC/USD", SATURDAY)
-    assert is_market_open("BTC/USD", WED_NIGHT)
+    saturday = datetime(2026, 7, 11, 15, 0, tzinfo=timezone.utc)
+    wed_night = datetime(2026, 7, 8, 3, 0, tzinfo=timezone.utc)
+    assert is_market_open("BTC/USD", saturday)
+    assert is_market_open("BTC/USD", wed_night)
+    assert is_market_open("ETH/USD")  # no time arg -> now, still open
 
 
-def test_stock_market_hours():
-    assert is_market_open("AAPL", WED_NOON_ET)
-    assert not is_market_open("AAPL", WED_NIGHT)
-    assert not is_market_open("AAPL", WED_AFTER_CLOSE)
-    assert not is_market_open("AAPL", SATURDAY)
+def test_watchlist_is_crypto_only():
+    assert all("/" in s for s in app_config.WATCHED_SYMBOLS)
+    assert "BTC/USD" in app_config.WATCHED_SYMBOLS
+    assert "AAPL" not in app_config.WATCHED_SYMBOLS
+    assert "XAUUSD" not in app_config.WATCHED_SYMBOLS
+    assert app_config.MARKET_TYPE == "crypto"
 
 
-def test_metals_market_hours():
-    assert is_market_open("XAUUSD", WED_NIGHT)       # 24h on weekdays
-    assert is_market_open("XAUUSD", WED_NOON_ET)
-    assert not is_market_open("XAUUSD", SATURDAY)
-    assert not is_market_open("XAUUSD", SUNDAY_EARLY)
-    assert is_market_open("XAUUSD", SUNDAY_LATE)     # reopens Sun 22:00 UTC
-    assert not is_market_open("XAUUSD", FRIDAY_LATE)  # closes Fri 21:00 UTC
+def test_no_stock_metal_correlation_groups():
+    assert set(app_config.CORRELATION_GROUPS) == {"crypto_alts", "crypto_majors"}
+    assert list(app_config.MACRO_BELLWETHERS) == ["crypto"]
 
 
-def test_compliance_rejects_closed_market(monkeypatch):
-    import agents.compliance_agent as ca
-
-    monkeypatch.setattr(ca, "is_market_open", lambda s: False)
-    memory = SharedMemory()
-    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
-    memory.write("decisions", "portfolio_plan", {
-        "approved_opportunities": [{
-            "symbol": "AAPL", "action": "BUY", "confidence": 0.9,
-            "price": 200.0, "max_qty": 5.0, "risk_ok": True,
-            "reasons": [], "strategies": ["test"],
-        }],
-        "timestamp": time.time(),
-    })
-
-    report = ca.ComplianceAgent().run()
-    assert report["approved_opportunities"] == []
-    rejected = report["rejected_opportunities"][0]
-    assert "Market closed for this symbol" in rejected["compliance_reasons"]
-
-
-def test_trigger_check_uses_market_scan_for_non_crypto(monkeypatch):
-    """A stock position must hit its SL from scan prices when the websocket
-    feed (crypto-only) has no quote for it."""
+def test_trigger_check_uses_market_scan_when_ws_silent(monkeypatch):
+    """A position whose symbol isn't on the websocket feed must still hit its
+    SL from the market-scan prices merged in by process_price_triggers."""
     import main
     from core.broker import PaperBroker
     from core.notifier import Notifier
@@ -112,47 +80,163 @@ def test_trigger_check_uses_market_scan_for_non_crypto(monkeypatch):
     save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
 
     broker = PaperBroker()
-    order = broker.place_order("AAPL", "BUY", 5.0, 200.0, sl=192.0, tp=220.0)
+    order = broker.place_order("TRX/USD", "BUY", 5.0, 200.0, sl=192.0, tp=220.0)
     assert order["status"] == "filled"
-    main.pos_mgr.open_position("AAPL", "BUY", 5.0, 200.0, sl=192.0, tp=220.0)
+    main.pos_mgr.open_position("TRX/USD", "BUY", 5.0, 200.0, sl=192.0, tp=220.0)
+    _age_open_positions()
 
     main.memory.write("analyses", "market_scan", {
-        "all_analyses": {"AAPL": {"price": 190.0}},
+        "all_analyses": {"TRX/USD": {"price": 190.0}},
         "timestamp": time.time(),
     })
 
     # Empty websocket prices: the merge from market_scan must still trigger the SL
     triggered = main.process_price_triggers({})
     assert len(triggered) == 1
-    assert triggered[0]["symbol"] == "AAPL"
+    assert triggered[0]["symbol"] == "TRX/USD"
     assert triggered[0]["reason"] == "stop_loss"
     p = load_portfolio()
-    assert "AAPL" not in p.positions
+    assert "TRX/USD" not in p.positions
     fee = app_config.TRADE_FEE_PCT / 100.0
-    expected = 10000.0 - 1000.0 * (1 + fee) + 950.0 * (1 - fee)
+    # Slippage model (both layers adverse): entry fills at quote x (1+slip);
+    # the stop-market exit fills at min(price, SL) x (1-slip) in the ledger
+    # and the broker's exit order slips once more on top of that price.
+    from core.broker import SLIPPAGE_PCT
+    slip = SLIPPAGE_PCT / 100.0
+    buy_cost = 5.0 * 200.0 * (1 + slip)
+    exit_fill = 190.0 * (1 - slip) * (1 - slip)
+    exit_proceeds = 5.0 * exit_fill
+    expected = 10000.0 - buy_cost * (1 + fee) + exit_proceeds * (1 - fee)
     assert p.cash == pytest.approx(expected)
 
 
-def test_market_type_assembles_watchlist():
-    """MARKET_TYPE=both merges crypto + stocks + metals; crypto stays default."""
-    code = (
-        "import config; "
-        "assert 'AAPL' in config.WATCHED_SYMBOLS, 'stocks missing'; "
-        "assert 'XAUUSD' in config.WATCHED_SYMBOLS, 'metals missing'; "
-        "assert 'BTC/USD' in config.WATCHED_SYMBOLS, 'crypto missing'"
-    )
-    import os
-    env = {**os.environ, "MARKET_TYPE": "both", "WATCHED_SYMBOLS": ""}
-    r = subprocess.run([sys.executable, "-c", code], env=env,
-                       capture_output=True, text=True, timeout=60)
-    assert r.returncode == 0, r.stderr
+# --- Data integrity: closed bars only, real depth, gap detection, 'ts' ----
+# Regression coverage for the fetch-level audit fixes in core/data_provider.
 
-    code_crypto = (
-        "import config; "
-        "assert 'AAPL' not in config.WATCHED_SYMBOLS; "
-        "assert 'BTC/USD' in config.WATCHED_SYMBOLS"
-    )
-    env = {**os.environ, "MARKET_TYPE": "crypto", "WATCHED_SYMBOLS": ""}
-    r = subprocess.run([sys.executable, "-c", code_crypto], env=env,
-                       capture_output=True, text=True, timeout=60)
-    assert r.returncode == 0, r.stderr
+
+class _Resp:
+    def __init__(self, data):
+        self._data = data
+
+    def json(self):
+        return self._data
+
+
+def _binance_kline(open_ms, close_ms, price=100.0):
+    return [open_ms, str(price), str(price + 1), str(price - 1), str(price),
+            "12.5", close_ms, "0", 0, "0", "0", "0"]
+
+
+class TestClosedBarsOnly:
+    def test_binance_drops_forming_bar(self, monkeypatch):
+        day = 86_400_000
+        now_ms = int(time.time() * 1000)
+        last_open = (now_ms // day) * day - day  # open of last CLOSED daily
+        klines = [_binance_kline(last_open - i * day, last_open - i * day + day - 1)
+                  for i in (2, 1, 0)]
+        klines.append(_binance_kline(last_open + day, last_open + 2 * day - 1))  # forming
+        monkeypatch.setattr(dp.requests, "get", lambda *a, **k: _Resp(klines))
+        bars = dp.fetch_binance_klines("BTC/USD", "1d", 10)
+        assert len(bars) == 3
+        assert all(b["ts"] + 86400 <= int(time.time()) for b in bars)
+        assert bars[-1]["ts"] == last_open // 1000
+
+    def test_cryptocom_drops_forming_bar(self, monkeypatch):
+        day = 86_400_000
+        now_ms = int(time.time() * 1000)
+        last_open = (now_ms // day) * day - day
+        data = [{"t": last_open - i * day, "o": "1", "h": "2", "l": "0.5",
+                 "c": "1.5", "v": "10"} for i in (2, 1, 0)]
+        data.append({"t": last_open + day, "o": "1", "h": "2", "l": "0.5",
+                     "c": "1.5", "v": "10"})  # forming daily
+        monkeypatch.setattr(dp.requests, "get",
+                            lambda *a, **k: _Resp({"result": {"data": data}}))
+        bars = dp.fetch_cryptocom_ohlc("BTC/USD", "1d", 10)
+        assert len(bars) == 3
+        assert all(b["ts"] + 86400 <= int(time.time()) for b in bars)
+
+
+class TestPaginationDepth:
+    def test_binance_paginates_past_1000_bar_cap(self, monkeypatch):
+        hour = 3_600_000
+        now_ms = int(time.time() * 1000)
+        last_open = (now_ms // hour) * hour - hour  # last CLOSED hourly
+        opens = [last_open - (1499 - i) * hour for i in range(1500)]
+        all_klines = [_binance_kline(o, o + hour - 1) for o in opens]
+        calls = []
+
+        def fake_get(url, params=None, **kw):
+            calls.append(dict(params))
+            limit = params.get("limit", 500)
+            end = params.get("endTime")
+            page = [k for k in all_klines if end is None or k[0] <= end]
+            return _Resp(page[-limit:])
+
+        monkeypatch.setattr(dp.requests, "get", fake_get)
+        bars = dp.fetch_binance_klines("BTC/USD", "1h", 1500)
+        assert len(calls) == 2  # 1000 + 500
+        assert len(bars) == 1500
+        assert bars[0]["ts"] == opens[0] // 1000
+        assert bars[-1]["ts"] == last_open // 1000
+        # strictly ascending, contiguous, no duplicates
+        tss = [b["ts"] for b in bars]
+        assert tss == sorted(set(tss))
+
+    def test_cryptocom_paginates_past_300_bar_cap(self, monkeypatch):
+        hour = 3_600_000
+        now_ms = int(time.time() * 1000)
+        last_open = (now_ms // hour) * hour - hour
+        opens = [last_open - (799 - i) * hour for i in range(800)]
+        all_bars = [{"t": o, "o": "1", "h": "2", "l": "0.5", "c": "1.5", "v": "10"}
+                    for o in opens]
+        calls = []
+
+        def fake_get(url, params=None, **kw):
+            calls.append(dict(params))
+            count = params.get("count", 300)
+            end = params.get("end_ts")
+            page = [b for b in all_bars if end is None or b["t"] <= end]
+            return _Resp({"result": {"data": page[-count:]}})
+
+        monkeypatch.setattr(dp.requests, "get", fake_get)
+        bars = dp.fetch_cryptocom_ohlc("BTC/USD", "1h", 800)
+        assert len(calls) == 3  # 300 + 300 + 200
+        assert len(bars) == 800
+        assert bars[0]["ts"] == opens[0] // 1000
+        assert bars[-1]["ts"] == last_open // 1000
+
+
+class TestGapDetectionAndTs:
+    def test_gap_between_bars_logs_warning(self, monkeypatch, caplog):
+        day = 86_400_000
+        base = ((int(time.time()) // 86400) - 10) * 86400 * 1000  # well past, aligned
+        opens = [base, base + day, base + 3 * day]  # one daily bar missing
+        klines = [_binance_kline(o, o + day - 1) for o in opens]
+        monkeypatch.setattr(dp.requests, "get", lambda *a, **k: _Resp(klines))
+        with caplog.at_level(logging.WARNING, logger="data_provider"):
+            bars = dp.fetch_binance_klines("BTC/USD", "1d", 10)
+        assert len(bars) == 3
+        assert any("gap" in r.getMessage().lower() for r in caplog.records)
+
+    def test_contiguous_bars_log_no_gap_warning(self, monkeypatch, caplog):
+        day = 86_400_000
+        base = ((int(time.time()) // 86400) - 10) * 86400 * 1000
+        opens = [base + i * day for i in range(4)]
+        klines = [_binance_kline(o, o + day - 1) for o in opens]
+        monkeypatch.setattr(dp.requests, "get", lambda *a, **k: _Resp(klines))
+        with caplog.at_level(logging.WARNING, logger="data_provider"):
+            bars = dp.fetch_binance_klines("BTC/USD", "1d", 10)
+        assert len(bars) == 4
+        assert not any("gap" in r.getMessage().lower() for r in caplog.records)
+
+    def test_every_candle_carries_unix_ts(self, monkeypatch):
+        day = 86_400_000
+        base = ((int(time.time()) // 86400) - 10) * 86400 * 1000
+        klines = [_binance_kline(base + i * day, base + (i + 1) * day - 1)
+                  for i in range(3)]
+        monkeypatch.setattr(dp.requests, "get", lambda *a, **k: _Resp(klines))
+        bars = dp.fetch_binance_klines("BTC/USD", "1d", 10)
+        assert all(isinstance(b["ts"], int) and b["ts"] > 0 for b in bars)
+        # ts must match the ISO date field (session strategies rely on it)
+        for b in bars:
+            assert datetime.fromtimestamp(b["ts"], tz=timezone.utc).isoformat() == b["date"]

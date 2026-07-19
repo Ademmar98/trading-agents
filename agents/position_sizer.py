@@ -23,8 +23,11 @@ class PositionSizer(BaseAgent):
             price = opp.get("price", 0)
             action = opp.get("action", "BUY")
 
-            size_mult = kelly_pct / 25.0 if kelly_pct else 1.0
-            size_mult = max(0.25, min(size_mult, 1.0))
+            # Kelly legitimately computes 0 on a negative-edge book; the old
+            # falsy branch (`if kelly_pct else 1.0`) turned that into FULL
+            # size. Unconditional now, floored at 0: no edge -> no size.
+            size_mult = kelly_pct / 25.0
+            size_mult = max(0.0, min(size_mult, 1.0))
 
             reg = (regimes.get("symbols", {}) or {}).get(symbol, {})
             vol = reg.get("volatility", 0)
@@ -56,15 +59,37 @@ class PositionSizer(BaseAgent):
 
     @staticmethod
     def _kelly_fraction():
-        trades = fetchall("SELECT pnl FROM trades WHERE pnl IS NOT NULL")
-        if len(trades) < 5:
+        # One R-multiple per POSITION, not per trade row:
+        #  - scaled exits (partial_tp + runner) write several rows under one
+        #    position_id; ungrouped they counted as separate "wins";
+        #  - raw-dollar pnl pools strategies with different risk budgets, so
+        #    big-notional trades drowned out the rest. Normalizing by the
+        #    position's frozen 1R risk (positions.initial_risk x closed qty)
+        #    makes Kelly measure edge, not size.
+        rows = fetchall("""
+            SELECT SUM(t.pnl) AS pnl, SUM(t.qty) AS qty,
+                   MAX(p.initial_risk) AS initial_risk
+            FROM trades t
+            LEFT JOIN positions p ON t.position_id = p.id
+            WHERE t.pnl IS NOT NULL
+            GROUP BY COALESCE(t.position_id, t.id)
+        """)
+        r_multiples = []
+        for r in rows:
+            risk = (r["initial_risk"] or 0) * (r["qty"] or 0)
+            if risk <= 0:
+                # Legacy/manual rows without a frozen 1R basis have no honest
+                # R — skip them rather than distort the sample.
+                continue
+            r_multiples.append(r["pnl"] / risk)
+        # Kelly on a handful of trades is noise; require a real track record.
+        if len(r_multiples) < 30:
             return 25.0
-        pnls = [t["pnl"] for t in trades]
-        winning = [p for p in pnls if p > 0]
-        losing = [abs(p) for p in pnls if p < 0]
+        winning = [x for x in r_multiples if x > 0]
+        losing = [abs(x) for x in r_multiples if x < 0]
         if not winning or not losing:
             return 25.0
-        win_rate = len(winning) / len(pnls)
+        win_rate = len(winning) / len(r_multiples)
         avg_win = sum(winning) / len(winning)
         avg_loss = sum(losing) / len(losing)
         if avg_loss == 0:

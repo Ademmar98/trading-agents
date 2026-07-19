@@ -997,6 +997,9 @@ class AsyncOptimizer(AsyncAgent):
         self._legacy = OptimizerAgent()
 
     async def tick(self):
+        from config import OPTIMIZER_ENABLED
+        if not OPTIMIZER_ENABLED:
+            return   # same rationale as main: don't tune live risk on noise
         await self.work(self._legacy.run)
         await self.publish(TOPIC_TUNING, {"checked_at": time.time()}, persist=False)
 

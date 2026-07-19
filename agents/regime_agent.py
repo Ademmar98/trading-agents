@@ -1,9 +1,33 @@
-﻿import time
+import time
 
-from config import WATCHED_SYMBOLS
+from config import (
+    WATCHED_SYMBOLS, SMA200_PERIOD, SMA200_DEPLOY_TARGET,
+    SMA200_UNKNOWN_TARGET, FIRM_BELLWETHER,
+    SCOUT_MODE_ENABLED, SCOUT_MAX_DEPLOY_PCT,
+)
 from agents.base_agent import BaseAgent
 from core.market import MarketData
 from core.regime import detect_regime
+
+
+def firm_deployment(bellwether_closes):
+    """The firm's capital-deployment dial — the one rule with evidence behind it.
+
+    Deploy while the bellwether closes above its SMA200; sit in cash below it.
+    Validated over 6.6 years including the 2022 bear (analysis/edge_hunt.py):
+    max drawdown 76.6% -> 63.9% at a higher Sharpe (0.93 vs 0.85) than holding.
+    Insurance, not alpha. Returns (firm_regime, deployment_target).
+
+    `bellwether_closes` must be CLOSED daily closes only — comparing the
+    forming bar against SMA200 would flip the firm in and out of cash intraday.
+    """
+    closes = [c for c in (bellwether_closes or []) if c]
+    if len(closes) < SMA200_PERIOD:
+        return "unknown", SMA200_UNKNOWN_TARGET
+    sma200 = sum(closes[-SMA200_PERIOD:]) / SMA200_PERIOD
+    if closes[-1] > sma200:
+        return "risk_on", SMA200_DEPLOY_TARGET
+    return "risk_off", 0.0
 
 
 class RegimeAgent(BaseAgent):
@@ -38,9 +62,53 @@ class RegimeAgent(BaseAgent):
             regimes[symbol] = result
             counts[result.get("regime", "unknown")] = counts.get(result.get("regime", "unknown"), 0) + 1
 
-        report = {"symbols": regimes, "summary": counts, "timestamp": time.time()}
+        # Firm-wide dial: the validated SMA200 rule on the bellwether. Needs
+        # 200+ daily closes, so it is fetched independently of the per-symbol
+        # regime labels above (which remain advisory only).
+        bell_closes = []
+        try:
+            bars = self.market.get_ohlc(FIRM_BELLWETHER, days=SMA200_PERIOD + 60,
+                                        interval="1d")
+            # The SMA200 dial must compare the last CLOSED daily bar, never
+            # the forming one (an intraday dip below SMA200 is not a regime
+            # change). The data provider drops forming bars at fetch level;
+            # this filter is the second line of defense (e.g. stale cache).
+            now = time.time()
+            bell_closes = [b["close"] for b in (bars or [])
+                           if "ts" not in b or b["ts"] + 86400 <= now]
+        except Exception as e:
+            self.log(f"Bellwether fetch failed ({FIRM_BELLWETHER}): {e}")
+        firm_regime, deployment_target = firm_deployment(bell_closes)
+        sma200 = (sum(bell_closes[-SMA200_PERIOD:]) / SMA200_PERIOD
+                  if len(bell_closes) >= SMA200_PERIOD else None)
+
+        # Scout mode: while the dial says risk_off, allow tiny probe entries
+        # (capped deployment + per-trade risk clamp downstream in compliance)
+        # so the expanded strategy pool collects forward stats. The dial's
+        # insurance is preserved — deployment stays far below risk_on levels.
+        scout_mode = (SCOUT_MODE_ENABLED and firm_regime == "risk_off")
+        if scout_mode:
+            deployment_target = SCOUT_MAX_DEPLOY_PCT / 100.0
+
+        report = {"symbols": regimes, "summary": counts,
+                  "firm_regime": firm_regime, "deployment_target": deployment_target,
+                  "scout_mode": scout_mode,
+                  "bellwether": FIRM_BELLWETHER,
+                  "bellwether_price": bell_closes[-1] if bell_closes else None,
+                  "bellwether_sma200": round(sma200, 2) if sma200 else None,
+                  "timestamp": time.time()}
         self.memory.write("analyses", "regime_scan", report)
-        self.log(f"Regime scan complete: {counts}")
+        detail = (f"{FIRM_BELLWETHER} {bell_closes[-1]:,.0f} vs SMA200 {sma200:,.0f}"
+                  if sma200 else f"{FIRM_BELLWETHER} history too short")
+        self.log(f"Regime scan: {counts} | firm={firm_regime} "
+                 f"deploy<={deployment_target:.0%} ({detail})"
+                 + (" [SCOUT]" if scout_mode else ""))
+        if deployment_target <= 0:
+            self.notifier.on_agent_action(
+                "regime", f"CASH — {detail}; no new entries until it reclaims SMA200")
+        elif scout_mode:
+            self.notifier.on_agent_action(
+                "regime", f"SCOUT — {detail}; probe-size entries only (risk {0.1}%)")
         dominant = max(counts, key=counts.get) if counts else "unknown"
         found_volatile = any(r.get("regime") == "volatile" for r in regimes.values() if isinstance(r, dict))
         if found_volatile:

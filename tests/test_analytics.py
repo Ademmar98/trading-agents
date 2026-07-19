@@ -47,6 +47,33 @@ def test_compute_analytics_with_trades():
     assert result["var_95"] > 0
 
 
+def test_partial_exit_legs_merge_into_one_trade():
+    """Regression: a partial_tp row + runner row for the same position_id are
+    ONE trade with net pnl. Ungrouped they counted as 2 trades (1 win / 1
+    loss here), skewing win rate and profit factor."""
+    execute(
+        "INSERT INTO positions (id, symbol, side, quantity, entry_price, current_price, initial_risk) "
+        "VALUES (1, 'BTC/USD', 'BUY', 0.1, 100.0, 100.0, 5.0)")
+    execute(
+        "INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, strategy, opened_at, closed_at) "
+        "VALUES (1, 'BTC/USD', 'BUY', 0.05, 100.0, 110.0, 30.0, 10.0, 'partial_tp', 'FVG', '2024-01-01T00:00:00', '2024-01-02T00:00:00')")
+    execute(
+        "INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, strategy, opened_at, closed_at) "
+        "VALUES (1, 'BTC/USD', 'BUY', 0.05, 100.0, 96.0, -10.0, -4.0, 'runner', 'FVG', '2024-01-01T00:00:00', '2024-01-03T00:00:00')")
+    # A second, single-exit losing position.
+    execute(
+        "INSERT INTO positions (id, symbol, side, quantity, entry_price, current_price, initial_risk) "
+        "VALUES (2, 'ETH/USD', 'BUY', 1.0, 100.0, 100.0, 5.0)")
+    execute(
+        "INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, strategy, opened_at, closed_at) "
+        "VALUES (2, 'ETH/USD', 'BUY', 1.0, 100.0, 95.0, -40.0, -5.0, 'stop_loss', 'MACD', '2024-01-01T00:00:00', '2024-01-02T00:00:00')")
+    result = compute_analytics()
+    assert result["total_trades"] == 2          # not 3
+    assert result["win_rate"] == 50.0           # net +20 winner, not 1/3
+    assert result["total_pnl"] == -20.0
+    assert result["profit_factor"] == 0.5       # 20 / 40
+
+
 def test_strategy_breakdown():
     seed_trades(5, "ICT-FVG")
     seed_trades(5, "MACD")
@@ -81,10 +108,19 @@ def test_value_at_risk_short():
 
 
 def test_rolling_drawdown():
+    # Newest-first (as stored): chronological is -300, -50, +200, +100.
+    # Equity from 10k: 9700 -> 9650 -> 9850 -> 9950; max dd = 350/10000.
     pnls = [100, 200, -50, -300]
-    max_dd, rolling = _rolling_drawdown(pnls)
-    assert max_dd > 0
+    max_dd, rolling = _rolling_drawdown(pnls, initial_balance=10000)
+    assert max_dd == pytest.approx(0.035)
     assert len(rolling) == 4
+
+
+def test_drawdown_not_inflated_by_small_wins():
+    """Two wins in a row is zero drawdown — the old per-trade-pnl math
+    called a $10 win followed by a $2 win an 80% drawdown."""
+    max_dd, _ = _rolling_drawdown([2.0, 10.0], initial_balance=10000)
+    assert max_dd == 0.0
 
 
 def test_trade_duration_stats():

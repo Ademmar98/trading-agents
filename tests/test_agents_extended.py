@@ -131,6 +131,26 @@ def test_auditor_with_trades():
     assert "suggestions" in result
 
 
+def test_auditor_credits_each_contributor_of_combined_signal():
+    """Pipe-joined strategy tags ("a|b") on a trade must be split so every
+    contributing strategy accumulates its own strategy_stats row — this feeds
+    the unprofitable-strategy exclusion loop."""
+    from agents.auditor import Auditor
+    save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+    execute("INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, strategy) "
+            "VALUES (1, 'BTC/USD', 'BUY', 0.1, 100.0, 110.0, 9.0, 9.0, 'take_profit', 'mom_burst|fvg_entry')")
+    execute("INSERT INTO trades (position_id, symbol, side, qty, entry_price, exit_price, pnl, pnl_pct, reason, strategy) "
+            "VALUES (2, 'ETH/USD', 'BUY', 1.0, 100.0, 90.0, -11.0, -11.0, 'stop_loss', 'mom_burst')")
+    Auditor().run()
+    stats = {r["strategy"]: dict(r)
+             for r in fetchall("SELECT strategy, trades, win_rate, pnl FROM strategy_stats")}
+    assert stats["mom_burst"]["trades"] == 2
+    assert stats["mom_burst"]["pnl"] == pytest.approx(-2.0)
+    assert stats["mom_burst"]["win_rate"] == pytest.approx(50.0)
+    assert stats["fvg_entry"]["trades"] == 1
+    assert stats["fvg_entry"]["win_rate"] == pytest.approx(100.0)
+
+
 def test_pipeline_downstream():
     from agents.sentiment_agent import SentimentAgent
     from agents.risk_manager import RiskManager

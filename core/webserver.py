@@ -22,11 +22,15 @@ def get_market_prices():
 
 
 def _live_pnl_stats():
-    row = fetchone("SELECT COUNT(*) AS cnt, SUM(pnl) AS total FROM trades")
+    # One logical trade per position (scaled exits write partial + runner rows)
+    row = fetchone("""
+        SELECT COUNT(*) AS cnt, SUM(pnl) AS total,
+               SUM(CASE WHEN pnl > 0 THEN 1 ELSE 0 END) AS w
+        FROM (SELECT SUM(pnl) AS pnl FROM trades GROUP BY COALESCE(position_id, id))
+    """)
     cnt = row["cnt"] if row else 0
     total = row["total"] if row and row["total"] else 0
-    wins = fetchone("SELECT COUNT(*) AS w FROM trades WHERE pnl > 0")
-    win_cnt = wins["w"] if wins else 0
+    win_cnt = row["w"] if row and row["w"] else 0
     return cnt, total, win_cnt
 
 
@@ -66,6 +70,26 @@ def get_summary():
         "win_rate": (win_cnt / trade_cnt * 100) if trade_cnt else 0,
         "broker": BROKER_TYPE,
         "testnet": BINANCE_USE_TESTNET,
+        "goals": _goal_progress(total_pnl_pct),
+    }
+
+
+def _goal_progress(total_pnl_pct):
+    """Firm goals for the dashboard: daily +0.5-3%, total +10-50%."""
+    from config import (DAILY_PROFIT_TARGET_MIN, DAILY_PROFIT_TARGET_MAX,
+                        TOTAL_PROFIT_TARGET_MIN, TOTAL_PROFIT_TARGET_MAX)
+    try:
+        from core.equity import daily_loss_pct
+        day_pnl = round(daily_loss_pct(), 2)
+    except Exception:
+        day_pnl = 0.0
+    return {
+        "day_pnl_pct": day_pnl,
+        "daily_target": [DAILY_PROFIT_TARGET_MIN, DAILY_PROFIT_TARGET_MAX],
+        "daily_hit": day_pnl >= DAILY_PROFIT_TARGET_MIN,
+        "total_pnl_pct": round(total_pnl_pct, 2),
+        "total_target": [TOTAL_PROFIT_TARGET_MIN, TOTAL_PROFIT_TARGET_MAX],
+        "total_hit": total_pnl_pct >= TOTAL_PROFIT_TARGET_MIN,
     }
 
 
@@ -262,6 +286,43 @@ def api_health():
 def api_sentiment():
     sentiment = memory.read("analyses", "sentiment_scan")
     return sentiment or {}
+
+
+@app.get("/api/head-trader")
+def api_head_trader():
+    report = memory.read("reports", "head_trader")
+    return report or {}
+
+
+@app.get("/api/daily-pnl")
+def api_daily_pnl():
+    """Realized PnL per UTC day (one logical trade per position)."""
+    rows = fetchall("""
+        SELECT date(closed_at) AS day, COUNT(*) AS trades,
+               ROUND(SUM(pnl), 2) AS pnl,
+               SUM(CASE WHEN pnl > 0 THEN 1 ELSE 0 END) AS wins
+        FROM (SELECT SUM(pnl) AS pnl, MAX(closed_at) AS closed_at
+              FROM trades GROUP BY COALESCE(position_id, id))
+        GROUP BY day ORDER BY day DESC LIMIT 30
+    """)
+    return {"days": [dict(r) for r in rows]}
+
+
+@app.get("/api/scorecard")
+def api_scorecard():
+    """Per-strategy live scorecard with a verdict per strategy."""
+    from core.analytics import compute_analytics
+    a = compute_analytics()
+    rows = a.get("strategy_breakdown", []) or []
+    for r in rows:
+        n = r.get("trades", 0)
+        if n < 10:
+            r["verdict"] = "building sample"
+        elif r.get("expectancy", 0) < 0:
+            r["verdict"] = "bleeding"
+        else:
+            r["verdict"] = "earning"
+    return {"strategies": rows}
 
 
 @app.get("/api/pricing")

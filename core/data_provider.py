@@ -1,3 +1,4 @@
+import logging
 import time
 from datetime import datetime, timezone
 
@@ -9,9 +10,18 @@ from config import (
     BROKER_TYPE,
 )
 
+_log = logging.getLogger("data_provider")
+
 BINANCE_BASE = "https://api.binance.com"
 BINANCE_TESTNET = "https://testnet.binance.vision"
 BINANCE_INTERVALS = {"1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"}
+
+# Bar duration per interval, milliseconds. Used to decide whether a bar is
+# closed yet and to detect gaps between consecutive bars.
+_INTERVAL_MS = {
+    "1m": 60_000, "5m": 300_000, "15m": 900_000, "30m": 1_800_000,
+    "1h": 3_600_000, "4h": 14_400_000, "1d": 86_400_000, "1w": 604_800_000,
+}
 ALPACA_AVAILABLE = bool(ALPACA_API_KEY and ALPACA_SECRET_KEY)
 
 _ALPACA_CLIENT = None
@@ -21,10 +31,8 @@ def _get_alpaca():
     global _ALPACA_CLIENT
     if _ALPACA_CLIENT is None and ALPACA_AVAILABLE:
         try:
-            from alpaca.data import StockHistoricalDataClient
             from alpaca.data import CryptoHistoricalDataClient
             _ALPACA_CLIENT = {
-                "stock": StockHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY),
                 "crypto": CryptoHistoricalDataClient(ALPACA_API_KEY, ALPACA_SECRET_KEY),
             }
         except ImportError:
@@ -65,80 +73,175 @@ def _is_crypto(symbol):
     return "/" in symbol
 
 
-def _is_stock(symbol):
-    return "/" not in symbol and symbol.isalpha() and len(symbol) <= 5
+def _ensure_ts(bars):
+    """Guarantee every candle dict carries 'ts' (unix seconds, UTC) so
+    session-based strategies can rely on it. Backward compatible: derives
+    'ts' from the ISO 'date' field when a source omits it."""
+    for b in bars:
+        if b.get("ts") is None and b.get("date"):
+            try:
+                b["ts"] = int(datetime.fromisoformat(
+                    str(b["date"]).replace("Z", "+00:00")).timestamp())
+            except (ValueError, TypeError):
+                pass
+    return bars
 
 
-def _is_forex(symbol):
-    # 6-letter pairs like EURUSD, and metals XAUUSD/XAGUSD
-    return "/" not in symbol and symbol.isalpha() and len(symbol) == 6
-
-
-def _yahoo_symbol(symbol):
-    if _is_crypto(symbol):
-        return symbol.replace("/", "-")
-    if _is_forex(symbol):
-        return f"{symbol}=X"  # Yahoo quotes spot forex/metals with the =X suffix
-    return symbol
+def _check_bar_gaps(symbol, interval, bars):
+    """Contiguity check: consecutive bar timestamps must differ by exactly
+    one interval. Gaps skew every downstream indicator, so log them loudly
+    (the bars are still returned — missing history is not fabricated)."""
+    step = (_INTERVAL_MS.get(interval) or 0) // 1000
+    if not step or len(bars) < 2:
+        return
+    ordered = sorted(bars, key=lambda b: b["ts"])
+    gaps = 0
+    for prev, cur in zip(ordered, ordered[1:]):
+        dt = cur["ts"] - prev["ts"]
+        if dt != step:
+            gaps += 1
+            _log.warning("bar gap %s %s: %s -> %s (delta %ds, expected %ds)",
+                         symbol, interval, prev.get("date"), cur.get("date"),
+                         dt, step)
+    if gaps:
+        _log.warning("%s %s: %d gap(s) across %d bars",
+                     symbol, interval, gaps, len(ordered))
 
 
 def fetch_binance_klines(symbol, interval="1d", limit=100):
+    """Closed bars only, up to the requested depth.
+
+    Two audit findings fixed here: (1) Binance appends the still-FORMING bar
+    as the last kline — every strategy reading bars[-1] was trading on a
+    repainting candle; any kline whose close_time is not yet in the past is
+    dropped. (2) The API caps one call at 1000 klines, so requests deeper
+    than that were silently truncated; we paginate backwards via endTime
+    until the requested depth is filled or history runs out.
+    """
     bsym = _to_binance_symbol(symbol)
     try:
-        params = {"symbol": bsym, "interval": interval, "limit": limit}
-        r = requests.get(f"{BINANCE_BASE}/api/v3/klines", params=params, timeout=15)
-        data = r.json()
-        if not isinstance(data, list):
-            return []
-        return [{
-            "date": datetime.fromtimestamp(k[0] / 1000, tz=timezone.utc).isoformat(),
-            "open": float(k[1]), "high": float(k[2]), "low": float(k[3]),
-            "close": float(k[4]), "volume": float(k[5]), "ts": k[0] // 1000,
-        } for k in data]
+        now_ms = int(time.time() * 1000)
+        raw = []
+        remaining = max(1, limit)
+        end_time = None
+        while remaining > 0:
+            page_size = min(remaining, 1000)  # Binance hard cap per call
+            params = {"symbol": bsym, "interval": interval, "limit": page_size}
+            if end_time is not None:
+                params["endTime"] = end_time
+            r = requests.get(f"{BINANCE_BASE}/api/v3/klines", params=params, timeout=15)
+            data = r.json()
+            if not isinstance(data, list):
+                return []
+            if not data:
+                break
+            raw = data + raw
+            if len(data) < page_size:
+                break  # history ran out
+            remaining -= len(data)
+            end_time = data[0][0] - 1  # walk one page further into the past
+        bars = []
+        seen = set()
+        for k in raw:
+            if k[6] >= now_ms:
+                continue  # still forming — never hand a repainting bar downstream
+            ts = k[0] // 1000
+            if ts in seen:
+                continue
+            seen.add(ts)
+            bars.append({
+                "date": datetime.fromtimestamp(k[0] / 1000, tz=timezone.utc).isoformat(),
+                "open": float(k[1]), "high": float(k[2]), "low": float(k[3]),
+                "close": float(k[4]), "volume": float(k[5]), "ts": ts,
+            })
+        bars.sort(key=lambda b: b["ts"])
+        bars = bars[-limit:]
+        _log.info("binance klines %s %s: requested %d, received %d closed bars",
+                  symbol, interval, limit, len(bars))
+        _check_bar_gaps(symbol, interval, bars)
+        return _ensure_ts(bars)
     except Exception:
         return []
 
 
-def fetch_yahoo_ohlc(symbol, interval="1d", days=100):
-    yahoo_sym = _yahoo_symbol(symbol)
-    range_map = {"1m": "1d", "5m": "5d", "15m": "1mo", "1h": "3mo", "4h": "6mo", "1d": f"{days}d"}
-    yahoo_interval = interval
-    if interval == "4h":
-        yahoo_interval = "1h"
-    y_range = range_map.get(interval, f"{days}d")
+# Crypto.com Exchange public API — keyless, exchange-grade crypto data.
+# Fallback for Binance klines where Binance is geo-blocked (e.g. US VPS).
+_CRYPTOCOM_TIMEFRAMES = {"1m": "M1", "5m": "M5", "15m": "M15", "30m": "M30",
+                         "1h": "H1", "4h": "H4", "1d": "D1"}
+
+
+def fetch_cryptocom_ohlc(symbol, interval="1d", limit=100):
+    """Keyless fallback with the same guarantees as fetch_binance_klines:
+    closed bars only (the venue includes the forming bar in its response)
+    and real depth — one call is capped at 300 bars, so deeper requests
+    paginate backwards via end_ts."""
+    tf = _CRYPTOCOM_TIMEFRAMES.get(interval)
+    if not tf or not _is_crypto(symbol):
+        return []
+    inst = symbol.replace("/", "_")  # BTC/USD -> BTC_USD (spot naming)
+    interval_ms = _INTERVAL_MS.get(interval)
     try:
-        r = requests.get(
-            f"https://query1.finance.yahoo.com/v8/finance/chart/{yahoo_sym}",
-            params={"range": y_range, "interval": yahoo_interval},
-            headers={"User-Agent": "Mozilla/5.0"},
-            timeout=15,
-        )
-        data = r.json()
-        result = data.get("chart", {}).get("result", [{}])[0]
-        quotes = result.get("indicators", {}).get("quote", [{}])[0]
-        timestamps = result.get("timestamp", [])
-        ohlc = []
-        for i, ts in enumerate(timestamps):
-            ohlc.append({
-                "date": datetime.fromtimestamp(ts, tz=timezone.utc).isoformat(),
-                "open": quotes.get("open", [None])[i] if quotes.get("open") else None,
-                "high": quotes.get("high", [None])[i] if quotes.get("high") else None,
-                "low": quotes.get("low", [None])[i] if quotes.get("low") else None,
-                "close": quotes.get("close", [None])[i] if quotes.get("close") else None,
-                "volume": quotes.get("volume", [0])[i] if quotes.get("volume") else 0,
-                "ts": ts,
+        now_ms = int(time.time() * 1000)
+        raw = []
+        seen = set()
+        end_ts = None
+        remaining = max(1, limit)
+        while remaining > 0:
+            page_size = min(remaining, 300)  # venue hard cap per call
+            params = {"instrument_name": inst, "timeframe": tf, "count": page_size}
+            if end_ts is not None:
+                params["end_ts"] = end_ts
+            r = requests.get(
+                "https://api.crypto.com/exchange/v1/public/get-candlestick",
+                params=params,
+                timeout=15,
+            )
+            page = ((r.json().get("result") or {}).get("data")) or []
+            if not page:
+                break
+            new = 0
+            oldest = None
+            for b in page:
+                t = int(b["t"])
+                if t in seen:
+                    continue
+                seen.add(t)
+                raw.append(b)
+                new += 1
+                oldest = t if oldest is None else min(oldest, t)
+            if new == 0:
+                break  # no progress (e.g. end_ts ignored) — stop paginating
+            remaining -= new
+            if len(page) < page_size:
+                break  # history ran out
+            end_ts = oldest - 1  # walk one page further into the past
+        bars = []
+        for b in raw:
+            t = int(b["t"])
+            if interval_ms is not None and t + interval_ms > now_ms:
+                continue  # still forming — never hand a repainting bar downstream
+            bars.append({
+                "date": datetime.fromtimestamp(t / 1000, tz=timezone.utc).isoformat(),
+                "open": float(b["o"]), "high": float(b["h"]),
+                "low": float(b["l"]), "close": float(b["c"]),
+                "volume": float(b.get("v") or 0), "ts": t // 1000,
             })
-        return [c for c in ohlc if c["close"] is not None]
+        bars.sort(key=lambda b: b["ts"])
+        bars = bars[-limit:]
+        _log.info("cryptocom ohlc %s %s: requested %d, received %d closed bars",
+                  symbol, interval, limit, len(bars))
+        _check_bar_gaps(symbol, interval, bars)
+        return _ensure_ts(bars)
     except Exception:
         return []
 
 
 def fetch_alpaca_bars(symbol, interval="1d", limit=100):
     client = _get_alpaca()
-    if not client:
+    if not client or not _is_crypto(symbol):
         return None
     try:
-        from alpaca.data.requests import StockBarsRequest, CryptoBarsRequest
+        from alpaca.data.requests import CryptoBarsRequest
         from alpaca.data.timeframe import TimeFrame, TimeFrameUnit
         tf_map = {
             "1m": TimeFrame(1, TimeFrameUnit.Minute),
@@ -149,15 +252,13 @@ def fetch_alpaca_bars(symbol, interval="1d", limit=100):
             "1d": TimeFrame(1, TimeFrameUnit.Day),
         }
         tf = tf_map.get(interval, TimeFrame(1, TimeFrameUnit.Day))
-        if _is_crypto(symbol):
-            req = CryptoBarsRequest(symbol_or_symbols=[symbol.replace("/", "")], timeframe=tf, limit=limit)
-            bars = client["crypto"].get_crypto_bars(req)
-        else:
-            req = StockBarsRequest(symbol_or_symbols=[symbol], timeframe=tf, limit=limit, feed="iex")
-            bars = client["stock"].get_stock_bars(req)
+        req = CryptoBarsRequest(symbol_or_symbols=[symbol.replace("/", "")], timeframe=tf, limit=limit)
+        bars = client["crypto"].get_crypto_bars(req)
         df = bars.df
         if df.empty:
             return []
+        step_s = (_INTERVAL_MS.get(interval) or 0) // 1000
+        now_s = int(time.time())
         ohlc = []
         for idx, row in df.iterrows():
             ts = idx[1] if isinstance(idx, tuple) else idx
@@ -165,6 +266,8 @@ def fetch_alpaca_bars(symbol, interval="1d", limit=100):
                 ts_epoch = int(ts.timestamp())
             else:
                 ts_epoch = int(time.mktime(ts.timetuple())) if hasattr(ts, "timetuple") else int(ts)
+            if step_s and ts_epoch + step_s > now_s:
+                continue  # still forming — never hand a repainting bar downstream
             ohlc.append({
                 "date": ts.isoformat() if isinstance(ts, datetime) else str(ts),
                 "open": float(row["open"]),
@@ -174,84 +277,55 @@ def fetch_alpaca_bars(symbol, interval="1d", limit=100):
                 "volume": float(row["volume"]),
                 "ts": ts_epoch,
             })
-        return ohlc
+        _check_bar_gaps(symbol, interval, ohlc)
+        return _ensure_ts(ohlc)
     except Exception:
         return None
 
 
 def fetch_ohlc(symbol, interval="1d", limit=100):
-    if _is_crypto(symbol):
-        alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
-        if alpaca_result:
-            return alpaca_result
-        return fetch_binance_klines(symbol, interval, limit)
-    if _is_stock(symbol):
-        alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
-        if alpaca_result:
-            return alpaca_result
-        days = limit
-        if interval == "1d":
-            days = limit
-        elif interval == "1h":
-            days = limit
-        return fetch_yahoo_ohlc(symbol, interval, days=days)
-    return fetch_yahoo_ohlc(symbol, interval, days=limit)
+    if not _is_crypto(symbol):
+        return []
+    alpaca_result = fetch_alpaca_bars(symbol, interval, limit) if ALPACA_AVAILABLE else None
+    if alpaca_result:
+        return alpaca_result
+    result = fetch_binance_klines(symbol, interval, limit)
+    # Crypto.com Exchange as keyless second source when Binance fails/geo-blocks
+    if not result:
+        result = fetch_cryptocom_ohlc(symbol, interval, limit)
+    return result
 
 
 def fetch_current_price(symbol):
-    if _is_crypto(symbol):
-        bsym = _to_binance_symbol(symbol)
-        try:
-            r = requests.get(f"{BINANCE_BASE}/api/v3/ticker/price", params={"symbol": bsym}, timeout=10)
-            return float(r.json()["price"])
-        except Exception:
-            pass
-        cg_id = symbol.split("/")[0].lower()
-        try:
-            r = requests.get(
-                "https://api.coingecko.com/api/v3/simple/price",
-                params={"ids": cg_id, "vs_currencies": "usd"},
-                timeout=10,
-            )
-            return r.json().get(cg_id, {}).get("usd", 0)
-        except Exception:
-            pass
-    elif _is_stock(symbol):
-        try:
-            r = requests.get(
-                f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
-                params={"range": "1d", "interval": "1d"},
-                headers={"User-Agent": "Mozilla/5.0"},
-                timeout=10,
-            )
-            meta = r.json().get("chart", {}).get("result", [{}])[0].get("meta", {})
-            return meta.get("regularMarketPrice", 0)
-        except Exception:
-            pass
+    if not _is_crypto(symbol):
+        return 0
+    bsym = _to_binance_symbol(symbol)
+    try:
+        r = requests.get(f"{BINANCE_BASE}/api/v3/ticker/price", params={"symbol": bsym}, timeout=10)
+        return float(r.json()["price"])
+    except Exception:
+        pass
+    cg_id = symbol.split("/")[0].lower()
+    try:
+        r = requests.get(
+            "https://api.coingecko.com/api/v3/simple/price",
+            params={"ids": cg_id, "vs_currencies": "usd"},
+            timeout=10,
+        )
+        return r.json().get(cg_id, {}).get("usd", 0)
+    except Exception:
+        pass
     return 0
 
 
 def fetch_prices(symbols=None):
     symbols = symbols or WATCHED_SYMBOLS
-    result = {}
     crypto = [s for s in symbols if _is_crypto(s)]
-    stocks = [s for s in symbols if _is_stock(s)]
-    if crypto:
-        if BROKER_TYPE == "binance" or not ALPACA_AVAILABLE:
-            result.update(_fetch_binance_tickers(crypto))
-        else:
-            result.update(_fetch_combined_crypto_prices(crypto))
-    if stocks:
-        if ALPACA_AVAILABLE:
-            result.update(_fetch_alpaca_stock_prices(stocks))
-        else:
-            result.update(_fetch_yahoo_stock_prices(stocks))
-    others = [s for s in symbols if s not in result and s not in crypto and s not in stocks]
-    for sym in others:
-        if _is_crypto(sym):
-            continue
-        result[sym] = {"price": fetch_current_price(sym), "change_24h": 0, "volume_24h": 0, "type": "other"}
-    return result
+    if not crypto:
+        return {}
+    if BROKER_TYPE == "binance" or not ALPACA_AVAILABLE:
+        return _fetch_binance_tickers(crypto)
+    return _fetch_combined_crypto_prices(crypto)
 
 
 def _fetch_binance_tickers(symbols):
@@ -272,33 +346,6 @@ def _fetch_binance_tickers(symbols):
                     "timestamp": datetime.now(timezone.utc).isoformat(),
                     "bid": float(t.get("bidPrice", 0)),
                     "ask": float(t.get("askPrice", 0)),
-                }
-        return result
-    except Exception:
-        return {}
-
-
-def _fetch_alpaca_stock_prices(symbols):
-    client = _get_alpaca()
-    if not client:
-        return {}
-    try:
-        from alpaca.data.requests import StockLatestQuoteRequest
-        req = StockLatestQuoteRequest(symbol_or_symbols=symbols, feed="iex")
-        quotes = client["stock"].get_stock_latest_quote(req)
-        result = {}
-        for sym in symbols:
-            q = quotes.get(sym)
-            if q:
-                price = (q.ask_price + q.bid_price) / 2 if q.ask_price and q.bid_price else (q.ask_price or q.bid_price)
-                result[sym] = {
-                    "price": float(price) if price else 0,
-                    "change_24h": 0,
-                    "volume_24h": 0,
-                    "type": "stock",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "bid": float(q.bid_price) if q.bid_price else 0,
-                    "ask": float(q.ask_price) if q.ask_price else 0,
                 }
         return result
     except Exception:
@@ -331,30 +378,4 @@ def _fetch_combined_crypto_prices(symbols):
     remaining = [s for s in symbols if s not in result]
     if remaining:
         result.update(_fetch_binance_tickers(remaining))
-    return result
-
-
-def _fetch_yahoo_stock_prices(symbols):
-    result = {}
-    for sym in symbols:
-        try:
-            r = requests.get(
-                f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}",
-                params={"range": "1d", "interval": "1d"},
-                headers={"User-Agent": "Mozilla/5.0"},
-                timeout=10,
-            )
-            meta = r.json().get("chart", {}).get("result", [{}])[0].get("meta", {})
-            price = meta.get("regularMarketPrice", 0)
-            prev_close = meta.get("chartPreviousClose", 0)
-            change_pct = ((price - prev_close) / prev_close * 100) if prev_close else 0
-            result[sym] = {
-                "price": price,
-                "change_24h": change_pct,
-                "volume_24h": meta.get("regularMarketVolume", 0),
-                "type": "stock",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            }
-        except Exception:
-            pass
     return result

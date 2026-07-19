@@ -1,12 +1,28 @@
-from config import RISK_PER_TRADE_PCT
+from math import floor, log10
+
+from config import RISK_PER_TRADE_PCT, MAX_SL_PCT, MAX_TP_PCT
 
 
+def round_sig(x, sig=6):
+    """Round to significant figures, not fixed decimals. round(x, 5) turns a
+    $0.00003 micro-cap's price grid into 33% steps — SL/TP geometry becomes
+    nonsense and backtests explode (a real +13,716% artifact)."""
+    if not x:
+        return x
+    return round(x, max(0, sig - 1 - floor(log10(abs(x)))))
+
+
+# risk_mult parked at 1.0 in EVERY regime until regime detection is
+# re-validated: the old ADX/regime dial was never validated and sat on an
+# arithmetic bug in core/regime.py (see config.py's SMA200 note), so letting
+# it scale position risk up or down multiplied noise. Structure kept — only
+# the sizing multipliers are neutralized; sl/tp/entry_slip are unchanged.
 REGIME_PRICING = {
-    "trending_up":   {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.10},
-    "trending_down": {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.10},
-    "trending":      {"sl_mult": 1.5, "tp_mult": 2.0, "entry_slip": 0.002, "risk_mult": 1.00},
-    "volatile":      {"sl_mult": 2.0, "tp_mult": 2.5, "entry_slip": 0.003, "risk_mult": 0.85},
-    "ranging":       {"sl_mult": 1.5, "tp_mult": 1.5, "entry_slip": 0.002, "risk_mult": 0.90},
+    "trending_up":   {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.0},
+    "trending_down": {"sl_mult": 1.5, "tp_mult": 2.5, "entry_slip": 0.001, "risk_mult": 1.0},
+    "trending":      {"sl_mult": 1.5, "tp_mult": 2.0, "entry_slip": 0.002, "risk_mult": 1.0},
+    "volatile":      {"sl_mult": 2.0, "tp_mult": 2.5, "entry_slip": 0.003, "risk_mult": 1.0},
+    "ranging":       {"sl_mult": 1.5, "tp_mult": 1.5, "entry_slip": 0.002, "risk_mult": 1.0},
 }
 
 DEFAULT_PRICING = {"sl_mult": 1.5, "tp_mult": 2.0, "entry_slip": 0.002, "risk_mult": 0.90}
@@ -26,31 +42,40 @@ def compute_pricing(symbol, action, price, data, regime=None, atr_val=0):
     bid = data.get("bid") or price
     ask = data.get("ask") or price
 
-    sl_distance = max(atr_dec * sl_mult, vol_dec * sl_mult * 1.2)
-    tp_distance = max(atr_dec * tp_mult, vol_dec * tp_mult * 0.8)
+    # ATR-first placement: the pair's own noise sets the stop; MIN/MAX act
+    # only as sanity rails. The old max(atr, range-vol) formula ballooned in
+    # volatile sessions until every stop landed at exactly the cap — six
+    # correlated alts all stopped at -2% in one 30-minute dip.
+    from core.risk import vol_aware_stop_loss
+    sl_pct_val = vol_aware_stop_loss(atr_pct, sl_mult)
+    if sl_pct_val is None:
+        sl_pct_val = max(0.3, min(vol_dec * 100 * sl_mult * 1.2, MAX_SL_PCT))
+    sl_distance = sl_pct_val / 100.0
+    # TP keeps the regime's R:R ratio relative to the actual stop
+    tp_distance = min(sl_distance * (tp_mult / sl_mult), MAX_TP_PCT / 100.0)
     sma_20 = data.get("sma_20") or 0
     sma_50 = data.get("sma_50") or 0
 
     if action == "BUY":
         target = bid
         if sma_20 > 0 and target > sma_20:
-            entry_price = round(max(sma_20, target * (1 - cfg["entry_slip"])), 5)
+            entry_price = round_sig(max(sma_20, target * (1 - cfg["entry_slip"])))
         elif sma_50 > 0 and target > sma_50:
-            entry_price = round(max(sma_50, target * (1 - cfg["entry_slip"] * 0.7)), 5)
+            entry_price = round_sig(max(sma_50, target * (1 - cfg["entry_slip"] * 0.7)))
         else:
-            entry_price = round(target, 5)
-        sl_price = round(entry_price * (1 - sl_distance), 5)
-        tp_price = round(entry_price * (1 + tp_distance), 5)
+            entry_price = round_sig(target)
+        sl_price = round_sig(entry_price * (1 - sl_distance))
+        tp_price = round_sig(entry_price * (1 + tp_distance))
     else:
         target = ask
         if sma_20 > 0 and target < sma_20:
-            entry_price = round(min(sma_20, target * (1 + cfg["entry_slip"])), 5)
+            entry_price = round_sig(min(sma_20, target * (1 + cfg["entry_slip"])))
         elif sma_50 > 0 and target < sma_50:
-            entry_price = round(min(sma_50, target * (1 + cfg["entry_slip"] * 0.7)), 5)
+            entry_price = round_sig(min(sma_50, target * (1 + cfg["entry_slip"] * 0.7)))
         else:
-            entry_price = round(target, 5)
-        sl_price = round(entry_price * (1 + sl_distance), 5)
-        tp_price = round(entry_price * (1 - tp_distance), 5)
+            entry_price = round_sig(target)
+        sl_price = round_sig(entry_price * (1 + sl_distance))
+        tp_price = round_sig(entry_price * (1 - tp_distance))
 
     denom = entry_price or 1e-8
     sl_pct = abs(entry_price - sl_price) / denom * 100

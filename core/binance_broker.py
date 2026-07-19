@@ -296,11 +296,6 @@ class BinanceBroker:
         except Exception:
             return []
 
-    def check_stop_losses(self, prices):
-        from core.broker import PaperBroker
-        pb = PaperBroker()
-        return pb.check_stop_losses(prices)
-
     def get_status(self):
         info = self.get_account_info()
         base = {"broker": "binance", "connected": self.connected,

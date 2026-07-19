@@ -49,52 +49,71 @@ class TestGetOptimizedParams:
 
 class TestOptimizeSymbol:
     def test_aborts_when_no_valid_results(self):
-        with patch("core.optimizer._backtest_with_params", return_value=None):
+        with patch("core.optimizer.fetch_klines", return_value=[]), \
+             patch("core.optimizer._backtest_with_params", return_value=None):
             result = optimize_symbol("TEST/USD", verbose=False)
             assert result is None
 
-    def test_returns_best_params(self):
-        def mock_backtest(sym, sm, tm, ps, ct, days=90):
+    def test_returns_best_params_when_validation_passes(self):
+        def mock_backtest(sym, sm, tm, ps, ct, bars=None, ohlc=None, bar_range=None):
             return {"score": sm + tm + ps, "total_return": 5.0, "total_trades": 3,
                     "win_rate": 66.7, "profit_factor": 2.0, "max_drawdown": 3.0,
                     "sharpe_ratio": 1.5}
-        with patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
+        with patch("core.optimizer.fetch_klines", return_value=[]), \
+             patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
             with patch("core.optimizer._save_optimization"):
                 result = optimize_symbol("TEST/USD", verbose=False)
                 assert result is not None
                 assert "params" in result
                 assert "result" in result
+                assert result["adopted"] is True
 
     def test_verbose_prints(self):
-        def mock_backtest(sym, sm, tm, ps, ct, days=90):
+        def mock_backtest(sym, sm, tm, ps, ct, bars=None, ohlc=None, bar_range=None):
             return {"score": 10, "total_return": 5.0, "total_trades": 3,
                     "win_rate": 66.7, "profit_factor": 2.0, "max_drawdown": 3.0,
                     "sharpe_ratio": 1.5}
-        with patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
+        with patch("core.optimizer.fetch_klines", return_value=[]), \
+             patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
             with patch("core.optimizer._save_optimization"):
                 result = optimize_symbol("TEST/USD", verbose=True)
                 assert result is not None
 
-    def test_saves_best(self):
-        results = [{"score": 10, "total_return": 5.0, "total_trades": 3,
-                     "win_rate": 66.7, "profit_factor": 2.0, "max_drawdown": 3.0,
-                     "sharpe_ratio": 1.5},
-                   {"score": 20, "total_return": 10.0, "total_trades": 5,
-                     "win_rate": 80.0, "profit_factor": 3.0, "max_drawdown": 2.0,
-                     "sharpe_ratio": 2.0}]
-        calls = []
-        def mock_backtest(sym, sm, tm, ps, ct, days=90):
-            r = results.pop(0) if results else {"score": 0, "total_return": 0, "total_trades": 0,
-                                                  "win_rate": 0, "profit_factor": 0, "max_drawdown": 0,
-                                                  "sharpe_ratio": 0}
-            calls.append({"sm": sm, "tm": tm, "ps": ps, "ct": ct})
-            return r
-        with patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
+    def test_saves_validation_metrics_not_train(self):
+        """The persisted numbers must come from the out-of-sample window."""
+        def mock_backtest(sym, sm, tm, ps, ct, bars=None, ohlc=None, bar_range=None):
+            if bar_range and bar_range[0] > 0:  # the validation call
+                return {"score": 55, "total_return": 4.0, "total_trades": 4,
+                        "win_rate": 75.0, "profit_factor": 1.5, "max_drawdown": 2.0,
+                        "sharpe_ratio": 1.2}
+            return {"score": sm + tm + ps, "total_return": 12.0, "total_trades": 8,
+                    "win_rate": 80.0, "profit_factor": 3.0, "max_drawdown": 1.5,
+                    "sharpe_ratio": 2.5}
+        with patch("core.optimizer.fetch_klines", return_value=[]), \
+             patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
             with patch("core.optimizer._save_optimization") as mock_save:
-                optimize_symbol("TEST/USD", verbose=False)
+                result = optimize_symbol("TEST/USD", verbose=False)
                 assert mock_save.called
-                saved_params = mock_save.call_args[0][1]
-                assert saved_params["score"] == 20
+                saved_result = mock_save.call_args[0][1]
+                assert saved_result["score"] == 55
+                assert result["adopted"] is True
+
+    def test_rejects_params_that_fail_out_of_sample(self):
+        """Great in-sample, bleeding out-of-sample = overfit; must not adopt."""
+        def mock_backtest(sym, sm, tm, ps, ct, bars=None, ohlc=None, bar_range=None):
+            if bar_range and bar_range[0] > 0:  # the validation call
+                return {"score": -5, "total_return": -3.0, "total_trades": 4,
+                        "win_rate": 25.0, "profit_factor": 0.6, "max_drawdown": 6.0,
+                        "sharpe_ratio": -1.0}
+            return {"score": 50, "total_return": 20.0, "total_trades": 8,
+                    "win_rate": 85.0, "profit_factor": 4.0, "max_drawdown": 1.0,
+                    "sharpe_ratio": 3.0}
+        with patch("core.optimizer.fetch_klines", return_value=[]), \
+             patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
+            with patch("core.optimizer._save_optimization") as mock_save:
+                result = optimize_symbol("TEST/USD", verbose=False)
+                assert not mock_save.called
+                assert result["adopted"] is False
 
 
 class TestRunAllOptimizations:
@@ -170,8 +189,28 @@ class TestSingleParam:
                     "win_rate": 66.7, "profit_factor": 2.0, "max_drawdown": 3.0,
                     "sharpe_ratio": 1.5}
         from core.optimizer import test_single_param
-        with patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
+        with patch("core.optimizer.fetch_klines", return_value=[]), \
+             patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
             best_val, result = test_single_param("SL_VOL_MULT", 2.0, 0.5)
             assert best_val is not None
             assert result is not None
             assert result["score"] > 0
+
+    def test_proposal_rejected_when_validation_fails(self):
+        """A parameter change that wins in-sample but loses out-of-sample
+        must be dropped (returns the incumbent value with no result)."""
+        def mock_backtest(sym, **kwargs):
+            if kwargs.get("bar_range") and kwargs["bar_range"][0] > 0:
+                return {"score": 1, "total_return": -2.0, "total_trades": 3,
+                        "win_rate": 33.0, "profit_factor": 0.5, "max_drawdown": 5.0,
+                        "sharpe_ratio": -0.5}
+            val = kwargs.get("sl_mult", 2.0)
+            return {"score": val * 10, "total_return": 5.0, "total_trades": 3,
+                    "win_rate": 66.7, "profit_factor": 2.0, "max_drawdown": 3.0,
+                    "sharpe_ratio": 1.5}
+        from core.optimizer import test_single_param
+        with patch("core.optimizer.fetch_klines", return_value=[]), \
+             patch("core.optimizer._backtest_with_params", side_effect=mock_backtest):
+            best_val, result = test_single_param("SL_VOL_MULT", 2.0, 0.5)
+            assert best_val == 2.0
+            assert result is None

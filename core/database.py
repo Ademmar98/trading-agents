@@ -67,6 +67,21 @@ def init_db():
                 updated_at TEXT DEFAULT (datetime('now'))
             );
 
+            CREATE TABLE IF NOT EXISTS pending_orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                symbol TEXT NOT NULL,
+                side TEXT DEFAULT 'BUY',
+                limit_price REAL NOT NULL,
+                quantity REAL NOT NULL,
+                stop_loss REAL DEFAULT 0,
+                take_profit REAL DEFAULT 0,
+                strategy TEXT DEFAULT '',
+                status TEXT DEFAULT 'pending',
+                created_at TEXT DEFAULT (datetime('now')),
+                expires_at TEXT,
+                filled_at TEXT
+            );
+
             CREATE TABLE IF NOT EXISTS trades (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 position_id INTEGER,
@@ -210,7 +225,33 @@ def _migrate(conn):
     })
     _ensure_columns(conn, "positions", {
         "peak_price": "REAL DEFAULT 0",
+        "partial_taken": "INTEGER DEFAULT 0",
+        "initial_risk": "REAL DEFAULT 0",
+        "strategy": "TEXT DEFAULT ''",
     })
+    # Scalp-geometry clamp (idempotent): positions opened before the intraday
+    # pricing fix carry daily-range stops (up to 60% wide). Tighten anything
+    # beyond the caps so old books on any deployment self-heal at boot.
+    # Swing positions are exempt — their 1-25% stops are by design.
+    from config import MAX_SL_PCT, MAX_TP_PCT
+    sl_f, tp_f = MAX_SL_PCT / 100.0, MAX_TP_PCT / 100.0
+    conn.execute(f"""
+        UPDATE positions SET
+            stop_loss = CASE side WHEN 'BUY' THEN entry_price * (1 - {sl_f})
+                                  ELSE entry_price * (1 + {sl_f}) END,
+            initial_risk = entry_price * {sl_f}
+        WHERE status='open' AND partial_taken=0 AND stop_loss > 0
+          AND COALESCE(strategy, '') NOT LIKE 'swing%'
+          AND ABS(entry_price - stop_loss) > entry_price * {sl_f}
+    """)
+    conn.execute(f"""
+        UPDATE positions SET
+            take_profit = CASE side WHEN 'BUY' THEN entry_price * (1 + {tp_f})
+                                    ELSE entry_price * (1 - {tp_f}) END
+        WHERE status='open' AND take_profit > 0
+          AND COALESCE(strategy, '') NOT LIKE 'swing%'
+          AND ABS(take_profit - entry_price) > entry_price * {tp_f}
+    """)
     _ensure_columns(conn, "optimization_results", {
         "sl_mult": "REAL",
         "tp_mult": "REAL",

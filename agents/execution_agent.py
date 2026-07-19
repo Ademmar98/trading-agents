@@ -1,11 +1,18 @@
-﻿import time
+import time
 from datetime import datetime, timezone
 
-from config import SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT
+from config import (
+    SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT,
+    SCALP_MIN_WIN_PROB, SCALP_ATR_SL_MULT, MAX_SL_PCT, MAX_TP_PCT,
+    BROKEN_SL_PCT, SWING_MAX_SL_PCT, MIN_TP_PROFIT_USD, POSITION_SIZE_MULT,
+    MAX_GROSS_LEVERAGE,
+)
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
 from core.portfolio import load_portfolio
 from core.positions import PositionManager
+from core.risk import session_risk_mult
+from core.scalp15 import atr_position_size
 
 MAX_SPREAD_PCT = 0.35
 
@@ -53,7 +60,34 @@ class ExecutionAgent(BaseAgent):
                 rejected.append({**opp, "execution_reasons": ["Computed quantity is zero"]})
                 continue
 
+            # Predictive gate for the 15m scalp stack, right before routing:
+            # setups whose estimated win probability misses the bar are
+            # aborted outright. The estimate is a smoothed empirical win rate
+            # + synergy bonus — an honest heuristic, not a calibrated
+            # probability, so the bar is env-tunable (SCALP_MIN_WIN_PROB).
+            is_scalp = "scalp_15m" in (opp.get("strategies") or [])
+            if is_scalp:
+                wp = opp.get("win_prob", 0)
+                if wp < SCALP_MIN_WIN_PROB:
+                    rejected.append({**opp, "execution_reasons": [
+                        f"Scalp win probability {wp:.0%} < {SCALP_MIN_WIN_PROB:.0%} gate"]})
+                    continue
+                # Size through the position-sizer skill's ATR method:
+                # qty = (equity x risk%) / (ATR x multiplier)
+                if opp.get("atr"):
+                    skill_qty = atr_position_size(
+                        load_portfolio().equity, opp["atr"], SCALP_ATR_SL_MULT,
+                        opp.get("calculated_risk_pct", RISK_PER_TRADE_PCT))
+                    if skill_qty > 0:
+                        qty = round(min(qty, skill_qty), 8)
+
             pricing_entry = pricing_map.get(symbol) if isinstance(pricing_map, dict) else None
+            if opp.get("stop_loss") and opp.get("take_profit") and opp.get("entry_price"):
+                # The signal carries its own geometry (scalp and swing styles,
+                # analyst-priced classics) — another opportunity's pricing_map
+                # slot must never override it, or a swing entry would inherit
+                # a scalp's 1% stop.
+                pricing_entry = opp
             if pricing_entry and pricing_entry.get("action") != opp.get("action", "BUY"):
                 # Pricing computed for the opposite direction — its SL/TP would
                 # sit on the wrong side of entry; use inline pricing instead.
@@ -79,8 +113,43 @@ class ExecutionAgent(BaseAgent):
                     tp_pct = vol_decimal * TP_VOL_MULT * 100
                     sl_price = round(price * (1 + vol_decimal * SL_VOL_MULT), 5)
                     tp_price = round(price * (1 - vol_decimal * TP_VOL_MULT), 5)
+                sl_pct = min(sl_pct, MAX_SL_PCT)
+                tp_pct = min(tp_pct, MAX_TP_PCT)
+                if action == "BUY":
+                    sl_price = round(price * (1 - sl_pct / 100), 5)
+                    tp_price = round(price * (1 + tp_pct / 100), 5)
+                else:
+                    sl_price = round(price * (1 + sl_pct / 100), 5)
+                    tp_price = round(price * (1 - tp_pct / 100), 5)
                 entry_price = price
                 risk_pct = RISK_PER_TRADE_PCT
+
+            # Broken-geometry guard: a BUY whose TP sits at/below entry or
+            # whose SL sits at/above entry is corrupt data, not a trade; a
+            # stop farther than BROKEN_SL_PCT from entry means the volatility
+            # inputs are garbage. Never route these — reject and alert.
+            side = opp.get("action", "BUY")
+            is_swing = any(str(s).startswith("swing")
+                           for s in (opp.get("strategies") or []))
+            sane_sl_bound = SWING_MAX_SL_PCT if is_swing else BROKEN_SL_PCT
+            broken = None
+            if side == "BUY":
+                if tp_price <= entry_price:
+                    broken = f"TP ${tp_price:g} at/below entry ${entry_price:g}"
+                elif sl_price >= entry_price:
+                    broken = f"SL ${sl_price:g} at/above entry ${entry_price:g}"
+            else:
+                if tp_price >= entry_price:
+                    broken = f"TP ${tp_price:g} at/above entry ${entry_price:g} (SELL)"
+                elif sl_price <= entry_price:
+                    broken = f"SL ${sl_price:g} at/below entry ${entry_price:g} (SELL)"
+            sl_dist_pct = (abs(entry_price - sl_price) / entry_price * 100) if entry_price else 0
+            if not broken and sl_dist_pct > sane_sl_bound:
+                broken = f"SL {sl_dist_pct:.1f}% from entry (> {sane_sl_bound:g}% sanity bound)"
+            if broken:
+                rejected.append({**opp, "execution_reasons": [f"Broken geometry: {broken}"]})
+                self.notifier.on_rejected_signal(symbol, broken)
+                continue
 
             # TP must clear the full cost of the round trip (entry fee + exit
             # fee + spread) with margin, or the trade loses money even when it wins.
@@ -91,7 +160,10 @@ class ExecutionAgent(BaseAgent):
                     f"TP too small: {tp_pct:.2f}% < {min_viable_tp:.2f}% (fees+spread {round_trip_cost:.2f}%)"]})
                 continue
 
-            risk_amount = load_portfolio().equity * (risk_pct / 100)
+            # Session-aware sizing: Asian-session moves are sharper and fills
+            # worse — risk half size there (SESSION_RISK_MULTS)
+            portfolio = load_portfolio()
+            risk_amount = portfolio.equity * (risk_pct / 100) * session_risk_mult()
             if sl_price and entry_price:
                 risk_per_unit = abs(entry_price - sl_price)
                 if risk_per_unit > 0:
@@ -99,9 +171,45 @@ class ExecutionAgent(BaseAgent):
                     if risk_capped_qty < qty:
                         qty = round(risk_capped_qty, 8)
 
+            # Position-size multiplier: scale up for larger absolute P&L, but
+            # stay cash-only — clamp so this position plus everything already
+            # open never exceeds equity x MAX_GROSS_LEVERAGE (no leverage,
+            # halal) and never costs more than available cash.
+            if POSITION_SIZE_MULT != 1.0 and qty > 0 and entry_price > 0:
+                scaled = qty * POSITION_SIZE_MULT
+                open_notional = sum(
+                    (p.get("current_price") or p.get("entry_price") or 0) * p["quantity"]
+                    for p in self._pos_mgr.get_open_positions())
+                lev_budget = max(0.0, portfolio.equity * MAX_GROSS_LEVERAGE - open_notional)
+                cost_per_unit = entry_price * (1 + TRADE_FEE_PCT / 100)
+                affordable_qty = min(lev_budget, portfolio.cash) / cost_per_unit if cost_per_unit else scaled
+                qty = round(max(0.0, min(scaled, affordable_qty)), 8)
+
+            # Minimum absolute profit at TP: a win must earn at least
+            # MIN_TP_PROFIT_USD at the final size, or the setup isn't worth a
+            # slot. Computed AFTER sizing (incl. the multiplier), so it reflects
+            # the real dollar target.
+            # Scout probes are deliberately tiny (risk clamped to 0.1%) — the
+            # $1 floor would reject every one of them. Scout floor: the TP
+            # must clear 1.5x round-trip fees (min $0.10).
+            min_tp_usd = MIN_TP_PROFIT_USD
+            if opp.get("scout"):
+                rt_fees = qty * entry_price * (2 * TRADE_FEE_PCT / 100)
+                min_tp_usd = max(0.10, rt_fees * 1.5)
+            est_tp_profit = qty * abs(tp_price - entry_price)
+            if est_tp_profit < min_tp_usd:
+                rejected.append({**opp, "execution_reasons": [
+                    f"TP profit ${est_tp_profit:.2f} < ${min_tp_usd:.2f} minimum "
+                    f"(qty {qty:g} x ${abs(tp_price - entry_price):g} move)"]})
+                continue
+
             action = opp.get("action", "BUY")
             plan_id = f"plan_{symbol}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S%f')}"
             rr = round(tp_pct / sl_pct, 2) if sl_pct > 0 else 0
+            # Per-strategy attribution: keep EVERY contributor to the combined
+            # signal (pipe-joined), not just the first — post-cycle analysis
+            # (auditor/analytics) splits on "|" to score each strategy.
+            contributors = "|".join(opp.get("strategies") or [])
             plan_entry = {
                 "plan_id": plan_id,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -113,7 +221,7 @@ class ExecutionAgent(BaseAgent):
                 "position_size_usd": round(entry_price * qty, 2),
                 "position_size_units": qty,
                 "confidence": opp.get("confidence", 0),
-                "strategy": (opp.get("strategies") or [None])[0] if opp.get("strategies") else "",
+                "strategy": contributors,
                 "regime": opp.get("regime", ""),
                 "rationale": ", ".join(opp.get("reasons", [])[:3]),
                 "risk_reward_ratio": rr,
@@ -146,6 +254,6 @@ class ExecutionAgent(BaseAgent):
         if executable:
             e = executable[0]
             self.notifier.on_agent_action(
-                "execution", f"{len(executable)} orders ready | top: {e['action']} {e['qty']} {e['symbol']} SL={e['sl_pct']:.1f}% TP={e['tp_pct']:.1f}%"
+                "execution", f"{len(executable)} orders ready | top: {e['action']} {e['symbol']} x{e['qty']:g} SL={e['sl_pct']:.1f}% TP={e['tp_pct']:.1f}%"
             )
         return report

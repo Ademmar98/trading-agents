@@ -1,13 +1,39 @@
 # Trading Agents
 
-Multi-agent crypto trading bot with paper/live broker support, 25+ strategies, regime detection, risk management, and a real-time dashboard.
+Multi-agent trading firm for crypto, stocks, and metals with paper/live broker support, 25+ strategies plus a 15m scalping stack, regime detection, fee-honest accounting, scaled exits, an LLM head-trader review layer, and a real-time dashboard.
 
 ## Architecture
 
-Agents run **concurrently** as asyncio actors on a message bus (`core/bus.py`),
-each with its own inbox, its own cadence, and persistent state that survives
-restarts (`agent_state` table). Every trade must survive a **deliberation**
-before it executes:
+The production pipeline runs agents sequentially each cycle, sharing state
+through JSON reports and SQLite:
+
+```
+Orchestrator → HealthMonitor → SentimentAgent → RegimeAgent → ResearchAnalyst
+→ RiskManager → PositionSizer → PortfolioManagerAgent
+→ ComplianceAgent → ExecutionAgent → Trader → Auditor → HeadTrader
+```
+
+- **Orchestrator** — coordinates the cycle; writes start/end markers to shared memory
+- **HealthMonitor** — checks broker connectivity, data freshness, error rates
+- **SentimentAgent** — scores market mood from price breadth and Fear & Greed Index
+- **RegimeAgent** — detects regime (trending/ranging/volatile) per symbol via ADX, BB width, ATR
+- **ResearchAnalyst** — fetches OHLC data, runs 25+ strategies per symbol, produces opportunities, and computes per-symbol SL/TP/risk % via regime-aware pricing
+- **RiskManager** — sets portfolio-level risk limits (per-symbol, volatility, correlation)
+- **PositionSizer** — computes Kelly-optimal position sizes based on historical trade stats
+- **PortfolioManagerAgent** — allocates capital across opportunities with strategy-weighted scoring
+- **ComplianceAgent** — enforces spot-only, exposure, concentration, and daily-loss gates
+- **ExecutionAgent** — builds formal trade plans with SL/TP/RR, checks spread before approval
+- **Trader** — executes orders through the selected broker; checks stop-losses on every cycle
+- **Auditor** — reviews performance, generates suggestions, tracks agent health
+- **HeadTrader** — Hermes-powered LLM review layer (hourly): writes a blunt memo on the firm's own numbers and nudges per-strategy confidence, clamped to [0.8, 1.1]; advisory only
+- **OptimizerAgent** — walk-forward parameter search (optimize on 70% of history, adopt only what survives the unseen 30%); runs in background thread, not in cycle
+
+### Multi-agent desk (opt-in: `MULTI_AGENT_MODE=true`)
+
+Alternatively, agents run **concurrently** as asyncio actors on a message bus
+(`core/bus.py`), each with its own inbox, its own cadence, and persistent
+state that survives restarts (`agent_state` table). Every trade must survive
+a **deliberation** before it executes:
 
 ```
 analyst ──proposal──▶ chair (orchestrator)
@@ -24,7 +50,9 @@ analyst ──proposal──▶ chair (orchestrator)
 ```
 
 - **Vetoes are non-negotiable** and reserved for `compliance`, `risk_manager`,
-  and `health` (circuit breakers, spot-only rule, drawdown limits).
+  and `health` (circuit breakers, spot-only rule, drawdown limits) — and they
+  **fail closed**: a veto-power reviewer that times out or crashes counts as
+  a veto, never as consent.
 - **Counters negotiate**: size cuts compound, the tightest stop wins, and the
   revised trade goes back for another round.
 - **Votes are earned**: the auditor archives every deliberation, matches it to
@@ -33,14 +61,23 @@ analyst ──proposal──▶ chair (orchestrator)
 - **Every argument is on the record**: all messages persist to the
   `agent_messages` table, queryable by deliberation
   (`core.database.get_message_thread`).
-- The **HealthMonitor** watches real runtime heartbeats and can halt the desk;
-  the **OptimizerAgent** tunes parameters on a slow tick.
+- **Spot-only at every gate**: a SELL can only close an existing long and is
+  clamped to held quantity at execution prep and again at the broker door.
 
-Agent roles (analyst, sentiment, regime, risk, sizing, portfolio, compliance,
-execution, trader, auditor, health, optimizer) are described in
-`agents/desk.py`. Set `MULTI_AGENT_MODE=false` to fall back to the legacy
-sequential pipeline (`Orchestrator → … → Auditor` sharing JSON files), which
-is kept for comparison and still backs the dashboard's report files.
+Agent roles are described in `agents/desk.py`. The desk stays opt-in until it
+has soaked in production; the legacy pipeline above remains the default and
+still backs the dashboard's report files.
+
+### Daily desk report
+
+Once per completed UTC day the firm writes a full report to
+`data/daily_reports/<date>.{json,md}` (also `GET /api/daily-report`) and
+pushes a summary to Telegram: per-strategy performance, every trade, agent
+and reviewer performance, errors, engine stalls, missing/stale data — and a
+**post-mortem for every losing trade** (`core/trade_postmortem.py`) that
+classifies the loss (`SL_TOO_TIGHT`, `BAD_ENTRY`, `TP_TOO_FAR`,
+`WRONG_SIGNAL`, `FEE_EATEN`) against real market bars and suggests the
+tunable to change.
 
 ## Features
 
@@ -51,6 +88,11 @@ is kept for comparison and still backs the dashboard's report files.
 | **Real Sentiment** | Fetches Fear & Greed Index from alternative.me and blends it with price breadth |
 | **Risk Metrics** | VaR (95%), rolling max drawdown, trade duration stats, Sharpe, profit factor, Kelly sizing |
 | **Trade Plans** | Each potential trade is saved to SQLite with SL, TP, R:R ratio, strategy, regime, rationale |
+| **Multi-Market** | `MARKET_TYPE=crypto/stocks/metals/both` — stocks via Yahoo (NYSE hours enforced), metals via COMEX futures proxies (GC=F/SI=F), crypto 24/7 |
+| **15m Scalp Stack** | EMA trend filter + fresh MACD cross + RSI guard; ATR-based SL (1.5x), TP from a win-rate/R:R matrix; win-probability gate before routing (`SCALP_MIN_WIN_PROB`) |
+| **Fee-Honest Accounting** | 0.1%/side fees on every paper fill and in recorded PnL; fills cross the spread (buy ask / sell bid); TP must clear round-trip costs |
+| **Scaled Exits** | Bank 50% at 1.5R, stop to breakeven + fee buffer, runner rides to TP; R-based trailing when breakeven is off |
+| **Portfolio Risk** | Total open-risk heat cap (`MAX_OPEN_RISK_PCT`), per-cluster position caps, spot-only, daily-loss circuit breaker |
 | **Multi-Broker** | Paper (default), Binance (testnet/live), MetaQuotes 5, DXtrade |
 | **Web Dashboard** | Live dashboard on port 8000 with positions, trades, equity curve, risk, plans |
 | **Telegram** | Notifications for trades, SL/TP hits, errors, daily summaries |

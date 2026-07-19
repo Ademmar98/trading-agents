@@ -17,6 +17,9 @@ class PortfolioManagerAgent(BaseAgent):
         regimes = self.memory.read("analyses", "regime_scan") or {}
         opportunities = sizing.get("sized_opportunities", []) or []
         strategy_weights = self._load_strategy_weights()
+        # The HeadTrader LLM memo is READ-ONLY (dashboard/Telegram). It used to
+        # multiply per-strategy confidence here; removed 2026-07-15 — nothing an
+        # LLM writes may touch sizing, ranking, or routing (AUDIT.md sec. 7).
 
         adjusted = []
         notes = []
@@ -32,10 +35,13 @@ class PortfolioManagerAgent(BaseAgent):
             sent = (sentiment.get("symbols", {}) or {}).get(symbol, {})
             reg = (regimes.get("symbols", {}) or {}).get(symbol, {})
 
+            # Sentiment/regime multipliers are unproven inputs, so they may only
+            # REDUCE conviction, never inflate it (capped at 1.0 since 2026-07-15).
+            # Their size multipliers below are already <= 1.0 (risk-reducing).
             sent_conf = sent.get("confidence_multiplier", 1.0)
             reg_conf = reg.get("confidence_multiplier", 1.0)
             combined_mult = 1.0 + (sent_conf - 1.0) + (reg_conf - 1.0)
-            confidence *= max(combined_mult, 0.5)
+            confidence *= max(min(combined_mult, 1.0), 0.5)
             max_qty *= sent.get("size_multiplier", 1.0) * reg.get("size_multiplier", 1.0)
 
             if sent.get("block_buy") and action == "BUY":

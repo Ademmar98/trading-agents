@@ -50,7 +50,11 @@ def daily_loss_pct():
 def build_daily_summary(date_str):
     """Stats for the Telegram report covering one completed UTC day."""
     p = load_portfolio()
-    rows = fetchall("SELECT pnl FROM trades WHERE date(closed_at) = ?", [date_str])
+    # Net per position within the day (scaled exits write partial + runner rows)
+    rows = fetchall("""
+        SELECT SUM(pnl) AS pnl FROM trades WHERE date(closed_at) = ?
+        GROUP BY COALESCE(position_id, id)
+    """, [date_str])
     pnls = [r["pnl"] for r in rows]
     wins = len([x for x in pnls if x > 0])
     start = day_start_equity(date_str)
@@ -72,6 +76,36 @@ def build_daily_summary(date_str):
         "open_positions": len(p.positions),
         "cash": round(p.cash, 2),
     }
+
+
+def check_goals(notifier):
+    """Firm goals (reporting targets, not trade gates): +DAILY_PROFIT_TARGET
+    MIN..MAX % per day and +TOTAL_PROFIT_TARGET MIN..MAX % of total capital.
+    Pings Telegram once per day / once per milestone when first reached."""
+    from config import (DAILY_PROFIT_TARGET_MIN, DAILY_PROFIT_TARGET_MAX,
+                        TOTAL_PROFIT_TARGET_MIN, TOTAL_PROFIT_TARGET_MAX)
+    today = _utc_today()
+    day_pnl = daily_loss_pct()
+    if day_pnl >= DAILY_PROFIT_TARGET_MIN and get_meta("goal_day_hit") != today:
+        set_meta("goal_day_hit", today)
+        notifier.send(
+            f"🎯 Daily goal reached: {day_pnl:+.2f}% "
+            f"(target +{DAILY_PROFIT_TARGET_MIN:g}% to +{DAILY_PROFIT_TARGET_MAX:g}%)")
+    if day_pnl >= DAILY_PROFIT_TARGET_MAX and get_meta("goal_day_max_hit") != today:
+        set_meta("goal_day_max_hit", today)
+        notifier.send(
+            f"🏆 Daily stretch goal hit: {day_pnl:+.2f}% — a day worth protecting")
+    p = load_portfolio()
+    total_pct = p.total_pnl_pct
+    if total_pct >= TOTAL_PROFIT_TARGET_MIN and get_meta("goal_total_min") != "1":
+        set_meta("goal_total_min", "1")
+        notifier.send(
+            f"🎯 Firm goal reached: {total_pct:+.2f}% of total capital "
+            f"(target +{TOTAL_PROFIT_TARGET_MIN:g}% to +{TOTAL_PROFIT_TARGET_MAX:g}%)")
+    if total_pct >= TOTAL_PROFIT_TARGET_MAX and get_meta("goal_total_max") != "1":
+        set_meta("goal_total_max", "1")
+        notifier.send(
+            f"🏆 Firm stretch goal hit: {total_pct:+.2f}% — maximum target reached")
 
 
 def pop_completed_day():

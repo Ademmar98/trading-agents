@@ -1,14 +1,23 @@
 import time
 import concurrent.futures
 
-from config import WATCHED_SYMBOLS, TRADING_TIMEFRAME, BACKTEST_BARS
+from config import (
+    WATCHED_SYMBOLS, TRADING_TIMEFRAME, BACKTEST_BARS, SCALP_15M_ENABLED,
+    SCALP_TIMEFRAMES, BUY_ONLY, MAX_TP_PCT, MACRO_BELLWETHERS,
+    SWING_ENABLED, SWING_SCAN_INTERVAL_MIN, CLASSIC_STRATEGIES_ENABLED,
+)
 from agents.base_agent import BaseAgent
 from core.market import MarketData
+from core.positions import PositionManager
+from core.microstructure import vwap as vwap_fn
 from core.strategies import scan_symbol
 from core.multiframe import analyze_symbol_multiframe
 from core.scalping_signals import analyze_symbol_mtf
-from core.database import get_unprofitable_strategies
-from core.pricing import compute_pricing
+from core.scalp15 import scalp_signal
+from core.swing import swing_signal
+from core.database import get_unprofitable_strategies, get_meta, set_meta
+from core.indicators import atr as intraday_atr_fn
+from core.pricing import compute_pricing, round_sig
 
 
 class ResearchAnalyst(BaseAgent):
@@ -17,6 +26,55 @@ class ResearchAnalyst(BaseAgent):
     def __init__(self):
         super().__init__()
         self.market = MarketData()
+        self.pos_mgr = PositionManager()
+
+    # _apply_priority_boosts was removed 2026-07-15. It inflated confidence for
+    # high-liquidity pairs (+0.03), trending regimes (+0.02) and bid-heavy order
+    # books (+0.03) — all unproven, and confidence decides the compliance bar,
+    # ranking, and the correlation-group / macro-dip overrides. Nothing unproven
+    # may raise conviction. (It also cost a REST order-book call per candidate.)
+
+    def _steward_open_trades(self, analyses):
+        """Re-analyze open trades each cycle: tighten stops (never widen)
+        when the picture turns against a position, and give a working
+        winner more target room within the MAX_TP_PCT cap."""
+        news = self.memory.read("reports", "news_scan") or {}
+        news_syms = news.get("symbols", {}) if time.time() - (news.get("timestamp") or 0) < 3600 else {}
+        adjusted = []
+        for pos in self.pos_mgr.get_open_positions():
+            if (pos.get("strategy") or "").startswith("swing"):
+                # Swing stops live on daily structure — tightening them with
+                # 15m ATR would strangle multi-day positions.
+                continue
+            a = analyses.get(pos["symbol"])
+            if not a or pos["side"] != "BUY":
+                continue
+            price = a.get("price") or pos["current_price"]
+            atr_v = a.get("atr") or 0
+            if not price or not atr_v:
+                continue
+            score = (news_syms.get(pos["symbol"]) or {}).get("score", 0)
+            bearish_votes = sum([
+                a.get("trend") == "bearish",
+                (a.get("rsi_14") or 50) > 75,
+                score <= -0.5,
+            ])
+            in_profit = price > pos["entry_price"]
+            if bearish_votes >= 2 and in_profit:
+                # Evidence turned: protect the gain under the current price
+                new_sl = round_sig(price - atr_v)
+                if self.pos_mgr.adjust_levels(pos["id"], new_sl=new_sl):
+                    adjusted.append(f"{pos['symbol']} SL→{new_sl} (bearish evidence)")
+            elif (a.get("trend") == "bullish" and score >= 0 and pos.get("take_profit")
+                  and price >= pos["take_profit"] * 0.997):
+                # Winner knocking on TP with the wind behind it: extend within cap
+                cap = pos["entry_price"] * (1 + MAX_TP_PCT / 100)
+                new_tp = round_sig(min(pos["take_profit"] + atr_v, cap))
+                if new_tp > pos["take_profit"] and self.pos_mgr.adjust_levels(pos["id"], new_tp=new_tp):
+                    adjusted.append(f"{pos['symbol']} TP→{new_tp} (extending winner)")
+        if adjusted:
+            self.log("Steward: " + "; ".join(adjusted[:4]))
+            self.notifier.on_agent_action("analyst", "steward adjusted " + ", ".join(adjusted[:3]))
 
     def run(self):
         self.log("Fetching market data and analyzing symbols")
@@ -34,8 +92,19 @@ class ResearchAnalyst(BaseAgent):
         symbol_regimes = regime_scan.get("symbols", {})
         bad_strats = get_unprofitable_strategies()
 
+        # Swing scans run on daily/4h bars, which change slowly — refresh
+        # every SWING_SCAN_INTERVAL_MIN and reuse the cached scan between.
+        swing_due = False
+        if SWING_ENABLED:
+            try:
+                last_swing = float(get_meta("swing_last_scan", "0") or 0)
+            except (TypeError, ValueError):
+                last_swing = 0.0
+            swing_due = time.time() - last_swing > SWING_SCAN_INTERVAL_MIN * 60
+
         analyses = {}
         opportunities = []
+        swing_map = {}
 
         def analyze_symbol(symbol):
             data = prices[symbol]
@@ -43,14 +112,77 @@ class ResearchAnalyst(BaseAgent):
                 ohlc = self.market.get_ohlc(symbol, days=BACKTEST_BARS, interval=TRADING_TIMEFRAME)
                 hist = self.market.get_historical(symbol)
                 indicators = self.market.compute_indicators(hist)
-                mtf_signal = analyze_symbol_multiframe(symbol)
-                scalping_signal = analyze_symbol_mtf(symbol)
+                # SL/TP inputs must come from the TRADING timeframe, not the
+                # daily history: compute_indicators' "volatility" is a 14-DAY
+                # high-low range (20-30% on stocks), which once priced a META
+                # scalp with a 29.5% stop. Overwrite with intraday values.
+                try:
+                    if ohlc and len(ohlc) >= 20:
+                        i_atr = intraday_atr_fn([b["high"] for b in ohlc],
+                                                [b["low"] for b in ohlc],
+                                                [b["close"] for b in ohlc]) or 0
+                        i_closes = [b["close"] for b in ohlc[-15:]]
+                        i_hi, i_lo = max(i_closes), min(i_closes)
+                        indicators["atr"] = i_atr
+                        indicators["volatility"] = round((i_hi - i_lo) / (i_lo or 1) * 100, 3)
+                        # Session VWAP: the trader rests BUY limits here when
+                        # price is extended above it
+                        v = vwap_fn(ohlc[-32:])
+                        if v:
+                            indicators["vwap"] = v
+                except Exception:
+                    pass  # daily values stay; the MAX_SL_PCT cap still guards
+                # The classic 28-strategy battery + its multiframe/scoring
+                # aggregators were proven net-negative in every regime
+                # (Phase 1). Off by default; the library remains for backtests.
+                if CLASSIC_STRATEGIES_ENABLED:
+                    mtf_signal = analyze_symbol_multiframe(symbol)
+                    scalping_signal = analyze_symbol_mtf(symbol)
+                else:
+                    mtf_signal = None
+                    scalping_signal = None
                 regime = symbol_regimes.get(symbol, {}).get("regime") if symbol_regimes else None
-                signals = scan_symbol(ohlc, regime=regime, exclude_strategies=bad_strats) if ohlc and len(ohlc) >= 30 else []
+                scalp_sigs = []
+                if SCALP_15M_ENABLED:
+                    # The same stack runs on every configured timeframe; a
+                    # failure on one TF must not sink the symbol's analysis
+                    for tf in SCALP_TIMEFRAMES:
+                        try:
+                            tf_ohlc = self.market.get_ohlc(symbol, days=80, interval=tf)
+                            sig = scalp_signal(symbol, regime=regime,
+                                               ohlc=tf_ohlc or None, timeframe=tf)
+                            if sig:
+                                scalp_sigs.append(sig)
+                        except Exception:
+                            continue
+                    scalp_sigs.sort(key=lambda s: s["win_prob"], reverse=True)
+                swing_sig = None
+                if swing_due:
+                    try:
+                        d1 = self.market.get_ohlc(symbol, days=200, interval="1d")
+                        h4 = self.market.get_ohlc(symbol, days=100, interval="4h")
+                        swing_sig = swing_signal(symbol, d1 or None, h4 or None, regime=regime)
+                    except Exception:
+                        swing_sig = None
+                if CLASSIC_STRATEGIES_ENABLED and ohlc and len(ohlc) >= 30:
+                    signals = scan_symbol(ohlc, regime=regime, exclude_strategies=bad_strats)
+                    if BUY_ONLY:
+                        # Firm policy: all analytical effort goes into longs
+                        signals = [s for s in signals if s.get("action") == "BUY"]
+                else:
+                    signals = []
+                # 30d daily returns so the RiskManager can correlate pairs
+                # from shared memory without its own data fetches
+                closes = [h.get("close") for h in (hist or []) if h.get("close")]
+                returns_30d = [
+                    (closes[i] - closes[i - 1]) / closes[i - 1]
+                    for i in range(max(1, len(closes) - 30), len(closes)) if closes[i - 1]
+                ]
                 return symbol, {
                     "price": data["price"],
                     "change_24h": data["change_24h"],
                     "volume_24h": data["volume_24h"],
+                    "returns_30d": returns_30d,
                     "type": data.get("type", "unknown"),
                     "bid": data.get("bid"),
                     "ask": data.get("ask"),
@@ -58,19 +190,23 @@ class ResearchAnalyst(BaseAgent):
                     "signals": signals,
                     "mtf_signal": mtf_signal,
                     "scalping_signal": scalping_signal,
-                }, signals, mtf_signal, scalping_signal, regime, indicators
+                    "scalp_signals": scalp_sigs,
+                }, signals, mtf_signal, scalping_signal, scalp_sigs, regime, indicators, swing_sig
             except Exception as e:
                 self.log(f"Error analyzing {symbol}: {e}")
-                return symbol, None, [], None, None, None, {}
+                return symbol, None, [], None, None, [], None, {}, None
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = {executor.submit(analyze_symbol, sym): sym for sym in symbols}
             for future in concurrent.futures.as_completed(futures):
                 result = future.result()
-                sym, analysis, signals, mtf_signal, scalping_signal, regime, indicators = result
+                (sym, analysis, signals, mtf_signal, scalping_signal,
+                 scalp_sigs, regime, indicators, swing_sig) = result
                 if analysis is None:
                     continue
                 analyses[sym] = analysis
+                if swing_sig:
+                    swing_map[sym] = swing_sig
                 seen_actions = set()
                 for sig in signals:
                     action = sig["action"]
@@ -99,7 +235,7 @@ class ResearchAnalyst(BaseAgent):
                                               {**prices[sym], **indicators}, regime, indicators.get("atr", 0))
                     opp.update(pricing)
                     opportunities.append(opp)
-                if scalping_signal and scalping_signal["action"] != "HOLD":
+                if scalping_signal and scalping_signal["action"] != "HOLD" and not (BUY_ONLY and scalping_signal["action"] == "SELL"):
                     action = scalping_signal["action"]
                     if action not in seen_actions:
                         seen_actions.add(action)
@@ -124,6 +260,68 @@ class ResearchAnalyst(BaseAgent):
                                                   {**prices[sym], **indicators}, regime, indicators.get("atr", 0))
                         opp.update(pricing)
                         opportunities.append(opp)
+                # Scalp stack across all configured timeframes (sorted by
+                # win probability — the strongest TF per action wins). Each
+                # carries its own ATR-derived SL/TP; no compute_pricing; the
+                # execution agent gates on SCALP_MIN_WIN_PROB before routing.
+                for ssig in scalp_sigs:
+                    if ssig["action"] in seen_actions:
+                        continue
+                    seen_actions.add(ssig["action"])
+                    opportunities.append({
+                        "symbol": sym,
+                        "action": ssig["action"],
+                        "confidence": min(ssig["win_prob"], 0.95),
+                        "price": ssig["price"],
+                        "entry_price": ssig["entry_price"],
+                        "stop_loss": ssig["stop_loss"],
+                        "take_profit": ssig["take_profit"],
+                        "sl_pct": ssig["sl_pct"],
+                        "tp_pct": ssig["tp_pct"],
+                        "calculated_risk_pct": ssig["calculated_risk_pct"],
+                        "atr": ssig["atr"],
+                        "win_prob": ssig["win_prob"],
+                        "reasons": ssig["reasons"][:5],
+                        "strategies": [ssig["strategy"]],
+                        "regime": regime, "multi_timeframe": False,
+                        "timeframe": ssig["timeframe"],
+                        "indicators": {
+                            "trend": indicators.get("trend", "neutral"),
+                            "rsi": ssig["rsi"],
+                            "volatility": indicators.get("volatility", 0),
+                            "atr": ssig["atr"],
+                        },
+                    })
+
+        # Swing desk: fresh scan results get cached; between scans the cached
+        # setups keep flowing into the pipeline (daily bars move slowly).
+        if SWING_ENABLED:
+            if swing_due:
+                set_meta("swing_last_scan", str(time.time()))
+                self.memory.write("analyses", "swing_scan", {
+                    "symbols": swing_map, "timestamp": time.time()})
+            else:
+                cached = self.memory.read("analyses", "swing_scan") or {}
+                if time.time() - (cached.get("timestamp") or 0) < 12 * 3600:
+                    swing_map = cached.get("symbols", {}) or {}
+            for sym, ssig in swing_map.items():
+                if not ssig or sym not in prices:
+                    continue
+                ind = analyses.get(sym, {})
+                opportunities.append({
+                    **ssig,
+                    "symbol": sym,
+                    "price": prices[sym]["price"],  # live mark; SL/TP stay from signal time
+                    "strategies": [ssig["strategy"]],
+                    "regime": (symbol_regimes.get(sym, {}) or {}).get("regime") if symbol_regimes else None,
+                    "multi_timeframe": True,
+                    "indicators": {
+                        "trend": ind.get("trend", "bullish"),
+                        "rsi": ind.get("rsi_14", 50),
+                        "volatility": ind.get("volatility", 0),
+                        "atr": ssig.get("atr", 0),
+                    },
+                })
 
         opportunities.sort(key=lambda o: o["confidence"], reverse=True)
         summary = f"Analyzed {len(analyses)} symbols, found {len(opportunities)} opportunities"
@@ -132,13 +330,30 @@ class ResearchAnalyst(BaseAgent):
         pricing_map = {}
         for o in opportunities:
             pricing_map.setdefault(o["symbol"], o)
+        # Bellwether momentum (~30min over the last two closed 15m bars) so
+        # compliance can pause a whole asset class mid-dip
+        bellwether_moves = {}
+        for cluster, bell in MACRO_BELLWETHERS.items():
+            try:
+                bars = self.market.get_ohlc(bell, days=2, interval="15m")
+                if bars and len(bars) >= 3 and bars[-3].get("close"):
+                    bellwether_moves[cluster] = round(
+                        (bars[-1]["close"] - bars[-3]["close"]) / bars[-3]["close"] * 100, 3)
+            except Exception:
+                continue
+
         self.memory.write("analyses", "market_scan", {
             "summary": summary, "opportunities": opportunities,
-            "all_analyses": analyses, "timestamp": time.time(),
+            "all_analyses": analyses, "bellwether_moves": bellwether_moves,
+            "timestamp": time.time(),
         })
         self.memory.write("decisions", "pricing", {
             "pricing_map": pricing_map, "timestamp": time.time(),
         })
+        try:
+            self._steward_open_trades(analyses)
+        except Exception as e:
+            self.log(f"Steward skipped: {e}")
         self.log(summary)
         if opportunities:
             top = opportunities[0]

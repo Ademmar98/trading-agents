@@ -20,7 +20,6 @@ def make_positions_panel(pos_mgr):
     table = Table(box=box.SIMPLE)
     table.add_column("Symbol", style="yellow")
     table.add_column("Side", width=5)
-    table.add_column("Qty", justify="right", width=10)
     table.add_column("Entry", justify="right", width=10)
     table.add_column("Price", justify="right", width=10)
     table.add_column("SL", justify="right", width=10)
@@ -32,7 +31,6 @@ def make_positions_panel(pos_mgr):
         table.add_row(
             pos["symbol"],
             f"[{'green' if pos['side']=='BUY' else 'red'}]{pos['side'][:4]}[/]",
-            f"{pos['quantity']:.4f}",
             f"${pos['entry_price']:.5f}",
             f"${pos['current_price']:.5f}",
             f"${pos['stop_loss']:.5f}" if pos["stop_loss"] else "-",
@@ -41,7 +39,7 @@ def make_positions_panel(pos_mgr):
         )
     extra = len(rows) - 20
     if extra > 0:
-        table.add_row("[dim]...[/dim]", "", "", "", "", "", "", f"[dim]{extra} more[/dim]")
+        table.add_row("[dim]...[/dim]", "", "", "", "", "", f"[dim]{extra} more[/dim]")
     return Panel(table, title=f"[bold cyan]Positions ({summary['count']})[/bold cyan]", box=box.ROUNDED)
 
 
@@ -73,7 +71,6 @@ def make_trades_panel(pos_mgr):
     table.add_column("Time", style="dim", width=10)
     table.add_column("Symbol", style="yellow")
     table.add_column("Side", width=5)
-    table.add_column("Qty", justify="right", width=8)
     table.add_column("Entry", justify="right", width=10)
     table.add_column("Exit", justify="right", width=10)
     table.add_column("Reason", width=8)
@@ -86,7 +83,6 @@ def make_trades_panel(pos_mgr):
             tm,
             t["symbol"],
             f"[{'green' if t['side']=='BUY' else 'red'}]{t['side'][:4]}[/]",
-            f"{t['qty']:.4f}",
             f"${t['entry_price']:.5f}",
             f"${t['exit_price']:.5f}",
             t.get("reason", "close")[:8],
@@ -94,7 +90,7 @@ def make_trades_panel(pos_mgr):
         )
     extra = len(trades) - 15
     if extra > 0:
-        table.add_row("", "[dim]...[/dim]", "", "", "", "", "", f"[dim]{extra} more[/dim]")
+        table.add_row("", "[dim]...[/dim]", "", "", "", "", f"[dim]{extra} more[/dim]")
     return Panel(table, title="[bold cyan]Closed Trades[/bold cyan]", box=box.ROUNDED)
 
 
@@ -276,7 +272,7 @@ def make_layout(portfolio, pos_mgr, memory, live_broker):
         "Spot-only (no leverage)  |  "
         f"Broker: {BROKER_TYPE.upper()}  |  "
         f"Open: {pos_mgr.get_positions_summary()['count']}  |  "
-        "Agents: Orchestrator -> Analyst -> HealthMonitor -> Sentiment -> Regime -> Pricing -> Risk -> PositionSizer -> PortfolioMgr -> Compliance -> Execution -> Trader -> Auditor -> Optimizer[/dim]",
+        "Agents: Orchestrator -> HealthMonitor -> Sentiment -> Regime -> Analyst -> Risk -> PositionSizer -> PortfolioMgr -> Compliance -> Execution -> Trader -> Auditor -> HeadTrader (+Optimizer bg)[/dim]",
         box=box.SIMPLE,
     ))
     return layout

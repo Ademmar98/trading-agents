@@ -4,11 +4,19 @@ from core.database import fetchall, execute
 
 
 def compute_analytics():
+    # Group by position so a scaled exit (partial_tp row + runner row) counts
+    # as one trade with its net pnl — split rows would skew win rate,
+    # expectancy, and the per-strategy stats.
     trades = fetchall("""
-        SELECT t.*, p.side, p.entry_price, p.quantity
+        SELECT MAX(t.symbol) AS symbol, MAX(t.strategy) AS strategy,
+               MAX(t.reason) AS reason, SUM(t.pnl) AS pnl, SUM(t.qty) AS qty,
+               MIN(t.opened_at) AS opened_at, MAX(t.closed_at) AS closed_at,
+               MAX(p.side) AS side, MAX(p.entry_price) AS entry_price,
+               MAX(p.quantity) AS quantity
         FROM trades t
         LEFT JOIN positions p ON t.position_id = p.id
-        ORDER BY t.closed_at DESC
+        GROUP BY COALESCE(t.position_id, t.id)
+        ORDER BY MAX(t.closed_at) DESC
     """)
     trades = [dict(r) for r in trades]
 
@@ -66,17 +74,28 @@ def compute_analytics():
     return result
 
 
-def _rolling_drawdown(pnls):
+def _rolling_drawdown(pnls, initial_balance=None):
+    """Max drawdown on the cumulative equity curve, as a fraction of peak
+    equity. The old version compared individual trade pnls to the largest
+    single win — a $10 win followed by a $2 win read as an 80% "drawdown",
+    which poisoned the dashboard and the head-trader's context.
+
+    pnls arrive newest-first (trades are ordered by closed_at DESC), so the
+    curve is built over the reversed sequence."""
     if not pnls:
         return 0, []
-    max_dd_pct = 0
-    peak = pnls[0]
+    if initial_balance is None:
+        from config import INITIAL_BALANCE
+        initial_balance = INITIAL_BALANCE
+    equity = initial_balance
+    peak = equity
+    max_dd_pct = 0.0
     rolling = []
-    for pnl in pnls:
-        if pnl > peak:
-            peak = pnl
-        dd = peak - pnl
-        dd_pct = dd / peak if peak > 0 else 0
+    for pnl in reversed(pnls):
+        equity += pnl
+        if equity > peak:
+            peak = equity
+        dd_pct = (peak - equity) / peak if peak > 0 else 0.0
         rolling.append(dd_pct)
         if dd_pct > max_dd_pct:
             max_dd_pct = dd_pct
@@ -118,20 +137,32 @@ def _trade_duration_stats(trades):
 def _compute_strategy_stats(trades):
     by_strategy = {}
     for t in trades:
-        strat_name = t.get("strategy") or t.get("reason", "unknown")
-        by_strategy.setdefault(strat_name, {"trades": 0, "won": 0, "pnl": 0})
-        by_strategy[strat_name]["trades"] += 1
-        by_strategy[strat_name]["pnl"] += t["pnl"]
-        if t["pnl"] > 0:
-            by_strategy[strat_name]["won"] += 1
+        # Combined signals tag the trade with every contributor pipe-joined
+        # ("a|b") — score the trade under EACH contributing strategy so
+        # co-contributors accumulate their own expectancy record.
+        for strat_name in (t.get("strategy") or t.get("reason", "unknown")).split("|"):
+            s = by_strategy.setdefault(strat_name, {"trades": 0, "won": 0, "pnl": 0,
+                                                    "win_pnl": 0.0, "loss_pnl": 0.0})
+            s["trades"] += 1
+            s["pnl"] += t["pnl"]
+            if t["pnl"] > 0:
+                s["won"] += 1
+                s["win_pnl"] += t["pnl"]
+            elif t["pnl"] < 0:
+                s["loss_pnl"] += abs(t["pnl"])
 
     result = []
-    for strategy, stats in sorted(by_strategy.items(), key=lambda x: x[1]["pnl"], reverse=True):
+    for strategy, s in sorted(by_strategy.items(), key=lambda x: x[1]["pnl"], reverse=True):
+        n = s["trades"]
+        losses = n - s["won"]
         result.append({
             "strategy": strategy,
-            "trades": stats["trades"],
-            "win_rate": round((stats["won"] / stats["trades"]) * 100, 1) if stats["trades"] > 0 else 0,
-            "pnl": round(stats["pnl"], 2),
+            "trades": n,
+            "win_rate": round((s["won"] / n) * 100, 1) if n else 0,
+            "pnl": round(s["pnl"], 2),
+            "expectancy": round(s["pnl"] / n, 2) if n else 0,
+            "avg_win": round(s["win_pnl"] / s["won"], 2) if s["won"] else 0,
+            "avg_loss": round(s["loss_pnl"] / losses, 2) if losses else 0,
         })
     return result
 

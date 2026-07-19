@@ -1,13 +1,13 @@
-﻿import time
+import time
 
-from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN
+from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET
 from agents.base_agent import BaseAgent
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
-from core.live_broker import MetaQuotesBroker
-from core.dxtrade_broker import DXTradeBroker
 from core.positions import PositionManager
 from core.database import update_plan_status
+from core import pending_orders
+from config import USE_LIMIT_ENTRIES, LIMIT_ENTRY_EXT_PCT
 
 # Reject fills when the market has run this far past the planned entry —
 # the plan's SL/TP geometry no longer holds.
@@ -19,12 +19,8 @@ class Trader(BaseAgent):
 
     def __init__(self):
         super().__init__()
-        if BROKER_TYPE == "mt5":
-            self.broker = MetaQuotesBroker(MT5_LOGIN, MT5_PASSWORD, MT5_SERVER)
-        elif BROKER_TYPE == "binance":
+        if BROKER_TYPE == "binance":
             self.broker = BinanceBroker(BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET)
-        elif BROKER_TYPE == "dxtrade":
-            self.broker = DXTradeBroker(DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN)
         else:
             self.broker = PaperBroker()
         self.pos_mgr = PositionManager()
@@ -82,12 +78,38 @@ class Trader(BaseAgent):
                 self.log(f"Skipping {symbol}: market {drift_pct:.2f}% away from planned entry")
                 continue
 
-            order = self.broker.place_order(symbol, action, qty, market_price, sl=sl_price, tp=tp_price)
+            # Real fills cross the spread: pay the ask on BUY, hit the bid on
+            # SELL. Filling at mid overstates results by half the spread per leg.
+            quote = all_analyses.get(symbol, {}) if isinstance(all_analyses.get(symbol), dict) else {}
+            if action == "BUY":
+                fill_ref = quote.get("ask") or market_price
+            else:
+                fill_ref = quote.get("bid") or market_price
+
+            # Extended above session VWAP? Rest a BUY limit at VWAP instead of
+            # buying the local top; the pending-order loop fills or expires it.
+            vwap_v = quote.get("vwap")
+            if (USE_LIMIT_ENTRIES and action == "BUY" and vwap_v
+                    and market_price > vwap_v * (1 + LIMIT_ENTRY_EXT_PCT / 100)
+                    and not pending_orders.open_pending(symbol)):
+                pending_orders.place_limit(
+                    symbol, vwap_v, qty, sl=sl_price, tp=tp_price,
+                    # All contributors to the signal, pipe-joined (see below).
+                    strategy="|".join(planned.get("strategies") or [""]))
+                self.log(f"BUY {symbol}: extended {((market_price/vwap_v)-1)*100:.2f}% over VWAP — resting limit @ ${vwap_v}")
+                continue
+
+            order = self.broker.place_order(symbol, action, qty, fill_ref, sl=sl_price, tp=tp_price)
             orders_executed.append(order)
             plan_id = planned.get("plan_id")
             strategies = planned.get("strategies") or []
-            strategy = strategies[0] if strategies else ""
-            fill_price = order.get("price") or market_price
+            # Tag the position with EVERY strategy that contributed to the
+            # winning combined signal (pipe-joined — one position per symbol
+            # stays intact; the auditor/analytics split on "|" to score each
+            # contributor). Previously only strategies[0] was recorded, so
+            # co-contributors never accumulated a track record.
+            strategy = "|".join(strategies)
+            fill_price = order.get("price") or fill_ref
             fill_qty = order.get("quantity") or qty
             if order.get("status") == "filled":
                 if plan_id:
@@ -100,7 +122,7 @@ class Trader(BaseAgent):
                 })
             status = "FILLED" if order.get("status") == "filled" else "REJECTED"
             self.log(
-                f"{action} {fill_qty} {symbol} @ ${fill_price:.5f} "
+                f"{action} {symbol} x{fill_qty:g} @ ${fill_price:.5f} "
                 f"SL=${sl_price:.5f} TP=${tp_price:.5f} ({status})"
             )
 
