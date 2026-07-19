@@ -7,7 +7,8 @@ import requests
 from config import (
     HERMES_API_KEY, HERMES_API_URL, HERMES_MODEL, HERMES_FALLBACK_MODEL,
     DEBATE_ENABLED, DEBATE_TOP_N, DEBATE_DOWNGRADE_MULT, DEBATE_TIMEOUT_SEC,
-    DEBATE_SKIP_WHEN_CAPPED,
+    DEBATE_SKIP_WHEN_CAPPED, DEBATE_LLM_BREAKER_FAILS,
+    DEBATE_LLM_BREAKER_COOLDOWN_SEC,
     TRADE_FEE_PCT,
 )
 from agents.base_agent import BaseAgent
@@ -241,7 +242,24 @@ class DebateAgent(BaseAgent):
     # spending timeout budget on it and go straight to the fallback model.
     _primary_credits_dead = False
 
+    # Circuit breaker: when the whole LLM path keeps failing (dead endpoint,
+    # overload, network), every debate round was burning up to
+    # DEBATE_TIMEOUT_SEC on timeouts before the deterministic engine stepped
+    # in — stretching each trading cycle from ~1min to ~3.5min. After
+    # DEBATE_LLM_BREAKER_FAILS consecutive total failures the breaker opens
+    # for DEBATE_LLM_BREAKER_COOLDOWN_SEC and calls fail instantly (the
+    # caller falls back to the deterministic engine). The next call after the
+    # cooldown is a half-open probe: success closes the breaker, failure
+    # re-opens it for another cooldown.
+    _llm_fail_streak = 0
+    _llm_circuit_open_until = 0.0
+
     def _llm(self, system_prompt, user_msg, deadline):
+        now = time.time()
+        if now < type(self)._llm_circuit_open_until:
+            raise RuntimeError(
+                f"LLM circuit open "
+                f"({int(type(self)._llm_circuit_open_until - now)}s cooldown left)")
         errors = []
         models = (HERMES_MODEL, HERMES_FALLBACK_MODEL)
         for model in models:
@@ -252,31 +270,42 @@ class DebateAgent(BaseAgent):
             remaining = deadline - time.time()
             if remaining <= 0:
                 raise TimeoutError("debate time budget exhausted")
-            r = requests.post(
-                HERMES_API_URL,
-                headers={"Authorization": f"Bearer {HERMES_API_KEY}",
-                         "Content-Type": "application/json"},
-                json={
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_msg},
-                    ],
-                    "max_tokens": 2000,
-                    "temperature": 0.3,
-                    # The free fallback (stepfun) is a reasoning model: without
-                    # this it burns the whole token budget on hidden reasoning
-                    # and returns content=null. Excluding reasoning makes it
-                    # fast, cheap, and reliable for structured debate calls.
-                    "reasoning": {"exclude": True},
-                },
-                # Per-request timeout shrinks to fit the cycle's total
-                # DEBATE_TIMEOUT_SEC wall-clock budget.
-                timeout=max(1.0, min(30.0, remaining)),
-            )
-            data = r.json()
+            try:
+                r = requests.post(
+                    HERMES_API_URL,
+                    headers={"Authorization": f"Bearer {HERMES_API_KEY}",
+                             "Content-Type": "application/json"},
+                    json={
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_msg},
+                        ],
+                        "max_tokens": 2000,
+                        "temperature": 0.3,
+                        # The free fallback (stepfun) is a reasoning model: without
+                        # this it burns the whole token budget on hidden reasoning
+                        # and returns content=null. Excluding reasoning makes it
+                        # fast, cheap, and reliable for structured debate calls.
+                        "reasoning": {"exclude": True},
+                    },
+                    # Per-request timeout shrinks to fit the cycle's total
+                    # DEBATE_TIMEOUT_SEC wall-clock budget.
+                    timeout=max(1.0, min(30.0, remaining)),
+                )
+                data = r.json()
+            except Exception as e:
+                # Network/parse trouble counts toward the breaker streak too —
+                # a dead endpoint must trip the circuit, not just bad replies.
+                errors.append(f"{model}: {type(e).__name__}: {e}"[:150])
+                continue
             content = (data.get("choices") or [{}])[0].get("message", {}).get("content")
             if content:
+                # Success: close the breaker, reset the streak.
+                if type(self)._llm_fail_streak or type(self)._llm_circuit_open_until:
+                    self.log(f"LLM circuit closed — {model} answering again")
+                type(self)._llm_fail_streak = 0
+                type(self)._llm_circuit_open_until = 0.0
                 return content, model
             err_msg = str(data.get("message") or data)[:150]
             errors.append(f"{model}: {err_msg}")
@@ -285,6 +314,14 @@ class DebateAgent(BaseAgent):
                 type(self)._primary_credits_dead = True
                 self.log(f"Primary model {model} out of credits — "
                          "skipping it for the rest of this process")
+        type(self)._llm_fail_streak += 1
+        if type(self)._llm_fail_streak >= DEBATE_LLM_BREAKER_FAILS:
+            type(self)._llm_circuit_open_until = (
+                time.time() + DEBATE_LLM_BREAKER_COOLDOWN_SEC)
+            type(self)._llm_fail_streak = 0
+            self.log(f"LLM circuit OPEN after {DEBATE_LLM_BREAKER_FAILS} "
+                     f"consecutive failures — deterministic engine only for "
+                     f"{DEBATE_LLM_BREAKER_COOLDOWN_SEC}s")
         raise RuntimeError("; ".join(errors) or "no model produced a response")
 
     @staticmethod

@@ -59,6 +59,11 @@ DEBATE_TIMEOUT_SEC = int(os.getenv("DEBATE_TIMEOUT_SEC", "90"))
 # every candidate anyway — skip the debate round entirely (zero LLM spend,
 # no 90s stall) and pass the plan through untouched.
 DEBATE_SKIP_WHEN_CAPPED = os.getenv("DEBATE_SKIP_WHEN_CAPPED", "true").lower() == "true"
+# LLM circuit breaker: after this many consecutive total LLM failures, stop
+# calling the endpoint for the cooldown and let the deterministic engine
+# judge instantly (a dead endpoint was stretching every cycle by ~90s).
+DEBATE_LLM_BREAKER_FAILS = int(os.getenv("DEBATE_LLM_BREAKER_FAILS", "3"))
+DEBATE_LLM_BREAKER_COOLDOWN_SEC = int(os.getenv("DEBATE_LLM_BREAKER_COOLDOWN_SEC", "1800"))
 
 # ── Scout mode (test cycle, 2026-07-18) ──
 # The SMA200 dial says risk_off (BTC below SMA200) for possibly the whole

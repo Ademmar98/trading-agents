@@ -33,6 +33,9 @@ def sandbox_data_dir(monkeypatch):
 def _agent(monkeypatch, key="test-key"):
     import agents.debate_agent as da
     monkeypatch.setattr(da, "HERMES_API_KEY", key)
+    # Fresh breaker state per test — the streak/circuit live on the class.
+    da.DebateAgent._llm_fail_streak = 0
+    da.DebateAgent._llm_circuit_open_until = 0.0
     return da, da.DebateAgent()
 
 
@@ -390,3 +393,83 @@ def test_primary_credits_dead_skips_primary_afterwards(monkeypatch):
         assert attempted == [da.HERMES_FALLBACK_MODEL]  # primary never retried
     finally:
         da.DebateAgent._primary_credits_dead = False
+
+
+def _reset_breaker(da):
+    da.DebateAgent._llm_fail_streak = 0
+    da.DebateAgent._llm_circuit_open_until = 0.0
+
+
+def test_llm_circuit_breaker_opens_and_fails_fast(monkeypatch):
+    """After DEBATE_LLM_BREAKER_FAILS consecutive total failures the breaker
+    opens: subsequent calls raise instantly with ZERO HTTP attempts, so a dead
+    endpoint can no longer stretch every cycle by the full timeout budget."""
+    da, agent = _agent(monkeypatch)
+    _reset_breaker(da)
+    monkeypatch.setattr(da, "DEBATE_LLM_BREAKER_FAILS", 3)
+    monkeypatch.setattr(da, "DEBATE_LLM_BREAKER_COOLDOWN_SEC", 1800)
+    calls = {"n": 0}
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        calls["n"] += 1
+        raise OSError("endpoint dead")
+
+    monkeypatch.setattr(da.requests, "post", fake_post)
+    try:
+        for _ in range(3):
+            with pytest.raises(RuntimeError):
+                agent._llm("sys", "user", time.time() + 30)
+        assert calls["n"] > 0
+        attempts_before = calls["n"]
+
+        # Circuit open: instant failure, no HTTP spend.
+        with pytest.raises(RuntimeError, match="circuit open"):
+            agent._llm("sys", "user", time.time() + 30)
+        assert calls["n"] == attempts_before
+    finally:
+        _reset_breaker(da)
+
+
+def test_llm_circuit_breaker_half_open_probe_recovers(monkeypatch):
+    """After the cooldown the next call is a half-open probe: a success closes
+    the breaker and normal LLM debates resume."""
+    import types
+    da, agent = _agent(monkeypatch)
+    _reset_breaker(da)
+    monkeypatch.setattr(da, "DEBATE_LLM_BREAKER_COOLDOWN_SEC", 1800)
+    # Simulate an already-tripped breaker whose cooldown has elapsed.
+    da.DebateAgent._llm_circuit_open_until = time.time() - 1
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        return types.SimpleNamespace(json=lambda: {
+            "choices": [{"message": {"content": "back online"}}]})
+
+    monkeypatch.setattr(da.requests, "post", fake_post)
+    try:
+        content, _ = agent._llm("sys", "user", time.time() + 30)
+        assert content == "back online"
+        assert da.DebateAgent._llm_circuit_open_until == 0.0
+        assert da.DebateAgent._llm_fail_streak == 0
+    finally:
+        _reset_breaker(da)
+
+
+def test_circuit_open_still_produces_engine_verdicts(monkeypatch):
+    """End-to-end: with the breaker open the debate round completes in
+    milliseconds and still stamps deterministic-engine verdicts."""
+    da, agent = _agent(monkeypatch)
+    _reset_breaker(da)
+    da.DebateAgent._llm_circuit_open_until = time.time() + 1800
+    calls = _mock_llm(monkeypatch, da, '{"verdict": "APPROVE", "rationale": "ok"}')
+    memory = SharedMemory()
+    _seed_plan(memory, [_opp("BTC/USD", 0.9)])
+    try:
+        t0 = time.time()
+        agent.run()
+        assert time.time() - t0 < 10  # no 90s LLM burn
+        assert calls["n"] == 0
+        rec = memory.read("reports", "debate")["debates"][0]
+        assert rec["model"] == "deterministic-engine"
+        assert rec["verdict"] in ("APPROVE", "DOWNGRADE", "REJECT")
+    finally:
+        _reset_breaker(da)
