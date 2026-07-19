@@ -5,7 +5,7 @@ from config import (
     SL_VOL_MULT, TP_VOL_MULT, MIN_TP_PCT, RISK_PER_TRADE_PCT, TRADE_FEE_PCT,
     SCALP_MIN_WIN_PROB, SCALP_ATR_SL_MULT, MAX_SL_PCT, MAX_TP_PCT,
     BROKEN_SL_PCT, SWING_MAX_SL_PCT, MIN_TP_PROFIT_USD, POSITION_SIZE_MULT,
-    MAX_GROSS_LEVERAGE,
+    MAX_GROSS_LEVERAGE, MAX_POSITION_SIZE_PCT,
 )
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
@@ -152,9 +152,12 @@ class ExecutionAgent(BaseAgent):
                 continue
 
             # TP must clear the full cost of the round trip (entry fee + exit
-            # fee + spread) with margin, or the trade loses money even when it wins.
+            # fee + spread) with real margin, or the trade loses money even
+            # when it wins. 3x: live post-mortems (2026-07-19, 20 trades)
+            # showed fees eating 36% of gross moves at 1.5x — thin targets
+            # turn a 50% win rate into negative expectancy.
             round_trip_cost = 2 * TRADE_FEE_PCT + spread_pct
-            min_viable_tp = max(MIN_TP_PCT, round_trip_cost * 1.5)
+            min_viable_tp = max(MIN_TP_PCT, round_trip_cost * 3.0)
             if tp_pct < min_viable_tp:
                 rejected.append({**opp, "execution_reasons": [
                     f"TP too small: {tp_pct:.2f}% < {min_viable_tp:.2f}% (fees+spread {round_trip_cost:.2f}%)"]})
@@ -184,6 +187,17 @@ class ExecutionAgent(BaseAgent):
                 cost_per_unit = entry_price * (1 + TRADE_FEE_PCT / 100)
                 affordable_qty = min(lev_budget, portfolio.cash) / cost_per_unit if cost_per_unit else scaled
                 qty = round(max(0.0, min(scaled, affordable_qty)), 8)
+
+            # FINAL hard per-position notional cap, anchored to EQUITY (not
+            # cash): risk-based sizing with a tight stop inflates notional to
+            # risk%/sl% of equity (2% risk / 1.2% stop = 1.7x equity), and a
+            # ~$31k single position on a $100k book slipped through exactly
+            # this gap — that one trade was 99% of the day's losses. Applied
+            # last so no multiplier or upstream sizing can exceed it.
+            if entry_price > 0 and qty > 0:
+                cap_qty = (portfolio.equity * MAX_POSITION_SIZE_PCT / 100) / entry_price
+                if qty > cap_qty:
+                    qty = round(cap_qty, 8)
 
             # Minimum absolute profit at TP: a win must earn at least
             # MIN_TP_PROFIT_USD at the final size, or the setup isn't worth a

@@ -686,7 +686,9 @@ class AsyncExecution(ReviewerMixin, AsyncAgent):
                             "we'd pay the market maker's rent")
         tp_pct = proposal.get("tp_pct") or 0
         round_trip = 2 * TRADE_FEE_PCT + spread_pct
-        min_viable = max(MIN_TP_PCT, round_trip * 1.5)
+        # 3x round trip, matching the legacy execution gate: thinner targets
+        # feed the fee grinder (36% of gross eaten in live post-mortems).
+        min_viable = max(MIN_TP_PCT, round_trip * 3.0)
         if tp_pct and tp_pct < min_viable:
             problems.append(f"TP {tp_pct:.2f}% can't clear costs "
                             f"({round_trip:.2f}% round trip)")

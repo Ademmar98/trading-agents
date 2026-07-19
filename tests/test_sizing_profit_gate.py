@@ -52,6 +52,8 @@ def _run(monkeypatch, mult=2.0, min_profit=1.0):
 
 class TestPositionMultiplier:
     def test_doubles_the_quantity(self, monkeypatch):
+        import agents.execution_agent as ea
+        monkeypatch.setattr(ea, "MAX_POSITION_SIZE_PCT", 100)
         save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
         _seed(entry=100.0, sl=98.0, tp=104.0, max_qty=50.0, risk_pct=0.5)
         # risk-capped qty = (10000*0.5%)/2 = 25 ; x2 = 50, well within cash/leverage
@@ -60,6 +62,8 @@ class TestPositionMultiplier:
         assert plan["orders"][0]["qty"] == pytest.approx(50.0, abs=0.2)
 
     def test_mult_one_is_baseline(self, monkeypatch):
+        import agents.execution_agent as ea
+        monkeypatch.setattr(ea, "MAX_POSITION_SIZE_PCT", 100)
         save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
         _seed(entry=100.0, sl=98.0, tp=104.0, max_qty=50.0, risk_pct=0.5)
         plan = _run(monkeypatch, mult=1.0)
@@ -80,16 +84,17 @@ class TestPositionMultiplier:
 class TestMinTpProfitGate:
     def test_rejects_sub_dollar_target(self, monkeypatch):
         save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
-        # tiny size: qty ~0.5 x2 = ~1.0 unit; TP move $0.60 -> ~$0.60 profit < $1
-        _seed(entry=100.0, sl=99.5, tp=100.6, max_qty=0.5, risk_pct=0.5)
+        # tiny size: qty ~0.5 x2 = ~1.0 unit; TP move $0.80 -> ~$0.80 profit < $1
+        # (TP 0.8% clears the 3x round-trip fee floor of ~0.66%)
+        _seed(entry=100.0, sl=99.5, tp=100.8, max_qty=0.5, risk_pct=0.5)
         plan = _run(monkeypatch, mult=2.0, min_profit=1.0)
         assert plan["orders"] == []
         assert "TP profit" in " ".join(plan["rejected"][0]["execution_reasons"])
 
     def test_doubling_rescues_a_borderline_setup(self, monkeypatch):
-        # qty 0.9 x $0.60 = $0.54 (< $1 at 1x) but x2 -> $1.08 (>= $1)
+        # qty 0.9 x $0.80 = $0.72 (< $1 at 1x) but x2 -> $1.44 (>= $1)
         save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
-        _seed(entry=100.0, sl=99.0, tp=100.6, max_qty=0.9, risk_pct=2.0)
+        _seed(entry=100.0, sl=99.0, tp=100.8, max_qty=0.9, risk_pct=2.0)
         assert _run(monkeypatch, mult=1.0, min_profit=1.0)["orders"] == []
         plan2 = _run(monkeypatch, mult=2.0, min_profit=1.0)
         assert len(plan2["orders"]) == 1
@@ -121,9 +126,9 @@ def test_scout_floor_uses_fee_multiple_not_one_usd(monkeypatch):
 
 def test_scout_tiny_trade_passes_but_dust_rejected(monkeypatch):
     save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
-    # TP move $0.60 (0.6% > MIN_TP_PCT) on qty 0.5 -> $0.30 profit. Round-trip
-    # fees on $50 notional = $0.10 -> scout floor max(0.10, 0.15) = $0.15.
-    _seed(entry=100.0, sl=98.0, tp=100.6, max_qty=0.5, risk_pct=0.1)
+    # TP move $0.80 (clears the 3x fee floor) on qty 0.5 -> $0.40 profit.
+    # Round-trip fees on $50 notional = $0.10 -> scout floor max(0.10, 0.15) = $0.15.
+    _seed(entry=100.0, sl=98.0, tp=100.8, max_qty=0.5, risk_pct=0.1)
     memory = SharedMemory()
     gate = memory.read("decisions", "compliance_gate")
     gate["approved_opportunities"][0]["scout"] = True
@@ -132,7 +137,31 @@ def test_scout_tiny_trade_passes_but_dust_rejected(monkeypatch):
     assert len(plan["orders"]) == 1
 
     # Same setup WITHOUT the scout flag must still face the $1 floor.
-    _seed(entry=100.0, sl=98.0, tp=100.6, max_qty=0.5, risk_pct=0.1)
+    _seed(entry=100.0, sl=98.0, tp=100.8, max_qty=0.5, risk_pct=0.1)
     plan = _run(monkeypatch, mult=1.0, min_profit=1.0)
     assert plan["orders"] == []
     assert "TP profit" in plan["rejected"][0]["execution_reasons"][0]
+
+
+class TestEquityPositionCap:
+    """FINAL sizing gate: no position may exceed MAX_POSITION_SIZE_PCT% of
+    equity, whatever risk sizing, max_qty, or the multiplier computed.
+    Regression for the live $31k-on-$100k position (2026-07-19)."""
+
+    def test_tight_stop_cannot_inflate_notional(self, monkeypatch):
+        # 2% risk with a 1% stop wants ~2x-equity notional; max_qty allows it.
+        save_portfolio(Portfolio(cash=100000.0, initial_balance=100000.0))
+        _seed(entry=100.0, sl=99.0, tp=104.0, max_qty=2000.0, risk_pct=2.0)
+        plan = _run(monkeypatch, mult=1.0)
+        assert len(plan["orders"]) == 1
+        import agents.execution_agent as ea
+        notional = plan["orders"][0]["qty"] * 100.0
+        assert notional <= 100000.0 * ea.MAX_POSITION_SIZE_PCT / 100 + 1
+
+    def test_cap_applies_after_multiplier(self, monkeypatch):
+        save_portfolio(Portfolio(cash=100000.0, initial_balance=100000.0))
+        _seed(entry=100.0, sl=99.0, tp=104.0, max_qty=2000.0, risk_pct=2.0)
+        plan = _run(monkeypatch, mult=3.0)
+        import agents.execution_agent as ea
+        notional = plan["orders"][0]["qty"] * 100.0
+        assert notional <= 100000.0 * ea.MAX_POSITION_SIZE_PCT / 100 + 1
