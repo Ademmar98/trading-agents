@@ -166,13 +166,16 @@ def _flat_bars(n, price, spread=0.5):
 
 
 def _run_scripted_backtest(ohlc, side="SELL"):
-    """Backtest scripted bars: one signal on the first tradable bar, nothing after."""
+    """Backtest scripted bars: one signal on the first tradable bar, nothing after.
+    BUY_ONLY is patched off: these tests pin the side-aware _exit_credit math,
+    which only executes when short simulation is enabled."""
     from core.backtester import backtest_symbol
     signal = [{"action": side, "confidence": 0.9, "strategies": ["test_strat"], "strategy": "test_strat"}]
     calls = iter([signal])
     with patch("core.backtester.fetch_klines", return_value=ohlc), \
          patch("core.backtester.scan_symbol", side_effect=lambda *a, **k: next(calls, [])), \
          patch("core.backtester.get_unprofitable_strategies", return_value=[]), \
+         patch("core.backtester.BUY_ONLY", False), \
          patch("core.backtester.MarketData") as MockMD:
         MockMD.return_value.compute_indicators.return_value = {"volatility": 2, "atr": 0}
         return backtest_symbol("TEST/USD", initial_capital=10000)
@@ -200,11 +203,9 @@ def test_short_tp_exit_credits_side_aware_cash():
     assert trade["side"] == "SELL"
     assert trade["reason"] == "TP"
     assert trade["pnl"] > 0
-    # Recorded pnl nets out the exit fee but not the entry fee.
-    from config import TRADE_FEE_PCT
-    entry_fee = trade["qty"] * trade["entry"] * TRADE_FEE_PCT / 100.0
+    # Recorded pnl nets out BOTH fees, so it maps 1:1 onto the cash delta.
     assert result["final_equity"] > 10000
-    assert result["final_equity"] == pytest.approx(10000 + trade["pnl"] - entry_fee, abs=0.02)
+    assert result["final_equity"] == pytest.approx(10000 + trade["pnl"], abs=0.02)
 
 
 def test_short_end_of_data_close_side_aware():
@@ -222,8 +223,8 @@ def test_short_end_of_data_close_side_aware():
     assert trade["side"] == "SELL"
     assert trade["reason"] == "close"
     assert trade["pnl"] > 0
-    from config import TRADE_FEE_PCT
-    entry_fee = trade["qty"] * trade["entry"] * TRADE_FEE_PCT / 100.0
+    from config import TRADE_FEE_PCT, BACKTEST_SPREAD_PCT
+    entry_fee = trade["qty"] * trade["entry"] * (TRADE_FEE_PCT + BACKTEST_SPREAD_PCT) / 100.0
     expected = 10000 - entry_fee + (trade["entry"] - trade["exit"]) * trade["qty"]
     assert result["final_equity"] > 10000
     assert result["final_equity"] == pytest.approx(expected, abs=0.02)

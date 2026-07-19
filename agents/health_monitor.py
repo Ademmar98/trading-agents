@@ -19,9 +19,23 @@ class HealthMonitor(BaseAgent):
         analysis = self.memory.read("analyses", "market_scan") or {}
         ts = analysis.get("timestamp", 0)
         stale_seconds = (TRADING_INTERVAL_MINUTES * 60) * 2
-        if ts and time.time() - ts > stale_seconds:
-            issues.append(f"market_scan stale ({int(time.time() - ts)}s old)")
+        # Liveness means PROGRESS, not latency. A 400+-symbol scan lawfully
+        # takes longer than the nominal interval, and health runs before the
+        # analyst each cycle — so the last scan's wall-clock age exceeds
+        # 2x interval on every healthy-but-slow cycle. Halting on age alone
+        # froze all entries for 38h straight (every cycle: scan ~150s old vs
+        # 120s threshold). Halt only when the scanner stops producing NEW
+        # scans past a hard ceiling; a slow-but-advancing scan just warns.
+        prev_report = self.memory.read("reports", "health") or {}
+        prev_scan_ts = prev_report.get("last_scan_ts", 0)
+        age = time.time() - ts if ts else 0
+        hard_ceiling = max(TRADING_INTERVAL_MINUTES * 60 * 10, 600)
+        if ts and ts == prev_scan_ts and age > hard_ceiling:
+            issues.append(f"market_scan stalled ({int(age)}s old, no new scan since last check)")
             halted = True
+        elif ts and age > stale_seconds:
+            warnings.append(f"market_scan slow ({int(age)}s old — cycle exceeds the "
+                            f"{TRADING_INTERVAL_MINUTES}m interval)")
 
         errors = self.memory.get_recent_errors(10)
         recent_errors = [e for e in errors if time.time() - e.get("time", 0) < stale_seconds]
@@ -58,6 +72,7 @@ class HealthMonitor(BaseAgent):
             "errors_last_cycle": len(recent_errors),
             "agents_active": len(agent_counts),
             "price_feed_alive": bool(prices),
+            "last_scan_ts": ts,
             "timestamp": time.time(),
         }
         self.memory.write("reports", "health", report)

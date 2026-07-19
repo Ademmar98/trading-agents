@@ -362,3 +362,18 @@ class TestSessionAndPullback:
     def test_trend_pullback_ema20(self):
         _assert_fires(tm.sig_trend_pullback_ema20, _pullback_resume(), "BUY",
                       "tm_trend_pullback_ema20")
+
+
+def test_vortex_flat_bars_no_crash():
+    """Flat/stale symbols produce zero true range -> None holes MID-series in
+    the vortex lines. The cross helpers must treat a gap as 'no cross', not
+    crash comparing None < None (live prod error on Trend - Vortex 14)."""
+    from core.strats.trend_momentum import sig_vortex, _crossed_up, _crossed_down
+    flat = [{"high": 5.0, "low": 5.0, "close": 5.0, "volume": 0, "date": "d"}
+            for _ in range(40)]
+    assert sig_vortex(flat) is None
+    # Trailing None (gap on the most recent bar) must not raise either.
+    series_a = [0.9] * 37 + [1.0, 1.1, None]
+    series_b = [1.1] * 37 + [1.0, 0.9, None]
+    assert _crossed_up(series_a, series_b) is False
+    assert _crossed_down(series_a, series_b) is False

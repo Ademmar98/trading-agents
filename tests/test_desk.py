@@ -696,6 +696,27 @@ class _FakeRuntime:
         return list(self._dead)
 
 
+class _FakeMemory:
+    """In-memory SharedMemory stand-in. The real one writes reports/health.json
+    into the shared test data dir — and ComplianceAgent halts on a lingering
+    halted=true, poisoning every later compliance test in the session."""
+
+    def __init__(self):
+        self.reports = {}
+
+    def get_recent_errors(self, n=50):
+        return []
+
+    def write(self, category, name, data):
+        self.reports[(category, name)] = data
+
+    def read(self, category, name):
+        return self.reports.get((category, name))
+
+    def log(self, agent, message):
+        pass
+
+
 @pytest.mark.asyncio
 async def test_health_judges_agents_by_their_own_cadence():
     """Message-driven agents and the 2h-cadence optimizer must not read as
@@ -708,7 +729,7 @@ async def test_health_judges_agents_by_their_own_cadence():
     )
     bus = MessageBus(persist=False)
     health = AsyncHealthMonitor(bus, services={"runtime": runtime})
-    health.memory.get_recent_errors = lambda n=50: []
+    health.memory = _FakeMemory()
     await health.tick()
     report = health.memory.read("reports", "health")
     assert report["halted"] is False
@@ -725,7 +746,7 @@ async def test_health_flags_stale_tickers_and_dead_tasks():
     )
     bus = MessageBus(persist=False)
     health = AsyncHealthMonitor(bus, services={"runtime": runtime})
-    health.memory.get_recent_errors = lambda n=50: []
+    health.memory = _FakeMemory()
     await health.tick()
     report = health.memory.read("reports", "health")
     assert report["halted"] is True

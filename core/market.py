@@ -1,3 +1,4 @@
+import threading
 import time
 from datetime import datetime, timezone
 
@@ -25,24 +26,32 @@ class MarketData:
     def __init__(self):
         self.cache = {}
         self.cache_ttl = 60
+        # The analyst analyzes symbols on a thread pool sharing one instance;
+        # unsynchronized check-then-read raced against eviction and raised
+        # KeyError for a *different* symbol's key mid-analysis.
+        self._cache_lock = threading.Lock()
 
     def _get_cached(self, key, ttl=None):
         ttl = ttl or self.cache_ttl
-        if key in self.cache:
-            ts, val = self.cache[key]
-            if time.time() - ts < ttl:
-                return val
+        with self._cache_lock:
+            entry = self.cache.get(key)
+            if entry is not None:
+                ts, val = entry
+                if time.time() - ts < ttl:
+                    return val
         return None
 
     def _set_cache(self, key, val):
-        self.cache[key] = (time.time(), val)
-        if len(self.cache) > MAX_CACHE_SIZE:
-            oldest = sorted(self.cache.keys(), key=lambda k: self.cache[k][0])[:len(self.cache) - MAX_CACHE_SIZE]
-            for k in oldest:
-                del self.cache[k]
+        with self._cache_lock:
+            self.cache[key] = (time.time(), val)
+            if len(self.cache) > MAX_CACHE_SIZE:
+                oldest = sorted(self.cache.keys(), key=lambda k: self.cache[k][0])[:len(self.cache) - MAX_CACHE_SIZE]
+                for k in oldest:
+                    del self.cache[k]
 
     def clear_cache(self):
-        self.cache.clear()
+        with self._cache_lock:
+            self.cache.clear()
 
     def fetch_prices(self, symbols=None):
         symbols = symbols or WATCHED_SYMBOLS

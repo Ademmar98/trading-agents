@@ -95,8 +95,15 @@ class TestHealthMonitor:
 
                 assert result["halted"] is False
 
-    def test_stale_analysis(self, mock_memory):
-        mock_memory.read.return_value = {"timestamp": time.time() - 3600}
+    def test_stalled_scan_halts_but_slow_scan_only_warns(self, mock_memory):
+        # Same scan timestamp as the previous health check + past the hard
+        # ceiling = the scanner stopped producing -> halt.
+        stalled_ts = time.time() - 3600
+        reports = {
+            ("analyses", "market_scan"): {"timestamp": stalled_ts},
+            ("reports", "health"): {"last_scan_ts": stalled_ts},
+        }
+        mock_memory.read.side_effect = lambda cat, name: reports.get((cat, name), {})
         with patch("agents.health_monitor.websocket_prices.get_all_prices", return_value={}):
             with patch("agents.health_monitor.load_portfolio") as mock_load:
                 portfolio = MagicMock()
@@ -110,7 +117,34 @@ class TestHealthMonitor:
                 result = agent.run()
 
                 assert result["halted"] is True
-                assert any("stale" in i for i in result["issues"])
+                assert any("stalled" in i for i in result["issues"])
+
+    def test_slow_but_advancing_scan_does_not_halt(self, mock_memory):
+        # The scan is older than 2x interval but NEWER than the one the
+        # previous health check saw — the scanner is making progress, the
+        # cycle is just slower than the nominal interval. Warn, never halt
+        # (halting on wall-clock age froze all entries for 38h in prod).
+        scan_ts = time.time() - 150
+        reports = {
+            ("analyses", "market_scan"): {"timestamp": scan_ts},
+            ("reports", "health"): {"last_scan_ts": scan_ts - 150},
+        }
+        mock_memory.read.side_effect = lambda cat, name: reports.get((cat, name), {})
+        with patch("agents.health_monitor.websocket_prices.get_all_prices", return_value={"BTC/USD": {}}):
+            with patch("agents.health_monitor.load_portfolio") as mock_load:
+                portfolio = MagicMock()
+                portfolio.cash = 10000
+                portfolio.positions = ["BTC/USD"]
+                mock_load.return_value = portfolio
+
+                from agents.health_monitor import HealthMonitor
+                agent = HealthMonitor()
+                agent.memory = mock_memory
+                result = agent.run()
+
+                assert result["halted"] is False
+                assert any("slow" in w for w in result["warnings"])
+                assert result["last_scan_ts"] == scan_ts
 
     def test_many_errors_halts(self, mock_memory):
         mock_memory.read.return_value = {"timestamp": time.time(), "summary": "ok"}

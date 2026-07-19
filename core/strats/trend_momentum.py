@@ -55,11 +55,17 @@ def _sig(tag, action, confidence, reasons):
 
 
 def _crossed_up(a, b):
-    """House convention: a was <= b three bars back, a > b now."""
+    """House convention: a was <= b three bars back, a > b now.
+    None-safe: series like Vortex leave mid-series gaps when a window's
+    true range is zero (flat/stale symbols) — a gap means no cross."""
+    if a[-3] is None or b[-3] is None or a[-1] is None or b[-1] is None:
+        return False
     return a[-3] <= b[-3] and a[-1] > b[-1]
 
 
 def _crossed_down(a, b):
+    if a[-3] is None or b[-3] is None or a[-1] is None or b[-1] is None:
+        return False
     return a[-3] >= b[-3] and a[-1] < b[-1]
 
 
