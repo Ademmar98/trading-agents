@@ -14,7 +14,7 @@ HEADLESS = "--headless" in sys.argv or os.getenv("HEADLESS", "").lower() == "tru
 # Reset flag: delete all data and start fresh
 RESET = "--reset" in sys.argv
 
-from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT
+from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, MT5_LOGIN, MT5_PASSWORD, MT5_SERVER, DXTRADE_API_URL, DXTRADE_USERNAME, DXTRADE_PASSWORD, DXTRADE_DOMAIN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT, MULTI_AGENT_MODE
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
 from core.live_broker import MetaQuotesBroker
@@ -29,7 +29,7 @@ from core.analytics import get_analytics, get_strategy_stats
 from core.webserver import start_webserver, get_market_prices
 from core.dashboard import make_layout
 from core.backtester import run_all_backtests, get_backtest_results, backtest_symbol
-from core.equity import snapshot_equity, build_daily_summary, pop_completed_day
+from core.equity import snapshot_equity, pop_completed_day
 from core.reconcile import reconcile_with_exchange
 from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
@@ -241,13 +241,12 @@ def process_price_triggers(prices):
         return triggered
 
 
-def run_cycle():
+def maintenance_cycle():
+    """Position upkeep that runs regardless of how decisions are made:
+    SL/TP triggers, rebalance, equity snapshots, store sync."""
     global _cycle_count
     _cycle_count += 1
     try:
-        for agent_cls in CYCLE_AGENTS:
-            agent_cls().run()
-
         prices = websocket_prices.get_all_prices()
         if prices:
             process_price_triggers(prices)
@@ -256,7 +255,11 @@ def run_cycle():
         snapshot_equity()
         completed_day = pop_completed_day()
         if completed_day:
-            notifier.daily_summary(build_daily_summary(completed_day))
+            # Full end-of-day report: strategies, trades, agent performance,
+            # errors/delays/missing data, and a post-mortem for every loss.
+            # Saved to data/daily_reports/, summary delivered via Telegram.
+            from core.daily_report import generate_daily_report
+            generate_daily_report(completed_day, notifier=notifier)
         if _cycle_count % 30 == 0:
             notifier.portfolio_snapshot(pos_mgr.get_positions_summary())
         sync_position_stores()
@@ -264,6 +267,18 @@ def run_cycle():
         memory.log("system", f"Cycle error: {e}")
         memory.log_error("cycle", str(e), traceback.format_exc())
         notifier.on_error(str(e))
+
+
+def run_cycle():
+    """Legacy sequential pipeline (MULTI_AGENT_MODE=false)."""
+    try:
+        for agent_cls in CYCLE_AGENTS:
+            agent_cls().run()
+    except Exception as e:
+        memory.log("system", f"Cycle error: {e}")
+        memory.log_error("cycle", str(e), traceback.format_exc())
+        notifier.on_error(str(e))
+    maintenance_cycle()
 
 
 def sync_position_stores():
@@ -454,25 +469,47 @@ def main():
         memory.log("system", f"Startup backtests failed: {e}")
         memory.log_error("backtester", str(e), traceback.format_exc())
 
-    def cycle_loop():
-        while True:
-            run_cycle()
-            time.sleep(TRADING_INTERVAL_MINUTES * 60)
+    runtime = None
+    if MULTI_AGENT_MODE:
+        # Concurrent desk: agents live on a message bus, argue over every
+        # trade, and keep their own persistent state. The cycle thread only
+        # does position upkeep — decisions happen on the bus.
+        from agents.runtime import AgentRuntime
+        from agents.desk import DESK_AGENTS
+        runtime = AgentRuntime(DESK_AGENTS)
+        runtime.start_in_thread()
+        console.print(f"[dim]Multi-agent desk online: {len(runtime.agents)} "
+                      "concurrent agents on the bus[/dim]")
+        memory.log("system", f"Multi-agent desk started ({len(runtime.agents)} agents)")
+
+        def cycle_loop():
+            while True:
+                maintenance_cycle()
+                time.sleep(TRADING_INTERVAL_MINUTES * 60)
+    else:
+        console.print("[dim]Legacy sequential pipeline (MULTI_AGENT_MODE=false)[/dim]")
+
+        def cycle_loop():
+            while True:
+                run_cycle()
+                time.sleep(TRADING_INTERVAL_MINUTES * 60)
 
     thread = threading.Thread(target=cycle_loop, daemon=True)
     thread.start()
 
-    def optimizer_loop():
-        from agents.optimizer_agent import OptimizerAgent
-        while True:
-            try:
-                OptimizerAgent().run()
-            except Exception as e:
-                memory.log_error("optimizer", str(e))
-            time.sleep(7200)  # every 2 hours
+    if not MULTI_AGENT_MODE:
+        # The desk runs its own optimizer agent; only legacy mode needs this loop.
+        def optimizer_loop():
+            from agents.optimizer_agent import OptimizerAgent
+            while True:
+                try:
+                    OptimizerAgent().run()
+                except Exception as e:
+                    memory.log_error("optimizer", str(e))
+                time.sleep(7200)  # every 2 hours
 
-    opt_thread = threading.Thread(target=optimizer_loop, daemon=True)
-    opt_thread.start()
+        opt_thread = threading.Thread(target=optimizer_loop, daemon=True)
+        opt_thread.start()
 
     try:
         if HEADLESS:
@@ -500,6 +537,8 @@ def main():
     except KeyboardInterrupt:
         console.print("\n[bold yellow]Shutting down...[/bold yellow]")
         memory.log("system", "Trading firm stopped by user")
+        if runtime is not None:
+            runtime.shutdown()   # agents save state before the process dies
         websocket_prices.stop()
 
 

@@ -270,6 +270,22 @@ def api_pricing():
     return pricing or {}
 
 
+@app.get("/api/daily-report")
+def api_daily_report(date: str | None = None):
+    """Latest daily desk report, or a specific one via ?date=YYYY-MM-DD."""
+    from core.daily_report import load_report
+    report = load_report(date)
+    if report is None:
+        raise HTTPException(status_code=404, detail="no daily report available")
+    return report
+
+
+@app.get("/api/daily-reports")
+def api_daily_reports():
+    from core.daily_report import list_report_dates
+    return {"dates": list_report_dates()}
+
+
 @app.get("/api/config")
 def api_config():
     from config import BROKER_TYPE, TRADING_INTERVAL_MINUTES, WATCHED_SYMBOLS, INITIAL_BALANCE, BINANCE_USE_TESTNET, DATA_DIR

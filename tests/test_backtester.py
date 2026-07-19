@@ -158,3 +158,72 @@ def test_backtest_symbol_with_signals():
         result = backtest_symbol("TEST/USD", initial_capital=10000)
         assert result is not None
         assert result["symbol"] == "TEST/USD"
+
+
+def _flat_bars(n, price, spread=0.5):
+    return [{"high": price + spread, "low": price - spread, "close": price, "date": "2024-01-01"}
+            for _ in range(n)]
+
+
+def _run_scripted_backtest(ohlc, side="SELL"):
+    """Backtest scripted bars: one signal on the first tradable bar, nothing after."""
+    from core.backtester import backtest_symbol
+    signal = [{"action": side, "confidence": 0.9, "strategies": ["test_strat"], "strategy": "test_strat"}]
+    calls = iter([signal])
+    with patch("core.backtester.fetch_klines", return_value=ohlc), \
+         patch("core.backtester.scan_symbol", side_effect=lambda *a, **k: next(calls, [])), \
+         patch("core.backtester.get_unprofitable_strategies", return_value=[]), \
+         patch("core.backtester.MarketData") as MockMD:
+        MockMD.return_value.compute_indicators.return_value = {"volatility": 2, "atr": 0}
+        return backtest_symbol("TEST/USD", initial_capital=10000)
+
+
+def test_exit_credit_short_partial_qty():
+    from core.backtester import _exit_credit
+    assert _exit_credit("SELL", 100, 0.5, 90) == 55.0
+    assert _exit_credit("BUY", 100, 0.5, 90) == 45.0
+
+
+def test_short_tp_exit_credits_side_aware_cash():
+    # Short entered at 100 (vol=2 -> SL 106 / TP 93), price falls through the TP.
+    # Regression: the exit used to credit qty*exit_price, so a winning short
+    # DRAINED cash and final_equity dropped below the starting capital.
+    ohlc = _flat_bars(201, 100.0)
+    ohlc.append({"high": 99.0, "low": 95.0, "close": 96.0, "date": "2024-01-02"})
+    ohlc.append({"high": 96.0, "low": 92.0, "close": 93.0, "date": "2024-01-03"})
+    ohlc += _flat_bars(2, 93.0)
+
+    result = _run_scripted_backtest(ohlc)
+
+    assert result["total_trades"] == 1
+    trade = result["trades"][0]
+    assert trade["side"] == "SELL"
+    assert trade["reason"] == "TP"
+    assert trade["pnl"] > 0
+    # Recorded pnl nets out the exit fee but not the entry fee.
+    from config import TRADE_FEE_PCT
+    entry_fee = trade["qty"] * trade["entry"] * TRADE_FEE_PCT / 100.0
+    assert result["final_equity"] > 10000
+    assert result["final_equity"] == pytest.approx(10000 + trade["pnl"] - entry_fee, abs=0.02)
+
+
+def test_short_end_of_data_close_side_aware():
+    # Short entered at 100, price settles at 95.5 — between TP (93) and SL (106) —
+    # so the position rides to the end of data and is closed there. final_equity
+    # is marked to the last close (the close-out fee lands after the last equity
+    # point); a profitable short must end above the starting capital.
+    ohlc = _flat_bars(201, 100.0)
+    ohlc += [{"high": 96.0, "low": 95.0, "close": 95.5, "date": "2024-01-02"} for _ in range(5)]
+
+    result = _run_scripted_backtest(ohlc)
+
+    assert result["total_trades"] == 1
+    trade = result["trades"][0]
+    assert trade["side"] == "SELL"
+    assert trade["reason"] == "close"
+    assert trade["pnl"] > 0
+    from config import TRADE_FEE_PCT
+    entry_fee = trade["qty"] * trade["entry"] * TRADE_FEE_PCT / 100.0
+    expected = 10000 - entry_fee + (trade["entry"] - trade["exit"]) * trade["qty"]
+    assert result["final_equity"] > 10000
+    assert result["final_equity"] == pytest.approx(expected, abs=0.02)

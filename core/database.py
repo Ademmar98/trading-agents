@@ -14,6 +14,9 @@ def get_connection():
     """Context manager that creates, yields, and reliably closes a SQLite connection."""
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(str(_db_path()))
+    # Concurrent agents write from worker threads; without a busy timeout a
+    # colliding write raises "database is locked" instead of waiting.
+    conn.execute("PRAGMA busy_timeout=5000")
     conn.row_factory = sqlite3.Row
     try:
         yield conn
@@ -147,6 +150,23 @@ def init_db():
                 rationale TEXT,
                 risk_reward_ratio REAL,
                 status TEXT DEFAULT 'created'
+            );
+
+            CREATE TABLE IF NOT EXISTS agent_state (
+                agent TEXT PRIMARY KEY,
+                state TEXT NOT NULL DEFAULT '{}',
+                updated_at TEXT DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS agent_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                msg_id TEXT NOT NULL,
+                correlation_id TEXT,
+                topic TEXT NOT NULL,
+                sender TEXT NOT NULL,
+                recipient TEXT,
+                payload TEXT NOT NULL DEFAULT '{}',
+                created_at TEXT DEFAULT (datetime('now'))
             );
 
             CREATE TABLE IF NOT EXISTS optimization_results (
@@ -283,6 +303,70 @@ def get_plans(limit=50):
     rows = fetchall(
         "SELECT * FROM trade_plans ORDER BY timestamp DESC LIMIT ?", [limit]
     )
+    return [dict(r) for r in rows]
+
+
+def get_agent_state(agent):
+    """Load an agent's persistent state dict (empty dict when none saved)."""
+    import json
+    row = fetchone("SELECT state FROM agent_state WHERE agent=?", [agent])
+    if not row:
+        return {}
+    try:
+        return json.loads(row["state"])
+    except (ValueError, TypeError):
+        return {}
+
+
+def set_agent_state(agent, state: dict):
+    import json
+    execute("""
+        INSERT INTO agent_state (agent, state, updated_at)
+        VALUES (?, ?, datetime('now'))
+        ON CONFLICT(agent) DO UPDATE SET
+            state=excluded.state, updated_at=datetime('now')
+    """, [agent, json.dumps(state, default=str)])
+
+
+def save_message(msg_id, topic, sender, payload, correlation_id=None, recipient=None):
+    import json
+    execute("""
+        INSERT INTO agent_messages (msg_id, correlation_id, topic, sender, recipient, payload)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, [msg_id, correlation_id, topic, sender, recipient,
+          json.dumps(payload, default=str)])
+
+
+def get_message_thread(correlation_id, limit=200):
+    """Full transcript of one deliberation, oldest first."""
+    import json
+    rows = fetchall("""
+        SELECT * FROM agent_messages WHERE correlation_id=?
+        ORDER BY id ASC LIMIT ?
+    """, [correlation_id, limit])
+    out = []
+    for r in rows:
+        d = dict(r)
+        try:
+            d["payload"] = json.loads(d["payload"])
+        except (ValueError, TypeError):
+            pass
+        out.append(d)
+    return out
+
+
+def get_recent_deliberations(limit=20):
+    """Latest deliberation threads: correlation_id + verdict topic if reached."""
+    rows = fetchall("""
+        SELECT correlation_id,
+               MIN(created_at) AS started_at,
+               COUNT(*) AS messages,
+               MAX(CASE WHEN topic LIKE '%.verdict' THEN payload END) AS verdict
+        FROM agent_messages
+        WHERE correlation_id IS NOT NULL
+        GROUP BY correlation_id
+        ORDER BY MIN(id) DESC LIMIT ?
+    """, [limit])
     return [dict(r) for r in rows]
 
 

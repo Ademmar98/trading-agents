@@ -80,6 +80,18 @@ else:
 
 TRADING_INTERVAL_MINUTES = int(os.getenv("TRADING_INTERVAL_MINUTES", "1"))
 
+# ── Multi-agent desk (asyncio actor runtime) ──
+# When on, agents run concurrently on a message bus and every trade goes
+# through a deliberation (propose → review → counter/veto → verdict).
+# Off = legacy sequential pipeline.
+MULTI_AGENT_MODE = os.getenv("MULTI_AGENT_MODE", "true").lower() == "true"
+NEGOTIATION_ROUNDS = int(os.getenv("NEGOTIATION_ROUNDS", "2"))
+REVIEW_TIMEOUT_SECONDS = float(os.getenv("REVIEW_TIMEOUT_SECONDS", "20"))
+PROPOSALS_PER_SCAN = int(os.getenv("PROPOSALS_PER_SCAN", "3"))
+# After a rejected proposal, the analyst won't re-propose the same
+# symbol+direction for this many scan ticks.
+PROPOSAL_COOLDOWN_TICKS = int(os.getenv("PROPOSAL_COOLDOWN_TICKS", "3"))
+
 # Tunable parameters — each entry defines a range and step for the optimizer
 TUNABLE_PARAMS = {
     "SL_VOL_MULT":       {"default": 1.5, "min": 0.3,  "max": 3.0, "increment": 0.3},

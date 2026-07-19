@@ -38,10 +38,18 @@ def _calc_sl_tp(entry_price, side, volatility_pct, atr_pct=0, sl_mult=2.5, tp_mu
     return sl, tp
 
 
+def _exit_credit(side, entry, qty, exit_price):
+    # Cash returned when closing qty at exit_price, before fees. Shorts post
+    # qty * entry as collateral at entry, so closing pays back collateral plus
+    # side-aware pnl: qty * (2*entry - exit_price). Must mirror _pos_value or
+    # the equity curve jumps at the close.
+    if side == "BUY":
+        return qty * exit_price
+    return qty * (2 * entry - exit_price)
+
+
 def _pos_value(pos, current_price):
-    if pos["side"] == "BUY":
-        return pos["qty"] * current_price
-    return pos["qty"] * (2 * pos["entry"] - current_price)
+    return _exit_credit(pos["side"], pos["entry"], pos["qty"], current_price)
 
 
 def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE):
@@ -93,7 +101,7 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
                 else:
                     pnl = (entry - exit_price) * qty
                 exit_fee = qty * exit_price * fee_ratio
-                cash += qty * exit_price - exit_fee
+                cash += _exit_credit(side, entry, qty, exit_price) - exit_fee
                 pnl_pct = (pnl / (entry * qty)) * 100 if entry * qty else 0
                 trades.append({
                     "symbol": symbol, "side": side, "qty": qty,
@@ -140,7 +148,7 @@ def backtest_symbol(symbol, bars=BACKTEST_BARS, initial_capital=INITIAL_BALANCE)
         else:
             pnl = (pos["entry"] - exit_price) * pos["qty"]
         exit_fee = pos["qty"] * exit_price * fee_ratio
-        cash += pos["qty"] * exit_price - exit_fee
+        cash += _exit_credit(pos["side"], pos["entry"], pos["qty"], exit_price) - exit_fee
         trades.append({
             "symbol": symbol, "side": pos["side"], "qty": pos["qty"],
             "entry": pos["entry"], "exit": exit_price,

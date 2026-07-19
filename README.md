@@ -4,27 +4,43 @@ Multi-agent crypto trading bot with paper/live broker support, 25+ strategies, r
 
 ## Architecture
 
-Agents run sequentially each cycle in a defined pipeline, sharing state through JSON files in `data/reports/`:
+Agents run **concurrently** as asyncio actors on a message bus (`core/bus.py`),
+each with its own inbox, its own cadence, and persistent state that survives
+restarts (`agent_state` table). Every trade must survive a **deliberation**
+before it executes:
 
 ```
-Orchestrator → HealthMonitor → SentimentAgent → RegimeAgent → ResearchAnalyst
-→ RiskManager → PositionSizer → PortfolioManagerAgent
-→ ComplianceAgent → ExecutionAgent → Trader → Auditor
+analyst ──proposal──▶ chair (orchestrator)
+                        │  fan-out, concurrent
+                        ▼
+   risk_manager · position_sizer · portfolio_manager · compliance
+   sentiment · regime · execution     — each answers with a stance:
+        approve / counter (my adjustments) / reject / veto
+                        │
+        objections ──▶ analyst: concede, defend (+evidence), or withdraw
+                        │  bounded rounds, then a weighted vote
+                        ▼
+              verdict ──▶ execution (order prep) ──▶ trader (broker)
 ```
 
-- **Orchestrator** — coordinates the cycle; writes start/end markers to shared memory
-- **HealthMonitor** — checks broker connectivity, data freshness, error rates
-- **SentimentAgent** — scores market mood from price breadth and Fear & Greed Index
-- **RegimeAgent** — detects regime (trending/ranging/volatile) per symbol via ADX, BB width, ATR
-- **ResearchAnalyst** — fetches OHLC data, runs 25+ strategies per symbol, produces opportunities, and computes per-symbol SL/TP/risk % via regime-aware pricing
-- **RiskManager** — sets portfolio-level risk limits (per-symbol, volatility, correlation)
-- **PositionSizer** — computes Kelly-optimal position sizes based on historical trade stats
-- **PortfolioManagerAgent** — allocates capital across opportunities with strategy-weighted scoring
-- **ComplianceAgent** — enforces spot-only, exposure, concentration, and daily-loss gates
-- **ExecutionAgent** — builds formal trade plans with SL/TP/RR, checks spread before approval
-- **Trader** — executes orders through the selected broker; checks stop-losses on every cycle
-- **Auditor** — reviews performance, generates suggestions, tracks agent health
-- **OptimizerAgent** — grid-searches parameter ranges to improve weak strategy metrics (runs in background thread, not in cycle)
+- **Vetoes are non-negotiable** and reserved for `compliance`, `risk_manager`,
+  and `health` (circuit breakers, spot-only rule, drawdown limits).
+- **Counters negotiate**: size cuts compound, the tightest stop wins, and the
+  revised trade goes back for another round.
+- **Votes are earned**: the auditor archives every deliberation, matches it to
+  the closed trade's real PnL, and moves each reviewer's voting weight
+  (0.5–1.5×) up when they called it right and down when they didn't.
+- **Every argument is on the record**: all messages persist to the
+  `agent_messages` table, queryable by deliberation
+  (`core.database.get_message_thread`).
+- The **HealthMonitor** watches real runtime heartbeats and can halt the desk;
+  the **OptimizerAgent** tunes parameters on a slow tick.
+
+Agent roles (analyst, sentiment, regime, risk, sizing, portfolio, compliance,
+execution, trader, auditor, health, optimizer) are described in
+`agents/desk.py`. Set `MULTI_AGENT_MODE=false` to fall back to the legacy
+sequential pipeline (`Orchestrator → … → Auditor` sharing JSON files), which
+is kept for comparison and still backs the dashboard's report files.
 
 ## Features
 
