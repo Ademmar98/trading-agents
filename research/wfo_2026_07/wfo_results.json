@@ -1,0 +1,148 @@
+{
+ "final_params": {
+  "adx_thr": 20,
+  "donch_n": 48,
+  "entry_mode": "breakout",
+  "k_sl": 3.0,
+  "k_tp": 6.0,
+  "k_tr": 3.0
+ },
+ "pick_distribution": [
+  [
+   "{\"adx_thr\": 20, \"donch_n\": 48, \"entry_mode\": \"breakout\", \"k_sl\": 3.0, \"k_tp\": 6.0, \"k_tr\": 3.0}",
+   3
+  ],
+  [
+   "{\"adx_thr\": 25, \"donch_n\": 24, \"entry_mode\": \"breakout\", \"k_sl\": 3.0, \"k_tp\": 10.0, \"k_tr\": 4.0}",
+   3
+  ],
+  [
+   "{\"adx_thr\": 25, \"donch_n\": 48, \"entry_mode\": \"breakout\", \"k_sl\": 2.0, \"k_tp\": 10.0, \"k_tr\": 4.0}",
+   3
+  ],
+  [
+   "{\"adx_thr\": 20, \"donch_n\": 24, \"entry_mode\": \"pullback\", \"k_sl\": 3.0, \"k_tp\": 6.0, \"k_tr\": 3.0}",
+   3
+  ],
+  [
+   "{\"adx_thr\": 20, \"donch_n\": 24, \"entry_mode\": \"breakout\", \"k_sl\": 3.0, \"k_tp\": 10.0, \"k_tr\": 3.0}",
+   2
+  ],
+  [
+   "{\"adx_thr\": 20, \"donch_n\": 48, \"entry_mode\": \"breakout\", \"k_sl\": 3.0, \"k_tp\": 10.0, \"k_tr\": 3.0}",
+   2
+  ],
+  [
+   "{\"adx_thr\": 25, \"donch_n\": 24, \"entry_mode\": \"breakout\", \"k_sl\": 3.0, \"k_tp\": 10.0, \"k_tr\": 3.0}",
+   2
+  ],
+  [
+   "{\"adx_thr\": 25, \"donch_n\": 24, \"entry_mode\": \"pullback\", \"k_sl\": 3.0, \"k_tp\": 6.0, \"k_tr\": 3.0}",
+   2
+  ],
+  [
+   "{\"adx_thr\": 20, \"donch_n\": 48, \"entry_mode\": \"breakout\", \"k_sl\": 2.0, \"k_tp\": 10.0, \"k_tr\": 4.0}",
+   2
+  ],
+  [
+   "{\"adx_thr\": 25, \"donch_n\": 24, \"entry_mode\": \"breakout\", \"k_sl\": 2.0, \"k_tp\": 6.0, \"k_tr\": 4.0}",
+   2
+  ]
+ ],
+ "is_stitched": {
+  "BTCUSD": {
+   "sharpe": -0.64,
+   "total_ret": -4.13
+  },
+  "ETHUSD": {
+   "sharpe": -0.13,
+   "total_ret": -1.01
+  },
+  "SOLUSD": {
+   "sharpe": -1.07,
+   "total_ret": -6.31
+  }
+ },
+ "oos": {
+  "BTCUSD": {
+   "metrics": {
+    "sharpe": -1.38,
+    "cagr": -3.39,
+    "maxdd": -5.8,
+    "calmar": -0.59,
+    "pf": 0.65,
+    "wr": 31.4,
+    "trades": 86,
+    "net": -4575.91,
+    "exposure": 20.0
+   },
+   "period": [
+    "2025-03-07 23:00:00+00:00",
+    "2026-07-19 00:00:00+00:00"
+   ],
+   "reasons": {
+    "regime_exit": 12,
+    "stop_loss": 58,
+    "take_profit": 16
+   },
+   "regimes": {
+    "trend": 86
+   }
+  },
+  "ETHUSD": {
+   "metrics": {
+    "sharpe": 0.04,
+    "cagr": 0.07,
+    "maxdd": -5.14,
+    "calmar": 0.01,
+    "pf": 1.01,
+    "wr": 35.6,
+    "trades": 101,
+    "net": 93.7,
+    "exposure": 14.8
+   },
+   "period": [
+    "2025-03-08 00:00:00+00:00",
+    "2026-07-19 00:00:00+00:00"
+   ],
+   "reasons": {
+    "take_profit": 23,
+    "stop_loss": 59,
+    "regime_exit": 19
+   },
+   "regimes": {
+    "trend": 101
+   }
+  },
+  "SOLUSD": {
+   "metrics": {
+    "sharpe": -0.94,
+    "cagr": -3.07,
+    "maxdd": -5.82,
+    "calmar": -0.53,
+    "pf": 0.76,
+    "wr": 32.8,
+    "trades": 61,
+    "net": -3035.0,
+    "exposure": 12.5
+   },
+   "period": [
+    "2025-07-11 19:00:00+00:00",
+    "2026-07-19 00:00:00+00:00"
+   ],
+   "reasons": {
+    "stop_loss": 38,
+    "take_profit": 10,
+    "regime_exit": 13
+   },
+   "regimes": {
+    "trend": 61
+   }
+  }
+ },
+ "portfolio_oos": {
+  "sharpe": -0.88,
+  "cagr": -1.86,
+  "maxdd": -4.18
+ }
+}
