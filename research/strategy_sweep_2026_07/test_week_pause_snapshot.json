@@ -1,0 +1,55 @@
+{
+  "snapshot_at": "2026-07-21T16:53:49.322555+00:00",
+  "reason": "graceful pause of the fresh test cycle for broker transition (MT5/FTMO-Demo)",
+  "note": "paper broker on Linux VPS; no real post_only orders \u2014 'limits' are the simulated pending_orders. See broker-transition blockers in execution/MT5_TRANSITION.md.",
+  "portfolio_equity": 99971.72,
+  "portfolio_pnl_pct": -0.03,
+  "initial_balance": 100000.0,
+  "open_positions": 4,
+  "closed_trades": 1,
+  "fill_rates": {
+    "total_quotes": 6,
+    "fill_rate_pct": 33.3,
+    "per_symbol": [
+      {
+        "symbol": "BCH/USD",
+        "quotes": 1,
+        "filled": 0,
+        "cancelled": 1
+      },
+      {
+        "symbol": "DOT/USD",
+        "quotes": 1,
+        "filled": 1,
+        "cancelled": 0
+      },
+      {
+        "symbol": "ETH/USD",
+        "quotes": 1,
+        "filled": 0,
+        "cancelled": 1
+      },
+      {
+        "symbol": "LTC/USD",
+        "quotes": 1,
+        "filled": 0,
+        "cancelled": 1
+      },
+      {
+        "symbol": "SOL/USD",
+        "quotes": 1,
+        "filled": 0,
+        "cancelled": 1
+      },
+      {
+        "symbol": "UNI/USD",
+        "quotes": 1,
+        "filled": 1,
+        "cancelled": 0
+      }
+    ]
+  },
+  "adverse_selection_1m_pct": -0.18,
+  "net_spread_saved_usd": 3.49,
+  "throttle_active": false
+}
