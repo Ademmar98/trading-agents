@@ -69,6 +69,18 @@ class Trader(BaseAgent):
                 self.log(f"Skipping {symbol}: position already open")
                 continue
 
+            # A maker limit is already resting for this BUY — let it work (fill
+            # or expire on its TTL) instead of pre-empting it with a market
+            # order. Without this, a symbol re-approved in a later cycle before
+            # its limit fills would skip both limit branches (their `not
+            # open_pending` guard) and fall through to the market path below —
+            # opening a TAKER position and cancelling its own resting limit,
+            # which defeated the maker-fee saving on ~half of entries.
+            if (USE_LIMIT_ENTRIES and action == "BUY" and LIMIT_ENTRY_ATR_MULT > 0
+                    and pending_orders.open_pending(symbol)):
+                self.log(f"Skipping {symbol}: limit already resting — no market pre-empt")
+                continue
+
             # Execute at the real market price: the planned entry is a pullback
             # target the market may never trade at, and paper-filling there
             # books a cost basis reality wouldn't allow.
