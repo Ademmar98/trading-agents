@@ -66,3 +66,16 @@ def test_no_atr_falls_through_to_market(monkeypatch):
     Trader().run()
     assert pending_orders.open_pending("BTC/USD") == []
     assert PositionManager().has_position("BTC/USD")
+
+
+def test_resting_limit_blocks_market_preempt(monkeypatch):
+    """Regression: a BUY whose limit is ALREADY resting (from a prior cycle)
+    must NOT fall through to a market order — that opened a taker position and
+    cancelled the symbol's own resting limit, diluting the maker-fee saving."""
+    monkeypatch.setattr(trader_mod, "LIMIT_ENTRY_ATR_MULT", 1.0)
+    pending_orders.place_limit("BTC/USD", 59000.0, 0.5, ref_price=60000, atr=1000)
+    _seed(SharedMemory())                                   # BTC BUY re-approved this cycle
+    Trader().run()
+    assert not PositionManager().has_position("BTC/USD")    # no market pre-empt
+    pend = pending_orders.open_pending("BTC/USD")
+    assert len(pend) == 1 and pend[0]["limit_price"] == 59000.0  # original limit untouched, no duplicate
