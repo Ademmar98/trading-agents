@@ -31,6 +31,7 @@ from config import (
     PROPOSAL_COOLDOWN_TICKS, RISK_PER_TRADE_PCT, TRADE_FEE_PCT, MIN_TP_PCT,
     MAX_TRADES_PER_DAY, MAX_CONSECUTIVE_LOSSES, DAILY_LOSS_LIMIT_PCT,
     LEVERAGE_ENABLED, BROKER_TYPE,
+    VOL_THROTTLE_ENABLED, VOL_THROTTLE_TARGET_VOL, VOL_THROTTLE_FLOOR,
 )
 from agents.runtime import AsyncAgent
 from agents.protocol import (
@@ -743,6 +744,13 @@ class AsyncExecution(ReviewerMixin, AsyncAgent):
             if risk_per_unit > 0:
                 risk_qty = (load_portfolio().equity * RISK_PER_TRADE_PCT / 100) / risk_per_unit
                 qty = min(qty, round(risk_qty, 8))
+        # GARCH vol throttle (BUYs only — a SELL is a full close): size down in
+        # high-vol regimes, never up. Off by default; fails safe to 1.0x.
+        if action == "BUY" and VOL_THROTTLE_ENABLED and qty > 0:
+            from core.vol_forecast import vol_throttle
+            thr = vol_throttle(symbol, VOL_THROTTLE_TARGET_VOL, VOL_THROTTLE_FLOOR)
+            if thr < 1.0:
+                qty = round(qty * thr, 8)
         if qty <= 0:
             return {"ok": False, "reasons": ["risk cap reduced size to zero"]}
         from datetime import datetime, timezone

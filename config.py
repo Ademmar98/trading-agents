@@ -286,6 +286,20 @@ MIN_TP_PROFIT_USD = float(os.getenv("MIN_TP_PROFIT_USD", "1.0"))
 # cash-dial. Raise POSITION_SIZE_MULT only once a signal proves positive
 # expectancy on forward data.
 POSITION_SIZE_MULT = float(os.getenv("POSITION_SIZE_MULT", "1.0"))
+
+# ── GARCH volatility throttle (answers "how much", never "which way") ──
+# When on, the final position size is multiplied by a GARCH(1,1) vol-target
+# throttle in [VOL_THROTTLE_FLOOR, 1.0]: size DOWN when the 1-day-ahead
+# forecast vol exceeds the target, and NEVER up (the 1.0 cap keeps sizing
+# spot-only — no leverage, halal). Validated on the firm's own strategy
+# (research/ garch vol-target test, 2026-07): throttling cut BTC/ETH max
+# drawdown 11-16 points and roughly halved worst-month losses for a small
+# Sharpe gain. Pure-numpy forecaster (core/vol_forecast.py) — no new deps.
+# Default OFF: flip VOL_THROTTLE_ENABLED=true to A/B it against fixed sizing.
+VOL_THROTTLE_ENABLED = os.getenv("VOL_THROTTLE_ENABLED", "false").lower() == "true"
+VOL_THROTTLE_TARGET_VOL = float(os.getenv("VOL_THROTTLE_TARGET_VOL", "50"))  # annualized %
+VOL_THROTTLE_FLOOR = float(os.getenv("VOL_THROTTLE_FLOOR", "0.25"))          # min multiplier
+
 # Broken-geometry bound: a stop farther than this from entry means the
 # volatility inputs are corrupt (the 29.5%-SL class of bug), not a trade.
 # Distinct from MAX_SL_PCT: that caps normal pricing, this rejects garbage.

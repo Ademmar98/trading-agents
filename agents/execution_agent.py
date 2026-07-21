@@ -6,6 +6,7 @@ from config import (
     SCALP_MIN_WIN_PROB, SCALP_ATR_SL_MULT, MAX_SL_PCT, MAX_TP_PCT,
     BROKEN_SL_PCT, SWING_MAX_SL_PCT, MIN_TP_PROFIT_USD, POSITION_SIZE_MULT,
     MAX_GROSS_LEVERAGE, MAX_POSITION_SIZE_PCT,
+    VOL_THROTTLE_ENABLED, VOL_THROTTLE_TARGET_VOL, VOL_THROTTLE_FLOOR,
 )
 from agents.base_agent import BaseAgent
 from core.database import save_plan, update_plan_status
@@ -199,6 +200,19 @@ class ExecutionAgent(BaseAgent):
                 if qty > cap_qty:
                     qty = round(cap_qty, 8)
 
+            # GARCH volatility throttle: shrink the final size when tomorrow's
+            # 1-day-ahead forecast vol exceeds the target — never grow it (the
+            # 1.0 cap keeps sizing spot-only / halal). Off by default; fails
+            # safe to 1.0x (no throttle) if no forecast is available, so the
+            # caps above still bound the trade. Applied before the min-profit
+            # gate so an over-throttled slot is correctly dropped.
+            vol_mult = 1.0
+            if VOL_THROTTLE_ENABLED and qty > 0:
+                from core.vol_forecast import vol_throttle
+                vol_mult = vol_throttle(symbol, VOL_THROTTLE_TARGET_VOL, VOL_THROTTLE_FLOOR)
+                if vol_mult < 1.0:
+                    qty = round(qty * vol_mult, 8)
+
             # Minimum absolute profit at TP: a win must earn at least
             # MIN_TP_PROFIT_USD at the final size, or the setup isn't worth a
             # slot. Computed AFTER sizing (incl. the multiplier), so it reflects
@@ -253,6 +267,7 @@ class ExecutionAgent(BaseAgent):
                 "tp_pct": round(tp_pct, 1),
                 "sl_pct": round(sl_pct, 1),
                 "spread_pct": round(spread_pct, 4),
+                "vol_throttle": round(vol_mult, 3),
                 "execution_ok": True,
                 "plan_id": plan_id,
             })

@@ -165,3 +165,27 @@ class TestEquityPositionCap:
         import agents.execution_agent as ea
         notional = plan["orders"][0]["qty"] * 100.0
         assert notional <= 100000.0 * ea.MAX_POSITION_SIZE_PCT / 100 + 1
+
+
+class TestVolThrottle:
+    def test_throttle_shrinks_size_when_enabled(self, monkeypatch):
+        import agents.execution_agent as ea
+        import core.vol_forecast as vf
+        monkeypatch.setattr(ea, "MAX_POSITION_SIZE_PCT", 100)   # cap out of the way
+        monkeypatch.setattr(ea, "VOL_THROTTLE_ENABLED", True)
+        monkeypatch.setattr(vf, "vol_throttle", lambda *a, **k: 0.5)
+        save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+        _seed(entry=100.0, sl=98.0, tp=104.0, max_qty=50.0, risk_pct=0.5)
+        plan = _run(monkeypatch, mult=1.0)          # baseline qty = 25
+        assert len(plan["orders"]) == 1
+        assert plan["orders"][0]["qty"] == pytest.approx(12.5, abs=0.2)  # 25 x 0.5
+        assert plan["orders"][0]["vol_throttle"] == 0.5
+
+    def test_throttle_off_by_default_leaves_size(self, monkeypatch):
+        import agents.execution_agent as ea
+        monkeypatch.setattr(ea, "MAX_POSITION_SIZE_PCT", 100)
+        save_portfolio(Portfolio(cash=10000.0, initial_balance=10000.0))
+        _seed(entry=100.0, sl=98.0, tp=104.0, max_qty=50.0, risk_pct=0.5)
+        plan = _run(monkeypatch, mult=1.0)
+        assert plan["orders"][0]["qty"] == pytest.approx(25.0, abs=0.2)
+        assert plan["orders"][0]["vol_throttle"] == 1.0
