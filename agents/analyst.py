@@ -235,31 +235,24 @@ class ResearchAnalyst(BaseAgent):
                                               {**prices[sym], **indicators}, regime, indicators.get("atr", 0))
                     opp.update(pricing)
                     opportunities.append(opp)
-                if scalping_signal and scalping_signal["action"] != "HOLD" and not (BUY_ONLY and scalping_signal["action"] == "SELL"):
+                # evaluate_tf (analyze_symbol_mtf) carries a real but tiny
+                # forward edge — +~5bp at 4h in the 2026-07 scalp study
+                # (research/scalp_2026_07/), far below the ~28bp a trade needs
+                # to clear round-trip costs. As a standalone trigger it loses
+                # money, so it may no longer OPEN a trade. Demoted to a
+                # confirmation input: when another source already produced an
+                # opportunity for this symbol+action, evaluate_tf agreeing
+                # nudges its confidence; it never creates its own entry.
+                if (scalping_signal and scalping_signal["action"] != "HOLD"
+                        and not (BUY_ONLY and scalping_signal["action"] == "SELL")
+                        and scalping_signal["action"] in seen_actions):
                     action = scalping_signal["action"]
-                    if action not in seen_actions:
-                        seen_actions.add(action)
-                        opp = {
-                            "symbol": sym, "action": action,
-                            "confidence": scalping_signal["confidence"],
-                            "price": prices[sym]["price"],
-                            "reasons": [f"scalping_mtf:{action}"] + [
-                                f"{tf}:{d['action']}({d['confidence']:.2f})"
-                                for tf, d in scalping_signal.get("mtf_details", {}).items()
-                            ],
-                            "strategies": ["scalping_mtf"],
-                            "regime": regime, "multi_timeframe": True,
-                            "indicators": {
-                                "trend": indicators.get("trend", "neutral"),
-                                "rsi": indicators.get("rsi_14", 50),
-                                "volatility": indicators.get("volatility", 0),
-                                "atr": indicators.get("atr", 0),
-                            }
-                        }
-                        pricing = compute_pricing(sym, action, prices[sym]["price"],
-                                                  {**prices[sym], **indicators}, regime, indicators.get("atr", 0))
-                        opp.update(pricing)
-                        opportunities.append(opp)
+                    for opp in opportunities:
+                        if opp["symbol"] == sym and opp["action"] == action:
+                            opp["confidence"] = round(min(0.95, opp["confidence"] + 0.03), 4)
+                            opp["reasons"] = (opp["reasons"]
+                                              + [f"evaluate_tf confirms {action}"])[:5]
+                            break
                 # Scalp stack across all configured timeframes (sorted by
                 # win probability — the strongest TF per action wins). Each
                 # carries its own ATR-derived SL/TP; no compute_pricing; the

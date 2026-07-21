@@ -47,8 +47,10 @@ class TestRRMatrix:
 
 class TestWinProbability:
     def test_prior_without_history(self):
+        # The +0.10 regime bonus was removed (2026-07 study: it overstated the
+        # win rate by 15-20pts). Both alignments now return the honest prior.
         assert scalp15.estimate_win_probability(False) == pytest.approx(0.5)
-        assert scalp15.estimate_win_probability(True) == pytest.approx(0.6)
+        assert scalp15.estimate_win_probability(True) == pytest.approx(0.5)
 
     def test_laplace_smoothed_history(self):
         execute("INSERT INTO strategy_stats (strategy, trades, win_rate, pnl) "
@@ -62,11 +64,13 @@ class TestSignal:
         _rig(monkeypatch)  # price 105 > EMA 100, MACD crosses up, RSI 55
         sig = scalp15.scalp_15m_signal("BTC/USD", regime="trending_up", ohlc=_bars())
         assert sig["action"] == "BUY"
-        # SL = 1.5 x ATR(2.0) = 3 below entry; wp 0.6 -> RR 1.5 -> TP 4.5 above
+        # SL = 1.5 x ATR(2.0) = 3 below entry. With the +0.10 regime bonus
+        # removed (2026-07 recalibration) a fresh strategy's wp = 0.5, which
+        # maps to RR 2.0 -> TP = entry + 2.0 x 3 = 6 above.
         assert sig["stop_loss"] == pytest.approx(102.0)
-        assert sig["take_profit"] == pytest.approx(109.5)
-        assert sig["win_prob"] == pytest.approx(0.6)
-        assert sig["rr"] == 1.5
+        assert sig["take_profit"] == pytest.approx(111.0)
+        assert sig["win_prob"] == pytest.approx(0.5)
+        assert sig["rr"] == 2.0
 
     def test_rsi_overbought_blocks_long(self, monkeypatch):
         _rig(monkeypatch, rsi_v=75.0)

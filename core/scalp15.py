@@ -44,10 +44,18 @@ def _macd_series(closes, fast=12, slow=26, signal=9):
 def estimate_win_probability(regime_aligned, strategy="scalp_15m"):
     """Estimated win probability for a scalp stack timeframe.
 
-    Laplace-smoothed empirical win rate of that timeframe's strategy tag
-    ((wins + 1) / (trades + 2), prior 0.5) plus a synergy bonus when the
-    detected regime agrees with the trade direction. This is an honest
-    heuristic, NOT a calibrated probability — treat gates on it accordingly.
+    Laplace-smoothed empirical win rate of that timeframe's strategy tag:
+    (wins + 1) / (trades + 2), prior 0.5.
+
+    The old +0.10 "regime synergy" bonus was REMOVED (2026-07-21). The scalp
+    study (research/scalp_2026_07/) measured it directly: signals this
+    function labelled 60% (a fresh strategy: base 0.5 + bonus 0.10) realized
+    37-43%, and even regime-aligned entries won only ~40%. The bonus wasn't a
+    synergy, it was a 15-20pt overstatement that let an unproven strategy
+    auto-clear the SCALP_MIN_WIN_PROB gate before earning any record. The
+    estimate now returns the honest empirical rate and nothing else; it is
+    still a heuristic, not a calibrated probability — recalibrate against real
+    bracket outcomes before trusting it as an execution gate.
     """
     row = fetchone(
         "SELECT trades, win_rate FROM strategy_stats WHERE strategy=?", [strategy]
@@ -55,8 +63,7 @@ def estimate_win_probability(regime_aligned, strategy="scalp_15m"):
     n = row["trades"] if row and row["trades"] else 0
     wins = (row["win_rate"] / 100.0) * n if row and row["win_rate"] else 0
     base = (wins + 1.0) / (n + 2.0)
-    bonus = 0.10 if regime_aligned else 0.0
-    return max(0.05, min(0.95, base + bonus))
+    return max(0.05, min(0.95, base))
 
 
 def rr_for_win_prob(wp):

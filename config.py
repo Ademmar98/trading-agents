@@ -140,15 +140,15 @@ SMA200_DEPLOY_TARGET = float(os.getenv("SMA200_DEPLOY_TARGET", "0.85"))
 SMA200_UNKNOWN_TARGET = float(os.getenv("SMA200_UNKNOWN_TARGET", "0.20"))
 FIRM_BELLWETHER = os.getenv("FIRM_BELLWETHER", "BTC/USD")
 
-# Phase 1b evidence (analysis/scalp_swing_expectancy.py, 3097 trades): the
-# scalp stack is net-negative on EVERY timeframe (1m-4h), t-stats -1.3 to -10,
-# negative in every regime — the 0.16% round-trip cost is ~1/3 R on tight
-# intraday stops and buries it, exactly like the classics. Disabled as a live
+# DISABLED — evidence twice over. Phase 1b (analysis/scalp_swing_expectancy.py,
+# 3097 trades) and the 2026-07 scalp study (research/scalp_2026_07/, 8490
+# bracket-simulated trades over 6 majors × 2y against the deployed code) both
+# find the stack net-negative on EVERY timeframe: realized win rate 37-40% is
+# statistically identical to random entry, net -0.124%/trade — the ~0.14%
+# round-trip cost buries a signal that adds no edge. The 1-week test cycle
+# (2026-07-17 → 2026-07-21) is over and confirmed the negative. Off as a live
 # source; the module stays for research. Re-enable with SCALP_15M_ENABLED=true.
-# TEST CYCLE (2026-07-17): re-enabled for the 1-week experiment; the fresh DB
-# starts its win-prob estimates neutral (Laplace), no circular-confidence
-# carryover from the old record.
-SCALP_15M_ENABLED = os.getenv("SCALP_15M_ENABLED", "true").lower() == "true"
+SCALP_15M_ENABLED = os.getenv("SCALP_15M_ENABLED", "false").lower() == "true"
 # The same EMA/MACD/RSI stack runs independently on every listed timeframe;
 # each gets its own strategy tag (scalp_1m ... scalp_4h) so the learning
 # loop judges them separately.
