@@ -1,0 +1,490 @@
+{
+ "symbols": {
+  "AAVEUSD": 1831,
+  "AVAXUSD": 1705,
+  "BCHUSD": 2026,
+  "BTCUSD": 2026,
+  "DOGEUSD": 2026,
+  "DOTUSD": 1067,
+  "ETHUSD": 2026,
+  "LINKUSD": 2026,
+  "LTCUSD": 2026,
+  "SOLUSD": 1608,
+  "UNIUSD": 2026,
+  "XRPUSD": 931
+ },
+ "stage1_sma_wfo": {
+  "per_symbol": {
+   "AAVEUSD": {
+    "wfo_oos": {
+     "sharpe": 0.749,
+     "cagr": 32.8,
+     "maxdd": -44.0,
+     "calmar": 0.75,
+     "total": 117.6
+    },
+    "fixed_50": {
+     "sharpe": 0.567,
+     "cagr": 17.7,
+     "maxdd": -55.0,
+     "calmar": 0.32,
+     "total": 106.8
+    },
+    "fixed_100": {
+     "sharpe": 0.247,
+     "cagr": -3.0,
+     "maxdd": -68.1,
+     "calmar": -0.04,
+     "total": -12.6
+    },
+    "buyhold": {
+     "sharpe": 0.266,
+     "cagr": -19.8,
+     "maxdd": -88.5,
+     "calmar": -0.22,
+     "total": -66.9
+    }
+   },
+   "AVAXUSD": {
+    "wfo_oos": {
+     "sharpe": 0.801,
+     "cagr": 36.5,
+     "maxdd": -59.5,
+     "calmar": 0.61,
+     "total": 110.7
+    },
+    "fixed_50": {
+     "sharpe": 0.511,
+     "cagr": 13.8,
+     "maxdd": -70.6,
+     "calmar": 0.2,
+     "total": 70.1
+    },
+    "fixed_100": {
+     "sharpe": 0.677,
+     "cagr": 25.2,
+     "maxdd": -51.5,
+     "calmar": 0.49,
+     "total": 152.0
+    },
+    "buyhold": {
+     "sharpe": -0.151,
+     "cagr": -44.5,
+     "maxdd": -95.6,
+     "calmar": -0.47,
+     "total": -93.6
+    }
+   },
+   "BCHUSD": {
+    "wfo_oos": {
+     "sharpe": 0.687,
+     "cagr": 29.2,
+     "maxdd": -42.6,
+     "calmar": 0.68,
+     "total": 140.1
+    },
+    "fixed_50": {
+     "sharpe": -0.144,
+     "cagr": -21.2,
+     "maxdd": -73.7,
+     "calmar": -0.29,
+     "total": -69.6
+    },
+    "fixed_100": {
+     "sharpe": 0.05,
+     "cagr": -11.5,
+     "maxdd": -70.2,
+     "calmar": -0.16,
+     "total": -45.7
+    },
+    "buyhold": {
+     "sharpe": 0.371,
+     "cagr": -8.0,
+     "maxdd": -94.3,
+     "calmar": -0.08,
+     "total": -37.0
+    }
+   },
+   "BTCUSD": {
+    "wfo_oos": {
+     "sharpe": 1.115,
+     "cagr": 40.0,
+     "maxdd": -33.0,
+     "calmar": 1.21,
+     "total": 216.5
+    },
+    "fixed_50": {
+     "sharpe": 0.609,
+     "cagr": 16.0,
+     "maxdd": -58.4,
+     "calmar": 0.27,
+     "total": 109.5
+    },
+    "fixed_100": {
+     "sharpe": 0.615,
+     "cagr": 15.7,
+     "maxdd": -38.3,
+     "calmar": 0.41,
+     "total": 107.2
+    },
+    "buyhold": {
+     "sharpe": 0.534,
+     "cagr": 15.3,
+     "maxdd": -76.7,
+     "calmar": 0.2,
+     "total": 119.9
+    }
+   },
+   "DOGEUSD": {
+    "wfo_oos": {
+     "sharpe": 0.338,
+     "cagr": 1.2,
+     "maxdd": -72.7,
+     "calmar": 0.02,
+     "total": 4.0
+    },
+    "fixed_50": {
+     "sharpe": 0.275,
+     "cagr": -2.6,
+     "maxdd": -76.5,
+     "calmar": -0.03,
+     "total": -12.3
+    },
+    "fixed_100": {
+     "sharpe": 0.232,
+     "cagr": -5.0,
+     "maxdd": -70.4,
+     "calmar": -0.07,
+     "total": -22.6
+    },
+    "buyhold": {
+     "sharpe": 0.76,
+     "cagr": 58.2,
+     "maxdd": -92.3,
+     "calmar": 0.63,
+     "total": 1169.8
+    }
+   },
+   "DOTUSD": {
+    "wfo_oos": {
+     "sharpe": -3.807,
+     "cagr": -81.3,
+     "maxdd": -65.1,
+     "calmar": -1.25,
+     "total": -68.2
+    },
+    "fixed_50": {
+     "sharpe": -0.791,
+     "cagr": -37.6,
+     "maxdd": -79.6,
+     "calmar": -0.47,
+     "total": -67.3
+    },
+    "fixed_100": {
+     "sharpe": -0.324,
+     "cagr": -21.5,
+     "maxdd": -75.6,
+     "calmar": -0.28,
+     "total": -43.7
+    },
+    "buyhold": {
+     "sharpe": -0.312,
+     "cagr": -44.3,
+     "maxdd": -93.0,
+     "calmar": -0.48,
+     "total": -81.8
+    }
+   },
+   "ETHUSD": {
+    "wfo_oos": {
+     "sharpe": 1.023,
+     "cagr": 45.0,
+     "maxdd": -40.3,
+     "calmar": 1.12,
+     "total": 256.6
+    },
+    "fixed_50": {
+     "sharpe": 0.529,
+     "cagr": 14.6,
+     "maxdd": -54.3,
+     "calmar": 0.27,
+     "total": 97.6
+    },
+    "fixed_100": {
+     "sharpe": 0.189,
+     "cagr": -0.9,
+     "maxdd": -62.9,
+     "calmar": -0.02,
+     "total": -4.7
+    },
+    "buyhold": {
+     "sharpe": 0.607,
+     "cagr": 18.5,
+     "maxdd": -79.3,
+     "calmar": 0.23,
+     "total": 156.1
+    }
+   },
+   "LINKUSD": {
+    "wfo_oos": {
+     "sharpe": 0.386,
+     "cagr": 6.0,
+     "maxdd": -57.1,
+     "calmar": 0.11,
+     "total": 22.1
+    },
+    "fixed_50": {
+     "sharpe": -0.021,
+     "cagr": -16.1,
+     "maxdd": -80.8,
+     "calmar": -0.2,
+     "total": -58.5
+    },
+    "fixed_100": {
+     "sharpe": 0.073,
+     "cagr": -10.6,
+     "maxdd": -80.8,
+     "calmar": -0.13,
+     "total": -43.0
+    },
+    "buyhold": {
+     "sharpe": 0.431,
+     "cagr": -6.1,
+     "maxdd": -90.2,
+     "calmar": -0.07,
+     "total": -29.4
+    }
+   },
+   "LTCUSD": {
+    "wfo_oos": {
+     "sharpe": -0.056,
+     "cagr": -17.0,
+     "maxdd": -66.6,
+     "calmar": -0.26,
+     "total": -47.2
+    },
+    "fixed_50": {
+     "sharpe": -0.607,
+     "cagr": -36.5,
+     "maxdd": -92.3,
+     "calmar": -0.39,
+     "total": -89.6
+    },
+    "fixed_100": {
+     "sharpe": -0.335,
+     "cagr": -26.5,
+     "maxdd": -86.9,
+     "calmar": -0.31,
+     "total": -78.6
+    },
+    "buyhold": {
+     "sharpe": 0.214,
+     "cagr": -16.3,
+     "maxdd": -89.5,
+     "calmar": -0.18,
+     "total": -62.8
+    }
+   },
+   "SOLUSD": {
+    "wfo_oos": {
+     "sharpe": 0.658,
+     "cagr": 129.4,
+     "maxdd": -34.3,
+     "calmar": 3.77,
+     "total": 630.7
+    },
+    "fixed_50": {
+     "sharpe": 0.534,
+     "cagr": 61.6,
+     "maxdd": -55.6,
+     "calmar": 1.11,
+     "total": 535.6
+    },
+    "fixed_100": {
+     "sharpe": -0.574,
+     "cagr": -32.6,
+     "maxdd": -85.0,
+     "calmar": -0.38,
+     "total": -78.1
+    },
+    "buyhold": {
+     "sharpe": 0.751,
+     "cagr": 132.8,
+     "maxdd": -96.3,
+     "calmar": 1.38,
+     "total": 4020.3
+    }
+   },
+   "UNIUSD": {
+    "wfo_oos": {
+     "sharpe": 0.566,
+     "cagr": 18.3,
+     "maxdd": -57.5,
+     "calmar": 0.32,
+     "total": 77.9
+    },
+    "fixed_50": {
+     "sharpe": 0.209,
+     "cagr": -5.7,
+     "maxdd": -60.7,
+     "calmar": -0.09,
+     "total": -25.3
+    },
+    "fixed_100": {
+     "sharpe": 0.013,
+     "cagr": -15.5,
+     "maxdd": -73.9,
+     "calmar": -0.21,
+     "total": -56.9
+    },
+    "buyhold": {
+     "sharpe": 0.483,
+     "cagr": -5.3,
+     "maxdd": -94.4,
+     "calmar": -0.06,
+     "total": -26.0
+    }
+   },
+   "XRPUSD": {
+    "wfo_oos": {
+     "sharpe": -1.438,
+     "cagr": -37.8,
+     "maxdd": -27.0,
+     "calmar": -1.4,
+     "total": -15.0
+    },
+    "fixed_50": {
+     "sharpe": 1.076,
+     "cagr": 59.1,
+     "maxdd": -54.7,
+     "calmar": 1.08,
+     "total": 152.9
+    },
+    "fixed_100": {
+     "sharpe": 1.051,
+     "cagr": 57.2,
+     "maxdd": -58.0,
+     "calmar": 0.99,
+     "total": 146.8
+    },
+    "buyhold": {
+     "sharpe": 0.662,
+     "cagr": 24.4,
+     "maxdd": -70.8,
+     "calmar": 0.34,
+     "total": 74.4
+    }
+   }
+  },
+  "pick_distribution": {
+   "50": 47,
+   "100": 9,
+   "200": 16,
+   "150": 23
+  }
+ },
+ "stage2_band_sweep": [
+  {
+   "band_pct": 0,
+   "mean_sharpe": 0.18,
+   "mean_cagr": -6.3,
+   "mean_maxdd": -77.6,
+   "mean_flips": 81.2,
+   "mean_exposure": 40.7
+  },
+  {
+   "band_pct": 1,
+   "mean_sharpe": 0.208,
+   "mean_cagr": -5.0,
+   "mean_maxdd": -76.8,
+   "mean_flips": 57.5,
+   "mean_exposure": 40.6
+  },
+  {
+   "band_pct": 2,
+   "mean_sharpe": 0.243,
+   "mean_cagr": -3.2,
+   "mean_maxdd": -75.9,
+   "mean_flips": 43.0,
+   "mean_exposure": 40.9
+  },
+  {
+   "band_pct": 3,
+   "mean_sharpe": 0.244,
+   "mean_cagr": -3.2,
+   "mean_maxdd": -75.3,
+   "mean_flips": 36.3,
+   "mean_exposure": 41.2
+  },
+  {
+   "band_pct": 5,
+   "mean_sharpe": 0.231,
+   "mean_cagr": -3.7,
+   "mean_maxdd": -76.7,
+   "mean_flips": 28.5,
+   "mean_exposure": 41.8
+  }
+ ],
+ "stage3_4_sma100_band2": {
+  "period": 100,
+  "band": 2,
+  "portfolio_regime": {
+   "sharpe": 0.313,
+   "cagr": 4.2,
+   "maxdd": -73.3,
+   "calmar": 0.06,
+   "total": 25.4
+  },
+  "portfolio_buyhold": {
+   "sharpe": 0.806,
+   "cagr": 39.6,
+   "maxdd": -82.5,
+   "calmar": 0.48,
+   "total": 536.7
+  },
+  "avg_deployment_pct": 40.9,
+  "null_shift_sharpe_mean": 0.688,
+  "null_shift_sharpe_p50": 0.689,
+  "null_shift_sharpe_p95": 1.062,
+  "regime_percentile_vs_null": 5.8
+ },
+ "stage3_4_sma50_band2": {
+  "period": 50,
+  "band": 2,
+  "portfolio_regime": {
+   "sharpe": 0.705,
+   "cagr": 26.1,
+   "maxdd": -55.4,
+   "calmar": 0.47,
+   "total": 261.8
+  },
+  "portfolio_buyhold": {
+   "sharpe": 0.806,
+   "cagr": 39.6,
+   "maxdd": -82.5,
+   "calmar": 0.48,
+   "total": 536.7
+  },
+  "avg_deployment_pct": 42.8,
+  "null_shift_sharpe_mean": 0.686,
+  "null_shift_sharpe_p50": 0.685,
+  "null_shift_sharpe_p95": 1.047,
+  "regime_percentile_vs_null": 54.6
+ },
+ "constant_exposure_benchmark": {
+  "constant_100pct_exposure": {
+   "sharpe": 0.806,
+   "cagr": 39.6,
+   "maxdd": -82.5,
+   "calmar": 0.48,
+   "total": 536.7
+  },
+  "constant_43pct_exposure": {
+   "sharpe": 0.806,
+   "cagr": 25.5,
+   "maxdd": -48.6,
+   "calmar": 0.53,
+   "total": 252.9
+  }
+ }
+}
