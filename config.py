@@ -103,6 +103,15 @@ NEWS_INTERVAL_MIN = int(os.getenv("NEWS_INTERVAL_MIN", "15"))
 USE_LIMIT_ENTRIES = os.getenv("USE_LIMIT_ENTRIES", "true").lower() == "true"
 LIMIT_ENTRY_EXT_PCT = float(os.getenv("LIMIT_ENTRY_EXT_PCT", "0.3"))
 LIMIT_ORDER_TTL_MIN = int(os.getenv("LIMIT_ORDER_TTL_MIN", "60"))
+# Study-validated limit entry (research/limit_exec_2026_07): rest a BUY limit
+# LIMIT_ENTRY_ATR_MULT x ATR below price on EVERY buy — not just VWAP-extended
+# ones. Per-decision execution went from -16.5 bps (market/taker) to ~breakeven
+# (limit/maker) on BTC/ETH/SOL: the certain 3 bps maker saving plus better
+# (dip) fill prices, at the cost of ~half the (edge-less) signals going
+# unfilled. SL/TP shift down with the fill so the risk geometry is preserved.
+# >0 uses this rule (needs USE_LIMIT_ENTRIES); 0 keeps the legacy VWAP
+# heuristic. Default 0 (off) — flip to A/B against market entries.
+LIMIT_ENTRY_ATR_MULT = float(os.getenv("LIMIT_ENTRY_ATR_MULT", "0"))
 
 # ── 15-minute scalping stack ──
 # Entry: price above/below EMA (trend filter) + MACD crossover in the trend

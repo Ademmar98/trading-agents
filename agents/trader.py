@@ -7,7 +7,7 @@ from core.binance_broker import BinanceBroker
 from core.positions import PositionManager
 from core.database import update_plan_status
 from core import pending_orders
-from config import USE_LIMIT_ENTRIES, LIMIT_ENTRY_EXT_PCT
+from config import USE_LIMIT_ENTRIES, LIMIT_ENTRY_EXT_PCT, LIMIT_ENTRY_ATR_MULT
 
 # Reject fills when the market has run this far past the planned entry —
 # the plan's SL/TP geometry no longer holds.
@@ -86,7 +86,29 @@ class Trader(BaseAgent):
             else:
                 fill_ref = quote.get("bid") or market_price
 
-            # Extended above session VWAP? Rest a BUY limit at VWAP instead of
+            # Study-validated limit entry (research/limit_exec_2026_07): rest a
+            # BUY limit LIMIT_ENTRY_ATR_MULT x ATR below price on EVERY buy —
+            # best per-decision execution (maker fee + better fills). SL/TP
+            # shift down by the same offset so the risk geometry is preserved
+            # from the actual (lower) fill. Takes precedence over the VWAP
+            # heuristic; the pending-order loop fills-through or expires it.
+            atr_v = planned.get("atr") or (planned.get("indicators") or {}).get("atr") or 0
+            if (USE_LIMIT_ENTRIES and action == "BUY" and LIMIT_ENTRY_ATR_MULT > 0
+                    and atr_v > 0 and not pending_orders.open_pending(symbol)):
+                limit_px = round(market_price - LIMIT_ENTRY_ATR_MULT * atr_v, 8)
+                if limit_px > 0:
+                    off = market_price - limit_px
+                    pending_orders.place_limit(
+                        symbol, limit_px, qty,
+                        sl=round(sl_price - off, 8) if sl_price else 0,
+                        tp=round(tp_price - off, 8) if tp_price else 0,
+                        strategy="|".join(planned.get("strategies") or [""]))
+                    self.log(f"BUY {symbol}: resting limit @ ${limit_px:g} "
+                             f"({LIMIT_ENTRY_ATR_MULT}xATR below ${market_price:g})")
+                    continue
+
+            # Extended above session VWAP? (legacy heuristic, used when
+            # LIMIT_ENTRY_ATR_MULT=0.) Rest a BUY limit at VWAP instead of
             # buying the local top; the pending-order loop fills or expires it.
             vwap_v = quote.get("vwap")
             if (USE_LIMIT_ENTRIES and action == "BUY" and vwap_v
