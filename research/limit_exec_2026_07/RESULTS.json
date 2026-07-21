@@ -1,0 +1,188 @@
+{
+ "BTCUSD": {
+  "market": {
+   "signals": 3311,
+   "fill_rate_pct": 100.0,
+   "exp_per_signal_bps": -13.68,
+   "exp_per_fill_bps": -13.68,
+   "win_rate_pct": 40.4,
+   "missed": 0,
+   "missed_that_would_have_won": 0
+  },
+  "lim_0.1%": {
+   "signals": 3311,
+   "fill_rate_pct": 90.5,
+   "exp_per_signal_bps": -11.03,
+   "exp_per_fill_bps": -12.19,
+   "win_rate_pct": 39.8,
+   "missed": 315,
+   "missed_that_would_have_won": "242"
+  },
+  "lim_0.25%": {
+   "signals": 3311,
+   "fill_rate_pct": 76.2,
+   "exp_per_signal_bps": -10.46,
+   "exp_per_fill_bps": -13.73,
+   "win_rate_pct": 38.8,
+   "missed": 788,
+   "missed_that_would_have_won": "551"
+  },
+  "lim_0.5%": {
+   "signals": 3311,
+   "fill_rate_pct": 56.0,
+   "exp_per_signal_bps": -6.62,
+   "exp_per_fill_bps": -11.83,
+   "win_rate_pct": 39.4,
+   "missed": 1458,
+   "missed_that_would_have_won": "895"
+  },
+  "lim_1xATR": {
+   "signals": 3311,
+   "fill_rate_pct": 47.0,
+   "exp_per_signal_bps": -1.17,
+   "exp_per_fill_bps": -2.5,
+   "win_rate_pct": 41.1,
+   "missed": 1755,
+   "missed_that_would_have_won": "1035"
+  },
+  "lim_FVG": {
+   "signals": 340,
+   "fill_rate_pct": 57.4,
+   "exp_per_signal_bps": -10.01,
+   "exp_per_fill_bps": -17.45,
+   "win_rate_pct": 36.4,
+   "missed": 145,
+   "missed_that_would_have_won": "83"
+  },
+  "_crash": {
+   "n_crash_events": 10,
+   "market_exp_bps": -186.9,
+   "limit0.5_caught": 10,
+   "limit0.5_exp_bps": -105.3
+  }
+ },
+ "ETHUSD": {
+  "market": {
+   "signals": 3126,
+   "fill_rate_pct": 100.0,
+   "exp_per_signal_bps": -11.87,
+   "exp_per_fill_bps": -11.87,
+   "win_rate_pct": 40.7,
+   "missed": 0,
+   "missed_that_would_have_won": 0
+  },
+  "lim_0.1%": {
+   "signals": 3126,
+   "fill_rate_pct": 92.2,
+   "exp_per_signal_bps": -9.98,
+   "exp_per_fill_bps": -10.83,
+   "win_rate_pct": 39.9,
+   "missed": 244,
+   "missed_that_would_have_won": "184"
+  },
+  "lim_0.25%": {
+   "signals": 3126,
+   "fill_rate_pct": 81.0,
+   "exp_per_signal_bps": -10.37,
+   "exp_per_fill_bps": -12.8,
+   "win_rate_pct": 39.4,
+   "missed": 593,
+   "missed_that_would_have_won": "414"
+  },
+  "lim_0.5%": {
+   "signals": 3126,
+   "fill_rate_pct": 65.1,
+   "exp_per_signal_bps": -7.98,
+   "exp_per_fill_bps": -12.25,
+   "win_rate_pct": 39.7,
+   "missed": 1090,
+   "missed_that_would_have_won": "699"
+  },
+  "lim_1xATR": {
+   "signals": 3126,
+   "fill_rate_pct": 49.2,
+   "exp_per_signal_bps": 1.17,
+   "exp_per_fill_bps": 2.38,
+   "win_rate_pct": 42.9,
+   "missed": 1588,
+   "missed_that_would_have_won": "930"
+  },
+  "lim_FVG": {
+   "signals": 352,
+   "fill_rate_pct": 53.1,
+   "exp_per_signal_bps": 8.35,
+   "exp_per_fill_bps": 15.72,
+   "win_rate_pct": 44.9,
+   "missed": 165,
+   "missed_that_would_have_won": "106"
+  },
+  "_crash": {
+   "n_crash_events": 2,
+   "market_exp_bps": -238.6,
+   "limit0.5_caught": 2,
+   "limit0.5_exp_bps": -236.9
+  }
+ },
+ "SOLUSD": {
+  "market": {
+   "signals": 2173,
+   "fill_rate_pct": 100.0,
+   "exp_per_signal_bps": -23.94,
+   "exp_per_fill_bps": -23.94,
+   "win_rate_pct": 38.9,
+   "missed": 0,
+   "missed_that_would_have_won": 0
+  },
+  "lim_0.1%": {
+   "signals": 2173,
+   "fill_rate_pct": 94.2,
+   "exp_per_signal_bps": -19.8,
+   "exp_per_fill_bps": -21.03,
+   "win_rate_pct": 38.8,
+   "missed": 127,
+   "missed_that_would_have_won": "95"
+  },
+  "lim_0.25%": {
+   "signals": 2173,
+   "fill_rate_pct": 87.9,
+   "exp_per_signal_bps": -18.92,
+   "exp_per_fill_bps": -21.52,
+   "win_rate_pct": 38.6,
+   "missed": 262,
+   "missed_that_would_have_won": "193"
+  },
+  "lim_0.5%": {
+   "signals": 2173,
+   "fill_rate_pct": 78.0,
+   "exp_per_signal_bps": -11.17,
+   "exp_per_fill_bps": -14.33,
+   "win_rate_pct": 40.0,
+   "missed": 479,
+   "missed_that_would_have_won": "327"
+  },
+  "lim_1xATR": {
+   "signals": 2173,
+   "fill_rate_pct": 50.2,
+   "exp_per_signal_bps": -2.12,
+   "exp_per_fill_bps": -4.24,
+   "win_rate_pct": 40.5,
+   "missed": 1083,
+   "missed_that_would_have_won": "636"
+  },
+  "lim_FVG": {
+   "signals": 253,
+   "fill_rate_pct": 57.3,
+   "exp_per_signal_bps": -19.23,
+   "exp_per_fill_bps": -33.55,
+   "win_rate_pct": 37.2,
+   "missed": 108,
+   "missed_that_would_have_won": "62"
+  },
+  "_crash": {
+   "n_crash_events": 18,
+   "market_exp_bps": -385.3,
+   "limit0.5_caught": 18,
+   "limit0.5_exp_bps": -384.3
+  }
+ }
+}
