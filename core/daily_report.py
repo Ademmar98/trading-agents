@@ -247,6 +247,16 @@ def _missing_section():
     }
 
 
+def _fill_diagnostics_section():
+    """Limit-fill microstructure metrics for the report (empty when the maker
+    path is off or no quotes rested)."""
+    try:
+        from core.fill_monitor import diagnostics
+        return diagnostics(days=1)
+    except Exception:
+        return {"per_symbol": [], "totals": {"total_quotes": 0}, "window_days": 1}
+
+
 def build_daily_report(date_str, bars_by_symbol=None):
     trades = _trades_section(date_str)
     deliberations = _deliberations_section(date_str)
@@ -264,6 +274,7 @@ def build_daily_report(date_str, bars_by_symbol=None):
         "missing": _missing_section(),
         "loss_postmortems": postmortems,
         "loss_summary": summarize_postmortems(postmortems),
+        "fill_diagnostics": _fill_diagnostics_section(),
     }
     return report
 
@@ -336,6 +347,19 @@ def render_markdown(report):
     if weights:
         lines.append("- earned voting weights: "
                      + ", ".join(f"{k}={v:.2f}" for k, v in sorted(weights.items())))
+
+    fd = report.get("fill_diagnostics") or {}
+    ft = fd.get("totals") or {}
+    if ft.get("total_quotes"):
+        lines += ["", "## Limit-fill execution (maker path)"]
+        adv = ft.get("adverse_1m_pct")
+        lines.append(
+            f"- {ft['total_quotes']} quotes, fill rate {ft['fill_rate_pct']:.0f}%, "
+            f"avg time-to-fill {ft.get('avg_time_to_fill_s') or '—'}s, "
+            f"adverse-selection 1m {adv:+.2f}% " if adv is not None else
+            f"- {ft['total_quotes']} quotes, fill rate {ft['fill_rate_pct']:.0f}%")
+        lines.append(f"- net spread saved: ${ft.get('net_spread_saved_usd', 0):+.2f}"
+                     + ("  |  ⚠ adverse-selection throttle ACTIVE" if ft.get("throttle_active") else ""))
 
     lines += ["", "## Problems"]
     problems = False

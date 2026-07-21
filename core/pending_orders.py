@@ -21,13 +21,16 @@ LIMIT_FILL_THROUGH_PCT = float(getattr(config, "LIMIT_FILL_THROUGH_PCT", 0.05))
 
 
 def place_limit(symbol, limit_price, quantity, sl=0, tp=0, strategy="",
-                ttl_min=LIMIT_ORDER_TTL_MIN):
+                ttl_min=LIMIT_ORDER_TTL_MIN, ref_price=0, atr=0):
+    """Rest a BUY limit. ref_price (bid/market at placement) and atr feed the
+    fill diagnostics (spread saved, cancel/replace-on-drift) in fill_monitor."""
     expires = (datetime.now(timezone.utc) + timedelta(minutes=ttl_min)).isoformat()
     cur = execute("""
         INSERT INTO pending_orders (symbol, side, limit_price, quantity,
-                                    stop_loss, take_profit, strategy, expires_at)
-        VALUES (?, 'BUY', ?, ?, ?, ?, ?, ?)
-    """, [symbol, limit_price, quantity, sl, tp, strategy, expires])
+                                    stop_loss, take_profit, strategy, expires_at,
+                                    ref_price, atr)
+        VALUES (?, 'BUY', ?, ?, ?, ?, ?, ?, ?, ?)
+    """, [symbol, limit_price, quantity, sl, tp, strategy, expires, ref_price, atr])
     return cur.lastrowid
 
 
@@ -62,7 +65,10 @@ def check_fills(prices, has_position):
         # which is what a real resting limit would get.
         through_price = po["limit_price"] * (1 - LIMIT_FILL_THROUGH_PCT / 100)
         if price <= through_price:
-            execute("UPDATE pending_orders SET status='filled', filled_at=? WHERE id=?",
-                    [now, po["id"]])
+            # A resting maker limit books at its limit price (or better); record
+            # it as fill_price so fill_monitor can score spread saved & adverse
+            # selection from the actual entry.
+            execute("UPDATE pending_orders SET status='filled', filled_at=?, "
+                    "fill_price=? WHERE id=?", [now, po["limit_price"], po["id"]])
             fills.append(po)
     return fills

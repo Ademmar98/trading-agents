@@ -252,6 +252,16 @@ def _migrate(conn):
           AND COALESCE(strategy, '') NOT LIKE 'swing%'
           AND ABS(take_profit - entry_price) > entry_price * {tp_f}
     """)
+    # Limit-fill diagnostics (fill rate / time-to-fill / adverse selection /
+    # spread saved) — see core/fill_monitor.py.
+    _ensure_columns(conn, "pending_orders", {
+        "ref_price": "REAL DEFAULT 0",    # bid/market at placement (spread-saved baseline)
+        "atr": "REAL DEFAULT 0",          # ATR at placement (cancel/replace on drift)
+        "fill_price": "REAL DEFAULT 0",   # actual fill price
+        "adverse_1m": "REAL",             # (price 1m post-fill / fill - 1); + good, - knife
+        "adverse_5m": "REAL",
+        "scored": "INTEGER DEFAULT 0",    # 0 none / 1 did 1m / 2 did 5m
+    })
     _ensure_columns(conn, "optimization_results", {
         "sl_mult": "REAL",
         "tp_mult": "REAL",

@@ -6,7 +6,7 @@ from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
 from core.positions import PositionManager
 from core.database import update_plan_status
-from core import pending_orders
+from core import pending_orders, fill_monitor
 from config import USE_LIMIT_ENTRIES, LIMIT_ENTRY_EXT_PCT, LIMIT_ENTRY_ATR_MULT
 
 # Reject fills when the market has run this far past the planned entry —
@@ -95,16 +95,26 @@ class Trader(BaseAgent):
             atr_v = planned.get("atr") or (planned.get("indicators") or {}).get("atr") or 0
             if (USE_LIMIT_ENTRIES and action == "BUY" and LIMIT_ENTRY_ATR_MULT > 0
                     and atr_v > 0 and not pending_orders.open_pending(symbol)):
-                limit_px = round(market_price - LIMIT_ENTRY_ATR_MULT * atr_v, 8)
+                bid = quote.get("bid") or market_price
+                ask = quote.get("ask") or market_price
+                # Circuit breaker: skip passive placement in a liquidity vacuum
+                # (spread blown out vs its rolling average).
+                if not fill_monitor.spread_ok(symbol, bid, ask):
+                    self.log(f"BUY {symbol}: spread blown out — skipping limit placement")
+                    continue
+                # Adverse-selection throttle widens the offset after knife fills.
+                k = fill_monitor.offset_mult(LIMIT_ENTRY_ATR_MULT)
+                limit_px = round(market_price - k * atr_v, 8)
                 if limit_px > 0:
                     off = market_price - limit_px
                     pending_orders.place_limit(
                         symbol, limit_px, qty,
                         sl=round(sl_price - off, 8) if sl_price else 0,
                         tp=round(tp_price - off, 8) if tp_price else 0,
-                        strategy="|".join(planned.get("strategies") or [""]))
+                        strategy="|".join(planned.get("strategies") or [""]),
+                        ref_price=ask, atr=atr_v)
                     self.log(f"BUY {symbol}: resting limit @ ${limit_px:g} "
-                             f"({LIMIT_ENTRY_ATR_MULT}xATR below ${market_price:g})")
+                             f"({k:.2f}xATR below ${market_price:g})")
                     continue
 
             # Extended above session VWAP? (legacy heuristic, used when

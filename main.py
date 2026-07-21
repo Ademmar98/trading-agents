@@ -230,6 +230,14 @@ def process_price_triggers(prices):
             if sym not in merged and isinstance(d, dict) and d.get("price"):
                 merged[sym] = {"price": d["price"]}
         triggered = pos_mgr.update_prices(merged)
+        # Limit-fill diagnostics: score post-fill adverse selection, feed the
+        # spread kill-switch, and cancel/replace quotes the market ran away from.
+        from core import fill_monitor
+        for _sym, _pd in merged.items():
+            if isinstance(_pd, dict):
+                fill_monitor.observe_spread(_sym, _pd.get("bid", 0), _pd.get("ask", 0))
+        fill_monitor.score_adverse_selection(merged)
+        fill_monitor.cancel_drifted(merged)
         fills = pending_orders.check_fills(merged, pos_mgr.has_position)
         if not triggered and not fills:
             return []

@@ -331,6 +331,14 @@ def api_pricing():
     return pricing or {}
 
 
+@app.get("/api/fill-diagnostics")
+def api_fill_diagnostics(days: int = 7):
+    """Limit-fill microstructure metrics: fill rate, time-to-fill, adverse
+    selection, net spread saved (see core.fill_monitor)."""
+    from core.fill_monitor import diagnostics
+    return diagnostics(days=days)
+
+
 @app.get("/api/daily-report")
 def api_daily_report(date: str | None = None):
     """Latest daily desk report, or a specific one via ?date=YYYY-MM-DD."""
