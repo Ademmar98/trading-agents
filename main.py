@@ -296,13 +296,16 @@ def maintenance_cycle():
         if _cycle_count % 30 == 0:
             notifier.portfolio_snapshot(pos_mgr.get_positions_summary())
         sync_position_stores()
-        # Liveness heartbeat — checked from OUTSIDE this thread by the
-        # watchdog and /api/health (incident 2026-07-22: silent 10.5h stall).
-        stamp_cycle_heartbeat()
     except Exception as e:
         memory.log("system", f"Cycle error: {e}")
         memory.log_error("cycle", str(e), traceback.format_exc())
         notifier.on_error(str(e))
+    finally:
+        # Liveness heartbeat in `finally`: a HANDLED sub-step error must NOT
+        # suppress the signal. It means "the cycle thread completed a pass" —
+        # only a true hang (incident 2026-07-22) stops it, which is exactly
+        # what the watchdog and /api/health need to detect.
+        stamp_cycle_heartbeat()
 
 
 def run_cycle():
