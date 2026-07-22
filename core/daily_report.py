@@ -289,6 +289,9 @@ def render_markdown(report):
         f"**All-time** {s['total_pnl_pct']:+.2f}%",
         f"**Closed trades** {s['trades_closed']}  |  **Win rate** {s['win_rate']:.0f}%  |  "
         f"**Realized** ${s['pnl_closed']:+,.2f}  |  **Open positions** {s['open_positions']}",
+        f"**Net expectancy/trade** ${s.get('net_expectancy_usd', 0):+.2f} today  |  "
+        f"${s.get('net_expectancy_all_usd', 0):+.2f} all-time "
+        f"(n={s.get('net_expectancy_all_n', 0)}) — positive is the edge bar",
         "",
         "## Trades",
     ]
@@ -399,6 +402,8 @@ def render_telegram(report):
         f"{s['total_pnl_pct']:+.2f}% all-time)",
         f"Trades {s['trades_closed']} | WR {s['win_rate']:.0f}% | "
         f"P&L ${s['pnl_closed']:+,.2f} | Open {s['open_positions']}",
+        f"Net exp/trade ${s.get('net_expectancy_usd', 0):+.2f} today, "
+        f"${s.get('net_expectancy_all_usd', 0):+.2f} all-time (n={s.get('net_expectancy_all_n', 0)})",
     ]
     day = report["strategies"]["day"]
     if day:

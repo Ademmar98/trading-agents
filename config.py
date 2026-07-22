@@ -381,6 +381,21 @@ else:
 
 TRADING_INTERVAL_MINUTES = int(os.getenv("TRADING_INTERVAL_MINUTES", "1"))
 
+# ── Cycle liveness (incident 2026-07-22: firm froze 10.5h, silently) ──
+# The analyst's parallel scan waited on as_completed() with no timeout; one
+# hung network read froze the whole cycle thread — no trades, no snapshots,
+# no daily report, and no alert because the health monitor runs INSIDE the
+# frozen loop. Three guards now exist:
+#   1. ANALYST_SCAN_TIMEOUT_S bounds the scan; stragglers are skipped.
+#   2. maintenance stamps a heartbeat; /api/health computes cycle age LIVE
+#      (webserver thread) so a stall is visible even while the loop is stuck.
+#   3. A watchdog thread alerts via Telegram when the cycle stalls, and (if
+#      CYCLE_WATCHDOG_EXIT_MIN > 0 and systemd Restart=always is configured)
+#      exits the process so systemd revives it — self-healing.
+ANALYST_SCAN_TIMEOUT_S = int(os.getenv("ANALYST_SCAN_TIMEOUT_S", "300"))
+CYCLE_STALL_AFTER_MIN = int(os.getenv("CYCLE_STALL_AFTER_MIN", "15"))
+CYCLE_WATCHDOG_EXIT_MIN = int(os.getenv("CYCLE_WATCHDOG_EXIT_MIN", "0"))
+
 # ── Multi-agent desk (asyncio actor runtime) ──
 # When on, agents run concurrently on a message bus and every trade goes
 # through a deliberation (propose → review → counter/veto → verdict).

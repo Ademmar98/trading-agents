@@ -5,6 +5,7 @@ from config import (
     WATCHED_SYMBOLS, TRADING_TIMEFRAME, BACKTEST_BARS, SCALP_15M_ENABLED,
     SCALP_TIMEFRAMES, BUY_ONLY, MAX_TP_PCT, MACRO_BELLWETHERS,
     SWING_ENABLED, SWING_SCAN_INTERVAL_MIN, CLASSIC_STRATEGIES_ENABLED,
+    ANALYST_SCAN_TIMEOUT_S,
 )
 from agents.base_agent import BaseAgent
 from core.market import MarketData
@@ -196,9 +197,19 @@ class ResearchAnalyst(BaseAgent):
                 self.log(f"Error analyzing {symbol}: {e}")
                 return symbol, None, [], None, None, [], None, {}, None
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-            futures = {executor.submit(analyze_symbol, sym): sym for sym in symbols}
-            for future in concurrent.futures.as_completed(futures):
+        # Bounded fan-out (incident 2026-07-22): as_completed with NO timeout
+        # froze the whole firm for 10.5h when one worker hung on a network
+        # read. The scan now has a hard deadline; whatever finished in time is
+        # used, stragglers are cancelled, and the executor is shut down
+        # WITHOUT waiting (a hung worker must never block the cycle again —
+        # its thread leaks until the socket dies, which is the lesser evil).
+        executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=10, thread_name_prefix="analyst-scan")
+        futures = {executor.submit(analyze_symbol, sym): sym for sym in symbols}
+        done_iter = concurrent.futures.as_completed(
+            futures, timeout=ANALYST_SCAN_TIMEOUT_S)
+        try:
+            for future in done_iter:
                 result = future.result()
                 (sym, analysis, signals, mtf_signal, scalping_signal,
                  scalp_sigs, regime, indicators, swing_sig) = result
@@ -285,6 +296,17 @@ class ResearchAnalyst(BaseAgent):
                             "atr": ssig["atr"],
                         },
                     })
+        except concurrent.futures.TimeoutError:
+            stuck = sorted(s for f, s in futures.items() if not f.done())
+            self.log(f"Scan deadline {ANALYST_SCAN_TIMEOUT_S}s hit — proceeding "
+                     f"with {len(analyses)} symbols, skipped {len(stuck)}: "
+                     f"{', '.join(stuck[:6])}")
+            self.memory.log_error(
+                self.name, f"scan timeout: {len(stuck)} symbols hung", "")
+        finally:
+            for f in futures:
+                f.cancel()
+            executor.shutdown(wait=False, cancel_futures=True)
 
         # Swing desk: fresh scan results get cached; between scans the cached
         # setups keep flowing into the pipeline (daily bars move slowly).

@@ -278,8 +278,28 @@ def api_risk():
 
 @app.get("/api/health")
 def api_health():
-    health_data = memory.read("reports", "health")
-    return health_data or {}
+    # The stored health report is written by an agent INSIDE the cycle thread,
+    # so it goes stale during a freeze (incident 2026-07-22: it kept reporting
+    # "ok" through a 10.5h stall). Overlay a LIVE cycle-age check computed here
+    # in the webserver thread, which keeps running even when the cycle hangs.
+    health_data = dict(memory.read("reports", "health") or {})
+    try:
+        from core.equity import cycle_age_seconds
+        from config import CYCLE_STALL_AFTER_MIN, TRADING_INTERVAL_MINUTES
+        age = cycle_age_seconds()
+        threshold = max(CYCLE_STALL_AFTER_MIN * 60, 3 * TRADING_INTERVAL_MINUTES * 60)
+        health_data["cycle_age_s"] = round(age, 0) if age is not None else None
+        stalled = age is not None and age > threshold
+        health_data["cycle_stalled"] = stalled
+        if stalled:
+            health_data["status"] = "stalled"
+            health_data["halted"] = True
+            health_data.setdefault("issues", [])
+            health_data["issues"] = list(health_data.get("issues", [])) + [
+                f"cycle frozen — no completed cycle for {int(age // 60)} min"]
+    except Exception:
+        pass
+    return health_data
 
 
 @app.get("/api/sentiment")

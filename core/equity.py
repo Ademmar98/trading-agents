@@ -65,6 +65,15 @@ def build_daily_summary(date_str):
     )
     end = end_row["equity"] if end_row else None
     day_pnl_pct = ((end - start) / start * 100) if start and end else 0.0
+    # Net expectancy per trade — the "are we profitable-shaped yet?" number.
+    # A signal with no edge nets ≈ -(round-trip cost) per trade; positive is
+    # the bar. Computed for the day and all-time so the trend is visible.
+    day_exp = (sum(pnls) / len(pnls)) if pnls else 0.0
+    all_rows = fetchall("SELECT SUM(pnl) AS pnl FROM trades "
+                        "GROUP BY COALESCE(position_id, id)")
+    all_pnls = [r["pnl"] for r in all_rows if r["pnl"] is not None]
+    all_exp = (sum(all_pnls) / len(all_pnls)) if all_pnls else 0.0
+    all_n = len(all_pnls)
     return {
         "date": date_str,
         "equity": round(p.equity, 2),
@@ -73,6 +82,9 @@ def build_daily_summary(date_str):
         "trades_closed": len(pnls),
         "pnl_closed": round(sum(pnls), 2),
         "win_rate": round(wins / len(pnls) * 100, 0) if pnls else 0,
+        "net_expectancy_usd": round(day_exp, 2),
+        "net_expectancy_all_usd": round(all_exp, 2),
+        "net_expectancy_all_n": all_n,
         "open_positions": len(p.positions),
         "cash": round(p.cash, 2),
     }
@@ -113,6 +125,10 @@ def pop_completed_day():
 
     The first call ever only arms the marker; afterwards each day rollover
     returns the previous day's date a single time.
+
+    NOTE: advances the marker immediately — if the caller then fails to
+    generate the report, that day is lost. Prefer peek_completed_day() +
+    mark_day_reported() for crash-safe generation.
     """
     today = _utc_today()
     last = get_meta("last_daily_summary")
@@ -120,3 +136,40 @@ def pop_completed_day():
         return None
     set_meta("last_daily_summary", today)
     return last  # None on the very first run, else the completed day
+
+
+def peek_completed_day():
+    """Crash-safe variant: return the completed day WITHOUT advancing the
+    marker. The caller generates the report and only then calls
+    mark_day_reported() — a failed generation retries next cycle instead of
+    silently losing the day. First call ever arms the marker and returns None."""
+    today = _utc_today()
+    last = get_meta("last_daily_summary")
+    if last is None:
+        set_meta("last_daily_summary", today)   # arm on first run
+        return None
+    if last == today:
+        return None
+    return last
+
+
+def mark_day_reported():
+    """Advance the day marker after a SUCCESSFUL report generation."""
+    set_meta("last_daily_summary", _utc_today())
+
+
+def stamp_cycle_heartbeat():
+    """Record that a maintenance cycle completed — the liveness signal the
+    watchdog and /api/health check from OUTSIDE the cycle thread."""
+    set_meta("last_cycle_at", str(datetime.now(timezone.utc).timestamp()))
+
+
+def cycle_age_seconds():
+    """Seconds since the last completed maintenance cycle (None if never)."""
+    raw = get_meta("last_cycle_at")
+    if not raw:
+        return None
+    try:
+        return max(0.0, datetime.now(timezone.utc).timestamp() - float(raw))
+    except (TypeError, ValueError):
+        return None

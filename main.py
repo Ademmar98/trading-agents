@@ -27,7 +27,10 @@ from core.analytics import get_analytics, get_strategy_stats
 from core.webserver import start_webserver, get_market_prices
 from core.dashboard import make_layout
 from core.backtester import run_all_backtests, get_backtest_results, backtest_symbol
-from core.equity import snapshot_equity, pop_completed_day, check_goals
+from core.equity import (
+    snapshot_equity, peek_completed_day, mark_day_reported,
+    stamp_cycle_heartbeat, cycle_age_seconds, check_goals,
+)
 from core.reconcile import reconcile_with_exchange
 from agents.orchestrator import Orchestrator
 from agents.analyst import ResearchAnalyst
@@ -280,16 +283,22 @@ def maintenance_cycle():
             check_goals(notifier)
         except Exception as e:
             memory.log("system", f"Goal check warning: {e}")
-        completed_day = pop_completed_day()
+        completed_day = peek_completed_day()
         if completed_day:
             # Full end-of-day report: strategies, trades, agent performance,
             # errors/delays/missing data, and a post-mortem for every loss.
             # Saved to data/daily_reports/, summary delivered via Telegram.
+            # Crash-safe: the day marker advances only on SUCCESS, so a failed
+            # generation retries next cycle instead of losing the day.
             from core.daily_report import generate_daily_report
-            generate_daily_report(completed_day, notifier=notifier)
+            if generate_daily_report(completed_day, notifier=notifier):
+                mark_day_reported()
         if _cycle_count % 30 == 0:
             notifier.portfolio_snapshot(pos_mgr.get_positions_summary())
         sync_position_stores()
+        # Liveness heartbeat — checked from OUTSIDE this thread by the
+        # watchdog and /api/health (incident 2026-07-22: silent 10.5h stall).
+        stamp_cycle_heartbeat()
     except Exception as e:
         memory.log("system", f"Cycle error: {e}")
         memory.log_error("cycle", str(e), traceback.format_exc())
@@ -501,6 +510,44 @@ def main():
 
     thread = threading.Thread(target=cycle_loop, daemon=True)
     thread.start()
+
+    # ── Cycle watchdog (incident 2026-07-22: silent 10.5h stall) ──
+    # Lives OUTSIDE the cycle thread. Alerts once per stall episode via
+    # Telegram + error log; if CYCLE_WATCHDOG_EXIT_MIN > 0, exits the process
+    # after that many stalled minutes so systemd (Restart=always) revives it.
+    def watchdog_loop():
+        from config import CYCLE_STALL_AFTER_MIN, CYCLE_WATCHDOG_EXIT_MIN
+        stall_threshold = max(CYCLE_STALL_AFTER_MIN * 60,
+                              3 * TRADING_INTERVAL_MINUTES * 60)
+        alerted = False
+        while True:
+            time.sleep(60)
+            try:
+                age = cycle_age_seconds()
+                if age is None:
+                    continue
+                if age > stall_threshold:
+                    if not alerted:
+                        alerted = True
+                        msg = (f"CYCLE STALLED: no completed maintenance cycle for "
+                               f"{int(age // 60)} min (threshold {stall_threshold // 60:.0f}m). "
+                               "Trading, snapshots and reports are frozen.")
+                        memory.log_error("watchdog", msg, "")
+                        notifier.on_error(msg)
+                    if (CYCLE_WATCHDOG_EXIT_MIN > 0
+                            and age > CYCLE_WATCHDOG_EXIT_MIN * 60):
+                        memory.log_error(
+                            "watchdog",
+                            f"stall > {CYCLE_WATCHDOG_EXIT_MIN}m — exiting for "
+                            "systemd restart", "")
+                        import os as _os
+                        _os._exit(43)
+                else:
+                    alerted = False
+            except Exception:
+                pass   # the watchdog itself must never die
+
+    threading.Thread(target=watchdog_loop, daemon=True, name="cycle-watchdog").start()
 
     if not MULTI_AGENT_MODE:
         # The desk runs its own optimizer agent; only legacy mode needs this loop.
