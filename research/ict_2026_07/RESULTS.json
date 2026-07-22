@@ -1,0 +1,411 @@
+{
+ "config": {
+  "rt_cost": 0.003,
+  "usd": 1000.0,
+  "params": {
+   "SWING_LB": 20,
+   "MSS_HI_LB": 6,
+   "MSS_WIN": 8,
+   "FILL_WIN": 15
+  }
+ },
+ "tf": {
+  "15Min": {
+   "overall": {
+    "trades": 756,
+    "win_rate": 27.6,
+    "total_pnl": -2454.73,
+    "avg_pnl": -3.247,
+    "pf": 0.33,
+    "maxdd_usd": 2457.8,
+    "maxdd_pct": 247.3,
+    "max_consec_losses": 16
+   },
+   "breaker_skips": 0,
+   "by_pair": {
+    "BTC": {
+     "trades": 45,
+     "win_rate": 24.4,
+     "total_pnl": -105.71,
+     "avg_pnl": -2.349,
+     "pf": 0.23,
+     "maxdd_usd": 99.65,
+     "maxdd_pct": 10.0,
+     "max_consec_losses": 16
+    },
+    "ETH": {
+     "trades": 38,
+     "win_rate": 18.4,
+     "total_pnl": -73.02,
+     "avg_pnl": -1.922,
+     "pf": 0.62,
+     "maxdd_usd": 135.36,
+     "maxdd_pct": 12.7,
+     "max_consec_losses": 10
+    },
+    "SOL": {
+     "trades": 35,
+     "win_rate": 34.3,
+     "total_pnl": -165.83,
+     "avg_pnl": -4.738,
+     "pf": 0.15,
+     "maxdd_usd": 157.04,
+     "maxdd_pct": 15.9,
+     "max_consec_losses": 5
+    },
+    "DOGE": {
+     "trades": 28,
+     "win_rate": 32.1,
+     "total_pnl": -40.81,
+     "avg_pnl": -1.458,
+     "pf": 0.63,
+     "maxdd_usd": 85.9,
+     "maxdd_pct": 8.4,
+     "max_consec_losses": 8
+    },
+    "AVAX": {
+     "trades": 53,
+     "win_rate": 24.5,
+     "total_pnl": -212.44,
+     "avg_pnl": -4.008,
+     "pf": 0.27,
+     "maxdd_usd": 217.09,
+     "maxdd_pct": 21.6,
+     "max_consec_losses": 8
+    },
+    "LINK": {
+     "trades": 48,
+     "win_rate": 25.0,
+     "total_pnl": -157.71,
+     "avg_pnl": -3.286,
+     "pf": 0.28,
+     "maxdd_usd": 152.44,
+     "maxdd_pct": 15.3,
+     "max_consec_losses": 9
+    },
+    "LTC": {
+     "trades": 46,
+     "win_rate": 30.4,
+     "total_pnl": -102.02,
+     "avg_pnl": -2.218,
+     "pf": 0.37,
+     "maxdd_usd": 103.86,
+     "maxdd_pct": 10.4,
+     "max_consec_losses": 8
+    },
+    "BCH": {
+     "trades": 42,
+     "win_rate": 21.4,
+     "total_pnl": -166.88,
+     "avg_pnl": -3.973,
+     "pf": 0.25,
+     "maxdd_usd": 177.77,
+     "maxdd_pct": 17.6,
+     "max_consec_losses": 15
+    },
+    "UNI": {
+     "trades": 42,
+     "win_rate": 26.2,
+     "total_pnl": -108.81,
+     "avg_pnl": -2.591,
+     "pf": 0.32,
+     "maxdd_usd": 112.5,
+     "maxdd_pct": 11.4,
+     "max_consec_losses": 8
+    },
+    "MATIC": {
+     "trades": 6,
+     "win_rate": 16.7,
+     "total_pnl": -29.83,
+     "avg_pnl": -4.971,
+     "pf": 0.1,
+     "maxdd_usd": 20.96,
+     "maxdd_pct": 2.1,
+     "max_consec_losses": 4
+    },
+    "NEAR": {
+     "trades": 5,
+     "win_rate": 60.0,
+     "total_pnl": -9.04,
+     "avg_pnl": -1.809,
+     "pf": 0.66,
+     "maxdd_usd": 18.06,
+     "maxdd_pct": 1.8,
+     "max_consec_losses": 1
+    },
+    "TRX": {
+     "trades": 2,
+     "win_rate": 0.0,
+     "total_pnl": -3.16,
+     "avg_pnl": -1.579,
+     "pf": 0.0,
+     "maxdd_usd": 1.9,
+     "maxdd_pct": 0.2,
+     "max_consec_losses": 2
+    },
+    "ALGO": {
+     "trades": 5,
+     "win_rate": 20.0,
+     "total_pnl": -33.64,
+     "avg_pnl": -6.729,
+     "pf": 0.35,
+     "maxdd_usd": 33.58,
+     "maxdd_pct": 3.4,
+     "max_consec_losses": 3
+    },
+    "GRT": {
+     "trades": 49,
+     "win_rate": 20.4,
+     "total_pnl": -185.25,
+     "avg_pnl": -3.781,
+     "pf": 0.33,
+     "maxdd_usd": 204.34,
+     "maxdd_pct": 20.1,
+     "max_consec_losses": 14
+    },
+    "BAT": {
+     "trades": 39,
+     "win_rate": 23.1,
+     "total_pnl": -177.86,
+     "avg_pnl": -4.56,
+     "pf": 0.14,
+     "maxdd_usd": 168.48,
+     "maxdd_pct": 17.0,
+     "max_consec_losses": 7
+    },
+    "XRP": {
+     "trades": 24,
+     "win_rate": 25.0,
+     "total_pnl": -61.85,
+     "avg_pnl": -2.577,
+     "pf": 0.41,
+     "maxdd_usd": 60.4,
+     "maxdd_pct": 6.0,
+     "max_consec_losses": 7
+    },
+    "DOT": {
+     "trades": 26,
+     "win_rate": 23.1,
+     "total_pnl": -106.44,
+     "avg_pnl": -4.094,
+     "pf": 0.21,
+     "maxdd_usd": 109.96,
+     "maxdd_pct": 11.0,
+     "max_consec_losses": 7
+    },
+    "CRV": {
+     "trades": 49,
+     "win_rate": 26.5,
+     "total_pnl": -216.16,
+     "avg_pnl": -4.411,
+     "pf": 0.22,
+     "maxdd_usd": 229.65,
+     "maxdd_pct": 22.7,
+     "max_consec_losses": 13
+    },
+    "AAVE": {
+     "trades": 64,
+     "win_rate": 35.9,
+     "total_pnl": -231.15,
+     "avg_pnl": -3.612,
+     "pf": 0.36,
+     "maxdd_usd": 242.17,
+     "maxdd_pct": 24.1,
+     "max_consec_losses": 9
+    },
+    "MKR": {
+     "trades": 37,
+     "win_rate": 24.3,
+     "total_pnl": -119.75,
+     "avg_pnl": -3.236,
+     "pf": 0.21,
+     "maxdd_usd": 99.88,
+     "maxdd_pct": 10.2,
+     "max_consec_losses": 7
+    },
+    "YFI": {
+     "trades": 34,
+     "win_rate": 35.3,
+     "total_pnl": -64.64,
+     "avg_pnl": -1.901,
+     "pf": 0.61,
+     "maxdd_usd": 84.13,
+     "maxdd_pct": 8.3,
+     "max_consec_losses": 9
+    },
+    "SUSHI": {
+     "trades": 39,
+     "win_rate": 46.2,
+     "total_pnl": -82.72,
+     "avg_pnl": -2.121,
+     "pf": 0.51,
+     "maxdd_usd": 101.38,
+     "maxdd_pct": 10.0,
+     "max_consec_losses": 5
+    }
+   },
+   "by_killzone": {
+    "London": {
+     "trades": 297,
+     "win_rate": 20.9,
+     "total_pnl": -835.98,
+     "avg_pnl": -2.815,
+     "pf": 0.33,
+     "maxdd_usd": 843.31,
+     "maxdd_pct": 84.1,
+     "max_consec_losses": 19
+    },
+    "NY_AM": {
+     "trades": 263,
+     "win_rate": 28.9,
+     "total_pnl": -1024.38,
+     "avg_pnl": -3.895,
+     "pf": 0.21,
+     "maxdd_usd": 1027.76,
+     "maxdd_pct": 103.3,
+     "max_consec_losses": 13
+    },
+    "NY_PM": {
+     "trades": 196,
+     "win_rate": 36.2,
+     "total_pnl": -594.37,
+     "avg_pnl": -3.033,
+     "pf": 0.47,
+     "maxdd_usd": 614.57,
+     "maxdd_pct": 60.6,
+     "max_consec_losses": 7
+    }
+   },
+   "sample_trades": [
+    {
+     "kz": 2,
+     "score": "High",
+     "conf": 3,
+     "used_fvg": true,
+     "entry": 7992.68,
+     "sl": 7846.065005,
+     "tp1": 8139.294995,
+     "tp2": 8475.48,
+     "R_pct": 1.834365882282287,
+     "pnl": 6.17182941141148,
+     "res": "TP1+BE",
+     "vwap_ok": true,
+     "absorb": true,
+     "pair": "YFI"
+    },
+    {
+     "kz": 2,
+     "score": "High",
+     "conf": 3,
+     "used_fvg": true,
+     "entry": 0.8645150100000001,
+     "sl": 0.85979938525,
+     "tp1": 0.8692306347500002,
+     "tp2": 0.87477123,
+     "R_pct": 0.545464762954213,
+     "pnl": -0.27267618522896786,
+     "res": "TP1+BE",
+     "vwap_ok": true,
+     "absorb": true,
+     "pair": "MATIC"
+    },
+    {
+     "kz": 3,
+     "score": "High",
+     "conf": 3,
+     "used_fvg": true,
+     "entry": 104.0,
+     "sl": 103.44825,
+     "tp1": 104.55175,
+     "tp2": 106.75874999999999,
+     "R_pct": 0.5305288461538447,
+     "pnl": -0.34735576923072564,
+     "res": "TP1+BE",
+     "vwap_ok": true,
+     "absorb": true,
+     "pair": "AAVE"
+    },
+    {
+     "kz": 2,
+     "score": "High",
+     "conf": 3,
+     "used_fvg": true,
+     "entry": 67883.95833333326,
+     "sl": 67568.15707556321,
+     "tp1": 68199.7595911033,
+     "tp2": 68537.966,
+     "R_pct": 0.4652074886666914,
+     "pnl": -0.6739625566665159,
+     "res": "TP1+BE",
+     "vwap_ok": true,
+     "absorb": true,
+     "pair": "BTC"
+    },
+    {
+     "kz": 2,
+     "score": "High",
+     "conf": 3,
+     "used_fvg": true,
+     "entry": 1946.005,
+     "sl": 1926.8860750000001,
+     "tp1": 1965.123925,
+     "tp2": 1994.9,
+     "R_pct": 0.9824704972494926,
+     "pnl": -12.82470497249488,
+     "res": "SL",
+     "vwap_ok": true,
+     "absorb": true,
+     "pair": "ETH"
+    },
+    {
+     "kz": 2,
+     "score": "High",
+     "conf": 3,
+     "used_fvg": true,
+     "entry": 1946.005,
+     "sl": 1926.8860750000001,
+     "tp1": 1965.123925,
+     "tp2": 1994.9,
+     "R_pct": 0.9824704972494926,
+     "pnl": -12.82470497249488,
+     "res": "SL",
+     "vwap_ok": true,
+     "absorb": true,
+     "pair": "ETH"
+    },
+    {
+     "kz": 2,
+     "score": "High",
+     "conf": 3,
+     "used_fvg": true,
+     "entry": 67883.95833333326,
+     "sl": 67568.15707556321,
+     "tp1": 68199.7595911033,
+     "tp2": 68537.966,
+     "R_pct": 0.4652074886666914,
+     "pnl": -0.6739625566665159,
+     "res": "TP1+BE",
+     "vwap_ok": true,
+     "absorb": true,
+     "pair": "BTC"
+    },
+    {
+     "kz": 3,
+     "score": "High",
+     "conf": 3,
+     "used_fvg": true,
+     "entry": 104.0,
+     "sl": 103.44825,
+     "tp1": 104.55175,
+     "tp2": 106.75874999999999,
+     "R_pct": 0.5305288461538447,
+     "pnl": -0.34735576923072564,
+     "res": "TP1+BE",
+     "vwap_ok": true,
+     "absorb": true,
+     "pair": "AAVE"
+    }
+   ]
+  }
+ }
+}
