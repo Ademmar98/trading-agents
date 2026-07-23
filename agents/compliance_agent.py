@@ -5,9 +5,10 @@ from config import (
     STREAK_LOSS_HALT_PCT, MAX_TRADES_PER_DAY, MAX_TRADES_PER_HOUR,
     MAX_OPEN_RISK_PCT, MAX_POSITIONS_PER_CLUSTER, MAX_GROSS_LEVERAGE,
     MAX_GROUP_POSITIONS, GROUP_OVERRIDE_CONF, MACRO_DIP_OVERRIDE_CONF,
-    SCOUT_RISK_PER_TRADE_PCT,
+    SCOUT_RISK_PER_TRADE_PCT, SYMBOL_REENTRY_COOLDOWN_MIN, MAX_SYMBOL_DAILY_LOSS_USD,
 )
-from core.risk import count_group_positions, macro_dip_alert
+from core.risk import (count_group_positions, macro_dip_alert,
+                       recent_stopout_cooldown, symbol_daily_loss)
 from agents.base_agent import BaseAgent
 from core.portfolio import load_portfolio
 from core.positions import PositionManager
@@ -223,6 +224,20 @@ class ComplianceAgent(BaseAgent):
                 reasons.append("Invalid price or quantity")
             if self._pos_mgr.has_position(opp.get("symbol", "")):
                 reasons.append("Position already open")
+            # Sequential-concentration guards (2026-07-23 meta-analysis): stop one
+            # name being machine-gunned into 100%+ of the loss (13x UNI).
+            _sym = opp.get("symbol", "")
+            if SYMBOL_REENTRY_COOLDOWN_MIN > 0 and recent_stopout_cooldown(
+                    _sym, SYMBOL_REENTRY_COOLDOWN_MIN):
+                reasons.append(
+                    f"Re-entry cooldown: {_sym} stopped out within "
+                    f"{SYMBOL_REENTRY_COOLDOWN_MIN}m")
+            if MAX_SYMBOL_DAILY_LOSS_USD > 0:
+                _sl = symbol_daily_loss(_sym)
+                if _sl >= MAX_SYMBOL_DAILY_LOSS_USD:
+                    reasons.append(
+                        f"{_sym} daily loss ${_sl:.0f} >= ${MAX_SYMBOL_DAILY_LOSS_USD:.0f} "
+                        "cap — name paused for the day")
             if reasons:
                 rejected.append({**opp, "compliance_reasons": reasons})
             else:

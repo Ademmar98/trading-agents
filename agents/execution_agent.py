@@ -231,6 +231,14 @@ class ExecutionAgent(BaseAgent):
                     f"(qty {qty:g} x ${abs(tp_price - entry_price):g} move)"]})
                 continue
 
+            # Realized-risk audit (2026-07-23): log the ACTUAL per-trade risk so
+            # constant-1R discipline is verifiable live — the meta-analysis found
+            # positive R but negative dollars whenever this drifted between trades.
+            _risk_usd = qty * abs(entry_price - sl_price) if (sl_price and entry_price) else 0.0
+            _risk_pct = (_risk_usd / portfolio.equity * 100) if portfolio.equity > 0 else 0.0
+            self.log(f"sized {symbol}: risk ${_risk_usd:.2f} ({_risk_pct:.2f}% equity), "
+                     f"qty {qty:g}, notional ${qty * entry_price:.0f}")
+
             action = opp.get("action", "BUY")
             plan_id = f"plan_{symbol}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S%f')}"
             rr = round(tp_pct / sl_pct, 2) if sl_pct > 0 else 0

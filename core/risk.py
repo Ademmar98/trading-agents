@@ -66,3 +66,49 @@ def vol_aware_stop_loss(atr_pct, sl_mult):
     if not atr_pct or atr_pct <= 0:
         return None
     return max(MIN_SL_PCT, min(atr_pct * sl_mult, MAX_SL_PCT))
+
+
+# ── Per-symbol concentration guards (post-mortem 2026-07-23) ──
+# The meta-analysis of 77 live trades found risk-normalised expectancy was
+# POSITIVE (+0.63R) yet dollars were NEGATIVE (-$8.59/trade): one alt (UNI)
+# was traded 13 times and became 100%+ of the net loss. Per-trade risk was
+# already capped; the hole was SEQUENTIAL concentration — re-entering the same
+# losing name over and over. These two gates close it.
+
+def recent_stopout_cooldown(symbol, cooldown_min, now=None):
+    """True when `symbol` had a losing STOP-OUT close within the last
+    cooldown_min minutes — blocks the machine-gun re-entry that let one name
+    dominate the book. Only stop-driven losses trigger it (a winner or a
+    take-profit resets the clock). cooldown_min <= 0 disables the gate."""
+    if not cooldown_min or cooldown_min <= 0:
+        return False
+    from core.database import fetchone
+    row = fetchone("SELECT pnl, reason, closed_at FROM trades "
+                   "WHERE symbol = ? ORDER BY id DESC LIMIT 1", [symbol])
+    if not row or not row["closed_at"]:
+        return False
+    if (row["pnl"] or 0) > 0:
+        return False                                   # last trade won
+    if "stop" not in (row["reason"] or "").lower():
+        return False                                   # only after a stop-out
+    try:
+        raw = str(row["closed_at"]).replace(" ", "T").replace("Z", "+00:00")
+        closed = datetime.fromisoformat(raw)
+        if closed.tzinfo is None:
+            closed = closed.replace(tzinfo=timezone.utc)
+    except (ValueError, AttributeError):
+        return False
+    age_min = ((now or datetime.now(timezone.utc)) - closed).total_seconds() / 60.0
+    return 0 <= age_min < cooldown_min
+
+
+def symbol_daily_loss(symbol, day=None):
+    """Realized loss (returned as a POSITIVE dollar figure) for `symbol` on the
+    given UTC day (default today). 0.0 if the symbol is net-flat or profitable.
+    Used to pause a single name once it has bled its daily budget."""
+    from core.database import fetchone
+    day = day or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    row = fetchone("SELECT SUM(pnl) AS pnl FROM trades "
+                   "WHERE symbol = ? AND date(closed_at) = ?", [symbol, day])
+    pnl = (row["pnl"] if row and row["pnl"] is not None else 0.0) or 0.0
+    return -pnl if pnl < 0 else 0.0

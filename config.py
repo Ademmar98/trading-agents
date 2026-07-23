@@ -241,6 +241,14 @@ DAILY_LOSS_LIMIT_PCT = float(os.getenv("DAILY_LOSS_LIMIT_PCT", "3"))
 # book 3% is $300; the USD cap keeps the same bite if TRADING_CAPITAL is
 # raised for the cycle, so a bigger bankroll can't lose more per day.
 MAX_DAILY_LOSS_USD = float(os.getenv("MAX_DAILY_LOSS_USD", "300"))
+# ── Per-symbol concentration guards (2026-07-23 meta-analysis) ──
+# One alt traded 13x was 100%+ of the net loss. Cooldown blocks re-entry for N
+# minutes after a stop-out (0 = off). Per-symbol daily-loss cap pauses a single
+# name once it bleeds this many $ in a UTC day (0 = off; scale to the book, e.g.
+# 1% => $100 on a $10k account). Both default OFF so no behaviour change until
+# set in .env — the VPS enables them for the live cycle.
+SYMBOL_REENTRY_COOLDOWN_MIN = int(os.getenv("SYMBOL_REENTRY_COOLDOWN_MIN", "0"))
+MAX_SYMBOL_DAILY_LOSS_USD = float(os.getenv("MAX_SYMBOL_DAILY_LOSS_USD", "0"))
 # Weekly loss budget (% of equity): a judged cycle must survive to its
 # verdict — past -5% on the week the firm stops entering and lets the open
 # book play out rather than bleeding the sample to zero.
