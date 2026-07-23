@@ -1,0 +1,498 @@
+{
+ "overall": {
+  "n": 77,
+  "win_rate": 51.9,
+  "avg_R": 0.626,
+  "n_R": 77,
+  "exp_usd": -8.59,
+  "sum_usd": -661.72,
+  "maxdd_usd": -770.09
+ },
+ "by_asset": {
+  "LINK": {
+   "n": 2,
+   "win_rate": 100.0,
+   "avg_R": 0.665,
+   "n_R": 2,
+   "exp_usd": 51.94,
+   "sum_usd": 103.88,
+   "maxdd_usd": 0
+  },
+  "SOL": {
+   "n": 4,
+   "win_rate": 75.0,
+   "avg_R": 1.875,
+   "n_R": 4,
+   "exp_usd": 11.01,
+   "sum_usd": 44.02,
+   "maxdd_usd": -10.76
+  },
+  "AAVE": {
+   "n": 10,
+   "win_rate": 70.0,
+   "avg_R": 2.582,
+   "n_R": 10,
+   "exp_usd": 9.72,
+   "sum_usd": 97.2,
+   "maxdd_usd": -24.11
+  },
+  "ETH": {
+   "n": 11,
+   "win_rate": 63.6,
+   "avg_R": 0.015,
+   "n_R": 11,
+   "exp_usd": 8.71,
+   "sum_usd": 95.79,
+   "maxdd_usd": -9.08
+  },
+  "AVAX": {
+   "n": 3,
+   "win_rate": 33.3,
+   "avg_R": 0.597,
+   "n_R": 3,
+   "exp_usd": 5.88,
+   "sum_usd": 17.65,
+   "maxdd_usd": -19.71
+  },
+  "AMZN": {
+   "n": 1,
+   "win_rate": 100.0,
+   "avg_R": 0.843,
+   "n_R": 1,
+   "exp_usd": 4.81,
+   "sum_usd": 4.81,
+   "maxdd_usd": 0
+  },
+  "ADA": {
+   "n": 3,
+   "win_rate": 66.7,
+   "avg_R": 1.224,
+   "n_R": 3,
+   "exp_usd": 1.98,
+   "sum_usd": 5.95,
+   "maxdd_usd": -34.53
+  },
+  "BTC": {
+   "n": 7,
+   "win_rate": 85.7,
+   "avg_R": 1.667,
+   "n_R": 7,
+   "exp_usd": 1.6,
+   "sum_usd": 11.22,
+   "maxdd_usd": -2.49
+  },
+  "XAGUSD": {
+   "n": 1,
+   "win_rate": 100.0,
+   "avg_R": 0.581,
+   "n_R": 1,
+   "exp_usd": 0.92,
+   "sum_usd": 0.92,
+   "maxdd_usd": 0
+  },
+  "AAPL": {
+   "n": 1,
+   "win_rate": 0.0,
+   "avg_R": -0.048,
+   "n_R": 1,
+   "exp_usd": -0.26,
+   "sum_usd": -0.26,
+   "maxdd_usd": -0.26
+  },
+  "XRP": {
+   "n": 2,
+   "win_rate": 50.0,
+   "avg_R": -0.091,
+   "n_R": 2,
+   "exp_usd": -0.44,
+   "sum_usd": -0.88,
+   "maxdd_usd": -2.22
+  },
+  "META": {
+   "n": 1,
+   "win_rate": 0.0,
+   "avg_R": -0.322,
+   "n_R": 1,
+   "exp_usd": -0.85,
+   "sum_usd": -0.85,
+   "maxdd_usd": -0.85
+  },
+  "BCH": {
+   "n": 4,
+   "win_rate": 50.0,
+   "avg_R": -0.26,
+   "n_R": 4,
+   "exp_usd": -2.8,
+   "sum_usd": -11.2,
+   "maxdd_usd": -13.03
+  },
+  "XAUUSD": {
+   "n": 1,
+   "win_rate": 0.0,
+   "avg_R": -1.662,
+   "n_R": 1,
+   "exp_usd": -4.25,
+   "sum_usd": -4.25,
+   "maxdd_usd": -4.25
+  },
+  "DOT": {
+   "n": 5,
+   "win_rate": 20.0,
+   "avg_R": -0.757,
+   "n_R": 5,
+   "exp_usd": -7.49,
+   "sum_usd": -37.46,
+   "maxdd_usd": -39.89
+  },
+  "DOGE": {
+   "n": 2,
+   "win_rate": 0.0,
+   "avg_R": -1.131,
+   "n_R": 2,
+   "exp_usd": -14.9,
+   "sum_usd": -29.8,
+   "maxdd_usd": -29.8
+  },
+  "LTC": {
+   "n": 4,
+   "win_rate": 25.0,
+   "avg_R": -0.658,
+   "n_R": 4,
+   "exp_usd": -25.35,
+   "sum_usd": -101.42,
+   "maxdd_usd": -101.42
+  },
+  "ATOM": {
+   "n": 2,
+   "win_rate": 0.0,
+   "avg_R": -1.369,
+   "n_R": 2,
+   "exp_usd": -33.26,
+   "sum_usd": -66.51,
+   "maxdd_usd": -66.51
+  },
+  "UNI": {
+   "n": 13,
+   "win_rate": 38.5,
+   "avg_R": 0.734,
+   "n_R": 13,
+   "exp_usd": -60.81,
+   "sum_usd": -790.53,
+   "maxdd_usd": -816.22
+  }
+ },
+ "by_session": {
+  "US": {
+   "n": 33,
+   "win_rate": 48.5,
+   "avg_R": 0.453,
+   "n_R": 33,
+   "exp_usd": 0.14,
+   "sum_usd": 4.71,
+   "maxdd_usd": -83.22
+  },
+  "Late": {
+   "n": 10,
+   "win_rate": 30.0,
+   "avg_R": -0.579,
+   "n_R": 10,
+   "exp_usd": -2.8,
+   "sum_usd": -27.95,
+   "maxdd_usd": -37.59
+  },
+  "London": {
+   "n": 17,
+   "win_rate": 88.2,
+   "avg_R": 2.759,
+   "n_R": 17,
+   "exp_usd": -14.38,
+   "sum_usd": -244.39,
+   "maxdd_usd": -340.07
+  },
+  "Asia": {
+   "n": 17,
+   "win_rate": 35.3,
+   "avg_R": -0.461,
+   "n_R": 17,
+   "exp_usd": -23.18,
+   "sum_usd": -394.09,
+   "maxdd_usd": -423.49
+  }
+ },
+ "by_regime": {
+  "ranging": {
+   "n": 38,
+   "win_rate": 55.3,
+   "avg_R": 0.371,
+   "n_R": 38,
+   "exp_usd": 3.25,
+   "sum_usd": 123.53,
+   "maxdd_usd": -160.86
+  },
+  "unknown": {
+   "n": 10,
+   "win_rate": 40.0,
+   "avg_R": 0.033,
+   "n_R": 10,
+   "exp_usd": -6.02,
+   "sum_usd": -60.19,
+   "maxdd_usd": -80.1
+  },
+  "trending": {
+   "n": 29,
+   "win_rate": 51.7,
+   "avg_R": 1.166,
+   "n_R": 29,
+   "exp_usd": -25.0,
+   "sum_usd": -725.06,
+   "maxdd_usd": -792.0
+  }
+ },
+ "by_trend": {
+  "unknown": {
+   "n": 10,
+   "win_rate": 40.0,
+   "avg_R": 0.033,
+   "n_R": 10,
+   "exp_usd": -6.02,
+   "sum_usd": -60.19,
+   "maxdd_usd": -80.1
+  },
+  "down": {
+   "n": 67,
+   "win_rate": 53.7,
+   "avg_R": 0.715,
+   "n_R": 67,
+   "exp_usd": -8.98,
+   "sum_usd": -601.53,
+   "maxdd_usd": -692.65
+  }
+ },
+ "by_vol": {
+  "low": {
+   "n": 4,
+   "win_rate": 50.0,
+   "avg_R": 1.447,
+   "n_R": 4,
+   "exp_usd": 8.08,
+   "sum_usd": 32.33,
+   "maxdd_usd": -27.96
+  },
+  "unknown": {
+   "n": 10,
+   "win_rate": 40.0,
+   "avg_R": 0.033,
+   "n_R": 10,
+   "exp_usd": -6.02,
+   "sum_usd": -60.19,
+   "maxdd_usd": -80.1
+  },
+  "high": {
+   "n": 1,
+   "win_rate": 0.0,
+   "avg_R": -1.088,
+   "n_R": 1,
+   "exp_usd": -8.13,
+   "sum_usd": -8.13,
+   "maxdd_usd": -8.13
+  },
+  "normal": {
+   "n": 62,
+   "win_rate": 54.8,
+   "avg_R": 0.697,
+   "n_R": 62,
+   "exp_usd": -10.09,
+   "sum_usd": -625.73,
+   "maxdd_usd": -724.98
+  }
+ },
+ "by_outcome": {
+  "take_profit": {
+   "n": 34,
+   "win_rate": 100.0,
+   "avg_R": 2.481,
+   "n_R": 34,
+   "exp_usd": 13.6,
+   "sum_usd": 462.53,
+   "maxdd_usd": 0
+  },
+  "other": {
+   "n": 3,
+   "win_rate": 33.3,
+   "avg_R": 0.071,
+   "n_R": 3,
+   "exp_usd": -0.06,
+   "sum_usd": -0.19,
+   "maxdd_usd": -1.11
+  },
+  "stop_loss": {
+   "n": 40,
+   "win_rate": 12.5,
+   "avg_R": -0.908,
+   "n_R": 40,
+   "exp_usd": -28.1,
+   "sum_usd": -1124.06,
+   "maxdd_usd": -1124.06
+  }
+ },
+ "regime_x_session": {
+  "trending|London": {
+   "n": 10,
+   "win_rate": 90.0,
+   "avg_R": 3.753,
+   "n_R": 10,
+   "exp_usd": -27.54,
+   "sum_usd": -275.39,
+   "maxdd_usd": -340.07
+  },
+  "ranging|London": {
+   "n": 6,
+   "win_rate": 83.3,
+   "avg_R": 1.434,
+   "n_R": 6,
+   "exp_usd": 1.68,
+   "sum_usd": 10.06,
+   "maxdd_usd": -3.59
+  },
+  "unknown|US": {
+   "n": 8,
+   "win_rate": 37.5,
+   "avg_R": 0.082,
+   "n_R": 8,
+   "exp_usd": -5.83,
+   "sum_usd": -46.6,
+   "maxdd_usd": -66.51
+  },
+  "ranging|US": {
+   "n": 18,
+   "win_rate": 50.0,
+   "avg_R": 0.45,
+   "n_R": 18,
+   "exp_usd": 1.39,
+   "sum_usd": 25.0,
+   "maxdd_usd": -65.18
+  },
+  "trending|US": {
+   "n": 7,
+   "win_rate": 57.1,
+   "avg_R": 0.887,
+   "n_R": 7,
+   "exp_usd": 3.76,
+   "sum_usd": 26.31,
+   "maxdd_usd": -18.04
+  },
+  "ranging|Late": {
+   "n": 4,
+   "win_rate": 50.0,
+   "avg_R": -0.158,
+   "n_R": 4,
+   "exp_usd": -0.29,
+   "sum_usd": -1.14,
+   "maxdd_usd": -4.03
+  },
+  "trending|Late": {
+   "n": 6,
+   "win_rate": 16.7,
+   "avg_R": -0.86,
+   "n_R": 6,
+   "exp_usd": -4.47,
+   "sum_usd": -26.81,
+   "maxdd_usd": -33.56
+  },
+  "ranging|Asia": {
+   "n": 10,
+   "win_rate": 50.0,
+   "avg_R": -0.197,
+   "n_R": 10,
+   "exp_usd": 8.96,
+   "sum_usd": 89.61,
+   "maxdd_usd": -95.68
+  },
+  "trending|Asia": {
+   "n": 6,
+   "win_rate": 16.7,
+   "avg_R": -0.795,
+   "n_R": 6,
+   "exp_usd": -74.86,
+   "sum_usd": -449.17,
+   "maxdd_usd": -478.39
+  },
+  "unknown|Asia": {
+   "n": 1,
+   "win_rate": 0.0,
+   "avg_R": -1.099,
+   "n_R": 1,
+   "exp_usd": -34.53,
+   "sum_usd": -34.53,
+   "maxdd_usd": -34.53
+  },
+  "unknown|London": {
+   "n": 1,
+   "win_rate": 100.0,
+   "avg_R": 0.772,
+   "n_R": 1,
+   "exp_usd": 20.94,
+   "sum_usd": 20.94,
+   "maxdd_usd": 0
+  }
+ },
+ "is_oos": {
+  "n_IS": 53,
+  "n_OOS": 24,
+  "top_candidates": [
+   [
+    "outcome",
+    "take_profit",
+    5.67
+   ],
+   [
+    "session",
+    "London",
+    4.98
+   ],
+   [
+    "regime",
+    "unknown",
+    2.46
+   ],
+   [
+    "trend",
+    "unknown",
+    2.46
+   ],
+   [
+    "vol",
+    "unknown",
+    2.46
+   ],
+   [
+    "asset",
+    "AAVE",
+    2.06
+   ]
+  ],
+  "best_test": {
+   "filter": "outcome=take_profit",
+   "IS": {
+    "n": 29,
+    "win_rate": 100.0,
+    "avg_R": 2.451,
+    "n_R": 29,
+    "exp_usd": 5.67,
+    "sum_usd": 164.57,
+    "maxdd_usd": 0
+   },
+   "OOS": {
+    "n": 5,
+    "win_rate": 100.0,
+    "avg_R": 2.652,
+    "n_R": 5,
+    "exp_usd": 59.59,
+    "sum_usd": 297.96,
+    "maxdd_usd": 0
+   },
+   "bootstrap_pctile": 100.0,
+   "bootstrap_p": 0.0
+  }
+ }
+}
