@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-07-24T13:09:41.712564+00:00",
+  "results": [
+    {
+      "strategy": "Funding Rate Capture",
+      "final_balance": 10143.11,
+      "total_return_pct": 1.43,
+      "annualized_return_pct": 12.55,
+      "total_funding": 143.11,
+      "total_costs": 28.5,
+      "net_profit": 143.11,
+      "num_funding_periods": 125,
+      "avg_funding_rate": 0.0121
+    },
+    {
+      "strategy": "Cross-Exchange Arb",
+      "final_balance": 10006.8,
+      "total_return_pct": 0.07,
+      "annualized_return_pct": 0.6,
+      "total_arb_trades": 0,
+      "avg_spread": 0,
+      "total_arb_profit": 0,
+      "expectancy": 0
+    },
+    {
+      "strategy": "On-Chain Alpha",
+      "final_balance": 10000,
+      "total_return_pct": 0.0,
+      "annualized_return_pct": 0.0,
+      "total_trades": 0,
+      "win_rate": 0,
+      "profit_factor": 0,
+      "total_fees": 0,
+      "expectancy": 0
+    }
+  ],
+  "winner": "Funding Rate Capture"
+}
