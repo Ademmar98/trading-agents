@@ -1,0 +1,5481 @@
+{
+  "ts": "2026-07-24T19:01:58.923123+00:00",
+  "n": 338,
+  "results": [
+    {
+      "symbol": "SYN",
+      "net_return": 249.31,
+      "total_trades": 18,
+      "wins": 13,
+      "losses": 5,
+      "win_rate": 72.2,
+      "avg_win_pct": 15.88,
+      "avg_loss_pct": -11.15,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 13
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ALLO",
+      "net_return": 185.7,
+      "total_trades": 4,
+      "wins": 3,
+      "losses": 1,
+      "win_rate": 75.0,
+      "avg_win_pct": 47.11,
+      "avg_loss_pct": -5.86,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 3,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HEI",
+      "net_return": 179.52,
+      "total_trades": 18,
+      "wins": 9,
+      "losses": 9,
+      "win_rate": 50.0,
+      "avg_win_pct": 25.1,
+      "avg_loss_pct": -9.15,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 9,
+        "EXIT_STOP_LOSS": 9
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PROM",
+      "net_return": 115.1,
+      "total_trades": 6,
+      "wins": 5,
+      "losses": 1,
+      "win_rate": 83.3,
+      "avg_win_pct": 21.05,
+      "avg_loss_pct": -13.2,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 5,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NOM",
+      "net_return": 78.58,
+      "total_trades": 7,
+      "wins": 4,
+      "losses": 3,
+      "win_rate": 57.1,
+      "avg_win_pct": 20.99,
+      "avg_loss_pct": -5.39,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 4,
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "VIC",
+      "net_return": 59.67,
+      "total_trades": 14,
+      "wins": 7,
+      "losses": 7,
+      "win_rate": 50.0,
+      "avg_win_pct": 17.28,
+      "avg_loss_pct": -8.17,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 7,
+        "EXIT_STOP_LOSS": 7
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "D",
+      "net_return": 59.26,
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 50.0,
+      "avg_win_pct": 36.32,
+      "avg_loss_pct": -7.09,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-04-20 08:00:00",
+      "data_end": "2026-06-19 00:00:00"
+    },
+    {
+      "symbol": "TNSR",
+      "net_return": 48.61,
+      "total_trades": 8,
+      "wins": 3,
+      "losses": 5,
+      "win_rate": 37.5,
+      "avg_win_pct": 32.25,
+      "avg_loss_pct": -8.5,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 3,
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RPL",
+      "net_return": 48.38,
+      "total_trades": 8,
+      "wins": 4,
+      "losses": 4,
+      "win_rate": 50.0,
+      "avg_win_pct": 18.29,
+      "avg_loss_pct": -6.19,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RESOLV",
+      "net_return": 43.97,
+      "total_trades": 7,
+      "wins": 3,
+      "losses": 4,
+      "win_rate": 42.9,
+      "avg_win_pct": 27.0,
+      "avg_loss_pct": -8.06,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 3,
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "COOKIE",
+      "net_return": 42.09,
+      "total_trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 66.7,
+      "avg_win_pct": 23.03,
+      "avg_loss_pct": -5.21,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DOLO",
+      "net_return": 41.87,
+      "total_trades": 3,
+      "wins": 3,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 12.96,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RIF",
+      "net_return": 35.03,
+      "total_trades": 18,
+      "wins": 9,
+      "losses": 9,
+      "win_rate": 50.0,
+      "avg_win_pct": 17.45,
+      "avg_loss_pct": -11.43,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9,
+        "EXIT_TAKE_PROFIT": 9
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RE",
+      "net_return": 30.36,
+      "total_trades": 24,
+      "wins": 9,
+      "losses": 15,
+      "win_rate": 37.5,
+      "avg_win_pct": 21.28,
+      "avg_loss_pct": -8.54,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 9,
+        "EXIT_STOP_LOSS": 15
+      },
+      "bars": 110,
+      "data_start": "2026-06-18 08:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ORDI",
+      "net_return": 29.63,
+      "total_trades": 1,
+      "wins": 1,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 29.81,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ONDO",
+      "net_return": 26.47,
+      "total_trades": 8,
+      "wins": 4,
+      "losses": 4,
+      "win_rate": 50.0,
+      "avg_win_pct": 13.07,
+      "avg_loss_pct": -5.94,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SXT",
+      "net_return": 25.57,
+      "total_trades": 10,
+      "wins": 3,
+      "losses": 7,
+      "win_rate": 30.0,
+      "avg_win_pct": 22.91,
+      "avg_loss_pct": -5.77,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BOME",
+      "net_return": 23.46,
+      "total_trades": 2,
+      "wins": 2,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 11.27,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NIGHT",
+      "net_return": 22.1,
+      "total_trades": 2,
+      "wins": 2,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 10.66,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "XLM",
+      "net_return": 21.33,
+      "total_trades": 11,
+      "wins": 4,
+      "losses": 7,
+      "win_rate": 36.4,
+      "avg_win_pct": 19.12,
+      "avg_loss_pct": -6.61,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 4,
+        "EXIT_STOP_LOSS": 7
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TOWNS",
+      "net_return": 20.0,
+      "total_trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 66.7,
+      "avg_win_pct": 15.03,
+      "avg_loss_pct": -8.77,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ACT",
+      "net_return": 19.1,
+      "total_trades": 7,
+      "wins": 2,
+      "losses": 5,
+      "win_rate": 28.6,
+      "avg_win_pct": 35.07,
+      "avg_loss_pct": -7.91,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TREE",
+      "net_return": 18.88,
+      "total_trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 66.7,
+      "avg_win_pct": 11.6,
+      "avg_loss_pct": -5.78,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TON",
+      "net_return": 18.24,
+      "total_trades": 7,
+      "wins": 4,
+      "losses": 3,
+      "win_rate": 57.1,
+      "avg_win_pct": 10.93,
+      "avg_loss_pct": -7.53,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 3,
+        "EXIT_FUNDING_POSITIVE": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-01 08:00:00",
+      "data_end": "2026-06-30 00:00:00"
+    },
+    {
+      "symbol": "STRK",
+      "net_return": 17.58,
+      "total_trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 66.7,
+      "avg_win_pct": 11.85,
+      "avg_loss_pct": -5.59,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "EPIC",
+      "net_return": 17.57,
+      "total_trades": 6,
+      "wins": 3,
+      "losses": 3,
+      "win_rate": 50.0,
+      "avg_win_pct": 12.69,
+      "avg_loss_pct": -6.06,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ALICE",
+      "net_return": 17.27,
+      "total_trades": 10,
+      "wins": 5,
+      "losses": 5,
+      "win_rate": 50.0,
+      "avg_win_pct": 11.98,
+      "avg_loss_pct": -6.96,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 5,
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "WIF",
+      "net_return": 17.14,
+      "total_trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 66.7,
+      "avg_win_pct": 13.68,
+      "avg_loss_pct": -8.98,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MORPHO",
+      "net_return": 15.17,
+      "total_trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 66.7,
+      "avg_win_pct": 10.95,
+      "avg_loss_pct": -5.89,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "LISTA",
+      "net_return": 15.14,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 21.74,
+      "avg_loss_pct": -5.16,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HOME",
+      "net_return": 14.98,
+      "total_trades": 35,
+      "wins": 13,
+      "losses": 22,
+      "win_rate": 37.1,
+      "avg_win_pct": 19.39,
+      "avg_loss_pct": -9.19,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 13,
+        "EXIT_STOP_LOSS": 22
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GPS",
+      "net_return": 14.75,
+      "total_trades": 1,
+      "wins": 1,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 14.91,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SCRT",
+      "net_return": 13.28,
+      "total_trades": 1,
+      "wins": 1,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 13.44,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ETH",
+      "net_return": 13.06,
+      "total_trades": 1,
+      "wins": 1,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 13.22,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ALT",
+      "net_return": 12.52,
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 50.0,
+      "avg_win_pct": 14.96,
+      "avg_loss_pct": -7.41,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "XVS",
+      "net_return": 12.29,
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 50.0,
+      "avg_win_pct": 10.71,
+      "avg_loss_pct": -7.26,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "LUMIA",
+      "net_return": 11.59,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 13.47,
+      "avg_loss_pct": -5.58,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "EDU",
+      "net_return": 11.34,
+      "total_trades": 1,
+      "wins": 1,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 11.5,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZAMA",
+      "net_return": 11.23,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 15.43,
+      "avg_loss_pct": -6.9,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RUNE",
+      "net_return": 10.3,
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 50.0,
+      "avg_win_pct": 12.65,
+      "avg_loss_pct": -5.68,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZEN",
+      "net_return": 10.01,
+      "total_trades": 1,
+      "wins": 1,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 10.16,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HAEDAL",
+      "net_return": 10.01,
+      "total_trades": 1,
+      "wins": 1,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 12.45,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "KSM",
+      "net_return": 9.95,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 17.04,
+      "avg_loss_pct": -5.79,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "1000CAT",
+      "net_return": 9.92,
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 50.0,
+      "avg_win_pct": 10.59,
+      "avg_loss_pct": -5.64,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GMX",
+      "net_return": 9.59,
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 50.0,
+      "avg_win_pct": 11.16,
+      "avg_loss_pct": -7.12,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CFG",
+      "net_return": 8.62,
+      "total_trades": 6,
+      "wins": 3,
+      "losses": 3,
+      "win_rate": 50.0,
+      "avg_win_pct": 10.36,
+      "avg_loss_pct": -6.59,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PNUT",
+      "net_return": 8.49,
+      "total_trades": 1,
+      "wins": 1,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 11.16,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DASH",
+      "net_return": 8.09,
+      "total_trades": 6,
+      "wins": 3,
+      "losses": 3,
+      "win_rate": 50.0,
+      "avg_win_pct": 14.36,
+      "avg_loss_pct": -9.46,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "EGLD",
+      "net_return": 7.81,
+      "total_trades": 9,
+      "wins": 4,
+      "losses": 5,
+      "win_rate": 44.4,
+      "avg_win_pct": 11.04,
+      "avg_loss_pct": -6.4,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 4,
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "APE",
+      "net_return": 7.68,
+      "total_trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 66.7,
+      "avg_win_pct": 11.09,
+      "avg_loss_pct": -12.37,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "IO",
+      "net_return": 7.37,
+      "total_trades": 6,
+      "wins": 3,
+      "losses": 3,
+      "win_rate": 50.0,
+      "avg_win_pct": 10.89,
+      "avg_loss_pct": -7.4,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GENIUS",
+      "net_return": 7.37,
+      "total_trades": 9,
+      "wins": 4,
+      "losses": 5,
+      "win_rate": 44.4,
+      "avg_win_pct": 13.17,
+      "avg_loss_pct": -7.82,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AAVE",
+      "net_return": 6.56,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 12.7,
+      "avg_loss_pct": -5.19,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ARPA",
+      "net_return": 6.35,
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 33.3,
+      "avg_win_pct": 21.49,
+      "avg_loss_pct": -6.99,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "OGN",
+      "net_return": 6.32,
+      "total_trades": 8,
+      "wins": 2,
+      "losses": 6,
+      "win_rate": 25.0,
+      "avg_win_pct": 26.1,
+      "avg_loss_pct": -6.0,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BB",
+      "net_return": 5.72,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 13.78,
+      "avg_loss_pct": -5.0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZK",
+      "net_return": 5.57,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 12.73,
+      "avg_loss_pct": -6.09,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "IMX",
+      "net_return": 5.33,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 12.59,
+      "avg_loss_pct": -6.19,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SUI",
+      "net_return": 5.18,
+      "total_trades": 1,
+      "wins": 1,
+      "losses": 0,
+      "win_rate": 100.0,
+      "avg_win_pct": 10.52,
+      "avg_loss_pct": 0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NMR",
+      "net_return": 5.01,
+      "total_trades": 4,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 50.0,
+      "avg_win_pct": 11.63,
+      "avg_loss_pct": -6.5,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ANIME",
+      "net_return": 4.94,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 16.48,
+      "avg_loss_pct": -5.92,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SOL",
+      "net_return": 3.8,
+      "total_trades": 6,
+      "wins": 3,
+      "losses": 3,
+      "win_rate": 50.0,
+      "avg_win_pct": 10.65,
+      "avg_loss_pct": -7.22,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "S",
+      "net_return": 3.8,
+      "total_trades": 6,
+      "wins": 3,
+      "losses": 3,
+      "win_rate": 50.0,
+      "avg_win_pct": 11.68,
+      "avg_loss_pct": -8.3,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 3,
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CFX",
+      "net_return": 3.49,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 11.61,
+      "avg_loss_pct": -7.01,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CAKE",
+      "net_return": 3.43,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ENJ",
+      "net_return": 3.35,
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 33.3,
+      "avg_win_pct": 17.12,
+      "avg_loss_pct": -6.15,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AEVO",
+      "net_return": 3.12,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 11.2,
+      "avg_loss_pct": -7.01,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MEME",
+      "net_return": 2.99,
+      "total_trades": 7,
+      "wins": 3,
+      "losses": 4,
+      "win_rate": 42.9,
+      "avg_win_pct": 13.13,
+      "avg_loss_pct": -7.85,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CELO",
+      "net_return": 2.65,
+      "total_trades": 7,
+      "wins": 3,
+      "losses": 4,
+      "win_rate": 42.9,
+      "avg_win_pct": 12.83,
+      "avg_loss_pct": -7.54,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HOT",
+      "net_return": 2.58,
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 33.3,
+      "avg_win_pct": 13.98,
+      "avg_loss_pct": -6.0,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TAO",
+      "net_return": 2.54,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 10.25,
+      "avg_loss_pct": -6.73,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ASTER",
+      "net_return": 2.5,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "INIT",
+      "net_return": 2.27,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 17.22,
+      "avg_loss_pct": -6.39,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "THETA",
+      "net_return": 2.15,
+      "total_trades": 5,
+      "wins": 2,
+      "losses": 3,
+      "win_rate": 40.0,
+      "avg_win_pct": 11.48,
+      "avg_loss_pct": -6.1,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SUSHI",
+      "net_return": 1.78,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 10.63,
+      "avg_loss_pct": -8.18,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RENDER",
+      "net_return": 1.66,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 14.51,
+      "avg_loss_pct": -5.58,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MASK",
+      "net_return": 1.4,
+      "total_trades": 2,
+      "wins": 1,
+      "losses": 1,
+      "win_rate": 50.0,
+      "avg_win_pct": 10.23,
+      "avg_loss_pct": -6.22,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PIXEL",
+      "net_return": 1.25,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SPK",
+      "net_return": 1.24,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SUN",
+      "net_return": 0.72,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 11.38,
+      "avg_loss_pct": -5.42,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PORTAL",
+      "net_return": 0.6,
+      "total_trades": 23,
+      "wins": 7,
+      "losses": 16,
+      "win_rate": 30.4,
+      "avg_win_pct": 22.07,
+      "avg_loss_pct": -7.96,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 7,
+        "EXIT_STOP_LOSS": 16
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NOT",
+      "net_return": 0.59,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 12.33,
+      "avg_loss_pct": -5.17,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AGLD",
+      "net_return": 0.07,
+      "total_trades": 14,
+      "wins": 3,
+      "losses": 11,
+      "win_rate": 21.4,
+      "avg_win_pct": 33.13,
+      "avg_loss_pct": -7.16,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 11,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BTC",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BNB",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "KAITO",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "UNI",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PAXG",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "LINK",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "XAUT",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "KITE",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BANK",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ETHFI",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TIA",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BEAMX",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "FF",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PYTH",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "OPEN",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SAPIEN",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TRB",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CVX",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BANANAS31",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GIGGLE",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MITO",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "LINEA",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AUCTION",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TUT",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "KAVA",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "EUL",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "1000CHEEMS",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HUMA",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "1000SATS",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SOLV",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TURTLE",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BROCCOLI714",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "XVG",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SOMI",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "C",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CGPT",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "VELODROME",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RED",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AT",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "FLOW",
+      "net_return": 0.0,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AVA",
+      "net_return": -0.07,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NIL",
+      "net_return": -0.81,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 13.83,
+      "avg_loss_pct": -6.45,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "LDO",
+      "net_return": -1.03,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 14.94,
+      "avg_loss_pct": -7.01,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "THE",
+      "net_return": -1.03,
+      "total_trades": 7,
+      "wins": 2,
+      "losses": 5,
+      "win_rate": 28.6,
+      "avg_win_pct": 19.99,
+      "avg_loss_pct": -6.87,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "WCT",
+      "net_return": -1.2,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 11.57,
+      "avg_loss_pct": -5.7,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ACE",
+      "net_return": -1.22,
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 33.3,
+      "avg_win_pct": 24.41,
+      "avg_loss_pct": -10.19,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DOGE",
+      "net_return": -1.34,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "XTZ",
+      "net_return": -1.89,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 16.92,
+      "avg_loss_pct": -5.5,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PEOPLE",
+      "net_return": -2.18,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 10.06,
+      "avg_loss_pct": -5.53,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ALGO",
+      "net_return": -2.32,
+      "total_trades": 5,
+      "wins": 2,
+      "losses": 3,
+      "win_rate": 40.0,
+      "avg_win_pct": 10.06,
+      "avg_loss_pct": -6.61,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BIO",
+      "net_return": -2.43,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 23.98,
+      "avg_loss_pct": -8.93,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ALPINE",
+      "net_return": -2.47,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 10.06,
+      "avg_loss_pct": -5.66,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "VANA",
+      "net_return": -2.77,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 11.46,
+      "avg_loss_pct": -6.41,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MUBARAK",
+      "net_return": -3.07,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MINA",
+      "net_return": -3.9,
+      "total_trades": 5,
+      "wins": 2,
+      "losses": 3,
+      "win_rate": 40.0,
+      "avg_win_pct": 10.56,
+      "avg_loss_pct": -6.7,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NEIRO",
+      "net_return": -4.15,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "POWR",
+      "net_return": -4.21,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 21.88,
+      "avg_loss_pct": -7.42,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "METIS",
+      "net_return": -4.38,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "XRP",
+      "net_return": -4.58,
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 33.3,
+      "avg_win_pct": 12.12,
+      "avg_loss_pct": -6.46,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ROSE",
+      "net_return": -4.59,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CETUS",
+      "net_return": -4.81,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "WAXP",
+      "net_return": -4.98,
+      "total_trades": 0,
+      "wins": 0,
+      "losses": 0,
+      "win_rate": 0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": 0,
+      "exit_reasons": {},
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "EIGEN",
+      "net_return": -5.21,
+      "total_trades": 5,
+      "wins": 2,
+      "losses": 3,
+      "win_rate": 40.0,
+      "avg_win_pct": 12.16,
+      "avg_loss_pct": -7.38,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TWT",
+      "net_return": -5.4,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.27,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "F",
+      "net_return": -5.46,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.33,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CHR",
+      "net_return": -5.49,
+      "total_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "win_rate": 33.3,
+      "avg_win_pct": 11.4,
+      "avg_loss_pct": -7.49,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "FORM",
+      "net_return": -5.49,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.36,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DOGS",
+      "net_return": -5.52,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.39,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RARE",
+      "net_return": -5.53,
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 33.3,
+      "avg_win_pct": 15.4,
+      "avg_loss_pct": -7.07,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "KERNEL",
+      "net_return": -5.64,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 10.17,
+      "avg_loss_pct": -6.5,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AWE",
+      "net_return": -5.64,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.51,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HMSTR",
+      "net_return": -5.65,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 13.67,
+      "avg_loss_pct": -5.49,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZRO",
+      "net_return": -5.68,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.55,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MOVR",
+      "net_return": -5.99,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.86,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TRX",
+      "net_return": -6.12,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.48,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SKY",
+      "net_return": -6.16,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.03,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "XAI",
+      "net_return": -6.19,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.18,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "A",
+      "net_return": -6.28,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.15,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BANANA",
+      "net_return": -6.32,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 11.85,
+      "avg_loss_pct": -5.56,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AIGENSYN",
+      "net_return": -6.33,
+      "total_trades": 18,
+      "wins": 6,
+      "losses": 12,
+      "win_rate": 33.3,
+      "avg_win_pct": 15.35,
+      "avg_loss_pct": -7.38,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 12,
+        "EXIT_TAKE_PROFIT": 6
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SCR",
+      "net_return": -6.33,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.2,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "VIRTUAL",
+      "net_return": -6.55,
+      "total_trades": 10,
+      "wins": 4,
+      "losses": 6,
+      "win_rate": 40.0,
+      "avg_win_pct": 12.35,
+      "avg_loss_pct": -8.25,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "1MBABYDOGE",
+      "net_return": -6.56,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.67,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BNT",
+      "net_return": -6.56,
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 33.3,
+      "avg_win_pct": 11.61,
+      "avg_loss_pct": -6.57,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CATI",
+      "net_return": -6.98,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.85,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HFT",
+      "net_return": -7.49,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -9.28,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HBAR",
+      "net_return": -7.69,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.47,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PENDLE",
+      "net_return": -7.72,
+      "total_trades": 7,
+      "wins": 2,
+      "losses": 5,
+      "win_rate": 28.6,
+      "avg_win_pct": 12.3,
+      "avg_loss_pct": -5.87,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TURBO",
+      "net_return": -7.82,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.69,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NEWT",
+      "net_return": -7.98,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 10.19,
+      "avg_loss_pct": -6.31,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "KNC",
+      "net_return": -8.39,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.34,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SAGA",
+      "net_return": -8.4,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -8.27,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DIA",
+      "net_return": -8.4,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.72,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "REZ",
+      "net_return": -8.75,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -8.62,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AIXBT",
+      "net_return": -8.76,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.12,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NEAR",
+      "net_return": -8.83,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 10.89,
+      "avg_loss_pct": -6.14,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ASR",
+      "net_return": -8.93,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.35,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CVC",
+      "net_return": -9.29,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.27,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AERO",
+      "net_return": -9.49,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.13,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 22,
+      "data_start": "2026-07-17 16:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "COMP",
+      "net_return": -9.58,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 12.77,
+      "avg_loss_pct": -6.91,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TST",
+      "net_return": -9.59,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -9.46,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ADA",
+      "net_return": -9.6,
+      "total_trades": 9,
+      "wins": 3,
+      "losses": 6,
+      "win_rate": 33.3,
+      "avg_win_pct": 10.74,
+      "avg_loss_pct": -6.19,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BIGTIME",
+      "net_return": -9.97,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.58,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MIRA",
+      "net_return": -10.28,
+      "total_trades": 11,
+      "wins": 2,
+      "losses": 9,
+      "win_rate": 18.2,
+      "avg_win_pct": 28.85,
+      "avg_loss_pct": -6.26,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "OG",
+      "net_return": -10.48,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.25,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DYM",
+      "net_return": -10.76,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.4,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "T",
+      "net_return": -10.86,
+      "total_trades": 9,
+      "wins": 2,
+      "losses": 7,
+      "win_rate": 22.2,
+      "avg_win_pct": 27.71,
+      "avg_loss_pct": -7.66,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ANKR",
+      "net_return": -10.99,
+      "total_trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 20.0,
+      "avg_win_pct": 15.79,
+      "avg_loss_pct": -5.91,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "VET",
+      "net_return": -11.04,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.75,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SANTOS",
+      "net_return": -11.07,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -8.55,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CRV",
+      "net_return": -11.16,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 11.73,
+      "avg_loss_pct": -7.18,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "STG",
+      "net_return": -11.3,
+      "total_trades": 19,
+      "wins": 7,
+      "losses": 12,
+      "win_rate": 36.8,
+      "avg_win_pct": 16.7,
+      "avg_loss_pct": -9.15,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 7,
+        "EXIT_STOP_LOSS": 12
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZBT",
+      "net_return": -11.34,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -11.22,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "YB",
+      "net_return": -11.39,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -11.27,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NXPC",
+      "net_return": -11.4,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.74,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "JOE",
+      "net_return": -11.55,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.79,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "G",
+      "net_return": -11.64,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.69,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "IOTX",
+      "net_return": -11.71,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.91,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "USTC",
+      "net_return": -11.87,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.99,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RVN",
+      "net_return": -11.95,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.03,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GAS",
+      "net_return": -12.09,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.11,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "IOST",
+      "net_return": -12.1,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.12,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NEO",
+      "net_return": -12.15,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.72,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "KAIA",
+      "net_return": -12.2,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.16,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "WAL",
+      "net_return": -12.23,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.18,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "WOO",
+      "net_return": -12.28,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 12.13,
+      "avg_loss_pct": -7.67,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AVNT",
+      "net_return": -12.36,
+      "total_trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 20.0,
+      "avg_win_pct": 11.69,
+      "avg_loss_pct": -5.47,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "API3",
+      "net_return": -12.41,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.81,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "\u5e01\u5b89\u4eba\u751f",
+      "net_return": -12.6,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.38,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "W",
+      "net_return": -12.61,
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 33.3,
+      "avg_win_pct": 13.16,
+      "avg_loss_pct": -8.88,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BMT",
+      "net_return": -12.72,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.44,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ROBO",
+      "net_return": -12.79,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.48,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CTSI",
+      "net_return": -12.97,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.57,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZKC",
+      "net_return": -13.01,
+      "total_trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 20.0,
+      "avg_win_pct": 16.27,
+      "avg_loss_pct": -6.7,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ONG",
+      "net_return": -13.17,
+      "total_trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 20.0,
+      "avg_win_pct": 15.45,
+      "avg_loss_pct": -6.26,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MOVE",
+      "net_return": -13.3,
+      "total_trades": 8,
+      "wins": 2,
+      "losses": 6,
+      "win_rate": 25.0,
+      "avg_win_pct": 15.23,
+      "avg_loss_pct": -6.65,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SKL",
+      "net_return": -13.36,
+      "total_trades": 8,
+      "wins": 2,
+      "losses": 6,
+      "win_rate": 25.0,
+      "avg_win_pct": 16.95,
+      "avg_loss_pct": -6.36,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 6
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "QTUM",
+      "net_return": -13.42,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 10.04,
+      "avg_loss_pct": -6.15,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PUMP",
+      "net_return": -13.56,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 13.09,
+      "avg_loss_pct": -8.39,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MBOX",
+      "net_return": -13.94,
+      "total_trades": 8,
+      "wins": 2,
+      "losses": 6,
+      "win_rate": 25.0,
+      "avg_win_pct": 13.15,
+      "avg_loss_pct": -6.23,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-04-20 08:00:00",
+      "data_end": "2026-06-19 00:00:00"
+    },
+    {
+      "symbol": "PROVE",
+      "net_return": -14.3,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.29,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SSV",
+      "net_return": -14.43,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.28,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "COW",
+      "net_return": -14.49,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.53,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "OP",
+      "net_return": -14.85,
+      "total_trades": 7,
+      "wins": 2,
+      "losses": 5,
+      "win_rate": 28.6,
+      "avg_win_pct": 10.94,
+      "avg_loss_pct": -6.19,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CHIP",
+      "net_return": -15.07,
+      "total_trades": 14,
+      "wins": 4,
+      "losses": 10,
+      "win_rate": 28.6,
+      "avg_win_pct": 16.7,
+      "avg_loss_pct": -7.31,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 10,
+        "EXIT_TAKE_PROFIT": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HOLO",
+      "net_return": -15.1,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.73,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "COTI",
+      "net_return": -15.17,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.18,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "WLD",
+      "net_return": -15.34,
+      "total_trades": 12,
+      "wins": 3,
+      "losses": 9,
+      "win_rate": 25.0,
+      "avg_win_pct": 18.47,
+      "avg_loss_pct": -7.4,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MAGIC",
+      "net_return": -15.35,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.44,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "RSR",
+      "net_return": -15.45,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.49,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PENGU",
+      "net_return": -15.55,
+      "total_trades": 8,
+      "wins": 2,
+      "losses": 6,
+      "win_rate": 25.0,
+      "avg_win_pct": 12.81,
+      "avg_loss_pct": -6.12,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ENS",
+      "net_return": -15.65,
+      "total_trades": 7,
+      "wins": 2,
+      "losses": 5,
+      "win_rate": 28.6,
+      "avg_win_pct": 13.1,
+      "avg_loss_pct": -7.78,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AVAX",
+      "net_return": -16.04,
+      "total_trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 20.0,
+      "avg_win_pct": 10.7,
+      "avg_loss_pct": -5.96,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HYPER",
+      "net_return": -16.11,
+      "total_trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 20.0,
+      "avg_win_pct": 12.25,
+      "avg_loss_pct": -6.85,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "QNT",
+      "net_return": -16.4,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.23,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "YGG",
+      "net_return": -16.42,
+      "total_trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -14.81,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AXL",
+      "net_return": -16.64,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.51,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BABY",
+      "net_return": -16.75,
+      "total_trades": 6,
+      "wins": 2,
+      "losses": 4,
+      "win_rate": 33.3,
+      "avg_win_pct": 11.37,
+      "avg_loss_pct": -9.2,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZIL",
+      "net_return": -16.92,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.65,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PHA",
+      "net_return": -17.03,
+      "total_trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 20.0,
+      "avg_win_pct": 10.48,
+      "avg_loss_pct": -6.41,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ENSO",
+      "net_return": -17.05,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.91,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZEC",
+      "net_return": -17.11,
+      "total_trades": 9,
+      "wins": 3,
+      "losses": 6,
+      "win_rate": 33.3,
+      "avg_win_pct": 13.09,
+      "avg_loss_pct": -8.52,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 3,
+        "EXIT_STOP_LOSS": 6
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ERA",
+      "net_return": -17.57,
+      "total_trades": 10,
+      "wins": 1,
+      "losses": 9,
+      "win_rate": 10.0,
+      "avg_win_pct": 59.02,
+      "avg_loss_pct": -7.32,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "USUAL",
+      "net_return": -17.8,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.19,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CKB",
+      "net_return": -17.81,
+      "total_trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 20.0,
+      "avg_win_pct": 12.57,
+      "avg_loss_pct": -6.64,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SAND",
+      "net_return": -18.05,
+      "total_trades": 6,
+      "wins": 1,
+      "losses": 5,
+      "win_rate": 16.7,
+      "avg_win_pct": 16.0,
+      "avg_loss_pct": -6.54,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MANTRA",
+      "net_return": -18.19,
+      "total_trades": 12,
+      "wins": 3,
+      "losses": 9,
+      "win_rate": 25.0,
+      "avg_win_pct": 16.11,
+      "avg_loss_pct": -6.68,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DUSK",
+      "net_return": -18.28,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.36,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MMT",
+      "net_return": -18.41,
+      "total_trades": 5,
+      "wins": 1,
+      "losses": 4,
+      "win_rate": 20.0,
+      "avg_win_pct": 12.78,
+      "avg_loss_pct": -7.61,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "STO",
+      "net_return": -18.49,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -9.54,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "FRAX",
+      "net_return": -18.54,
+      "total_trades": 6,
+      "wins": 1,
+      "losses": 5,
+      "win_rate": 16.7,
+      "avg_win_pct": 10.6,
+      "avg_loss_pct": -6.46,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "OPG",
+      "net_return": -18.6,
+      "total_trades": 16,
+      "wins": 5,
+      "losses": 11,
+      "win_rate": 31.2,
+      "avg_win_pct": 13.09,
+      "avg_loss_pct": -6.97,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 11,
+        "EXIT_TAKE_PROFIT": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GRAM",
+      "net_return": -18.64,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.87,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 68,
+      "data_start": "2026-07-02 08:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZRX",
+      "net_return": -18.7,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.81,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SNX",
+      "net_return": -18.75,
+      "total_trades": 10,
+      "wins": 3,
+      "losses": 7,
+      "win_rate": 30.0,
+      "avg_win_pct": 10.75,
+      "avg_loss_pct": -6.7,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "TRUMP",
+      "net_return": -19.1,
+      "total_trades": 8,
+      "wins": 2,
+      "losses": 6,
+      "win_rate": 25.0,
+      "avg_win_pct": 11.39,
+      "avg_loss_pct": -6.43,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PARTI",
+      "net_return": -19.12,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.77,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GTC",
+      "net_return": -19.47,
+      "total_trades": 8,
+      "wins": 1,
+      "losses": 7,
+      "win_rate": 12.5,
+      "avg_win_pct": 7.25,
+      "avg_loss_pct": -3.83,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4,
+        "EXIT_FUNDING_POSITIVE": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ARKM",
+      "net_return": -19.87,
+      "total_trades": 6,
+      "wins": 1,
+      "losses": 5,
+      "win_rate": 16.7,
+      "avg_win_pct": 12.5,
+      "avg_loss_pct": -6.59,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CYBER",
+      "net_return": -20.21,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.09,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "2Z",
+      "net_return": -20.44,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.21,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "STEEM",
+      "net_return": -20.55,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.29,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ICP",
+      "net_return": -21.24,
+      "total_trades": 6,
+      "wins": 1,
+      "losses": 5,
+      "win_rate": 16.7,
+      "avg_win_pct": 14.39,
+      "avg_loss_pct": -6.78,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "LAYER",
+      "net_return": -21.24,
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 20.0,
+      "avg_win_pct": 16.36,
+      "avg_loss_pct": -6.13,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 8,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BAT",
+      "net_return": -21.39,
+      "total_trades": 8,
+      "wins": 2,
+      "losses": 6,
+      "win_rate": 25.0,
+      "avg_win_pct": 10.85,
+      "avg_loss_pct": -6.99,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ETC",
+      "net_return": -21.59,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.75,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HEMI",
+      "net_return": -21.89,
+      "total_trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -11.47,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AR",
+      "net_return": -22.17,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.17,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DYDX",
+      "net_return": -22.4,
+      "total_trades": 4,
+      "wins": 1,
+      "losses": 3,
+      "win_rate": 25.0,
+      "avg_win_pct": 11.34,
+      "avg_loss_pct": -12.03,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 1,
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ASTR",
+      "net_return": -22.66,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.12,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ONT",
+      "net_return": -23.18,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.25,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "INJ",
+      "net_return": -23.39,
+      "total_trades": 12,
+      "wins": 3,
+      "losses": 9,
+      "win_rate": 25.0,
+      "avg_win_pct": 13.0,
+      "avg_loss_pct": -6.48,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ENA",
+      "net_return": -23.46,
+      "total_trades": 8,
+      "wins": 2,
+      "losses": 6,
+      "win_rate": 25.0,
+      "avg_win_pct": 12.36,
+      "avg_loss_pct": -7.8,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BREV",
+      "net_return": -23.61,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -8.54,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "IOTA",
+      "net_return": -23.64,
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 20.0,
+      "avg_win_pct": 12.76,
+      "avg_loss_pct": -6.0,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 8,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "VANRY",
+      "net_return": -23.75,
+      "total_trades": 16,
+      "wins": 4,
+      "losses": 12,
+      "win_rate": 25.0,
+      "avg_win_pct": 16.47,
+      "avg_loss_pct": -6.82,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 12,
+        "EXIT_TAKE_PROFIT": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "JTO",
+      "net_return": -23.97,
+      "total_trades": 10,
+      "wins": 3,
+      "losses": 7,
+      "win_rate": 30.0,
+      "avg_win_pct": 13.56,
+      "avg_loss_pct": -8.7,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7,
+        "EXIT_TAKE_PROFIT": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ONE",
+      "net_return": -24.21,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.18,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "AXS",
+      "net_return": -24.46,
+      "total_trades": 6,
+      "wins": 1,
+      "losses": 5,
+      "win_rate": 16.7,
+      "avg_win_pct": 10.33,
+      "avg_loss_pct": -7.12,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "POLYX",
+      "net_return": -24.68,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -8.69,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "YFI",
+      "net_return": -24.79,
+      "total_trades": 6,
+      "wins": 1,
+      "losses": 5,
+      "win_rate": 16.7,
+      "avg_win_pct": 10.95,
+      "avg_loss_pct": -7.31,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BERA",
+      "net_return": -25.04,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.79,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MANTA",
+      "net_return": -25.1,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -9.05,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "LSK",
+      "net_return": -25.14,
+      "total_trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.49,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "C98",
+      "net_return": -25.44,
+      "total_trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -8.12,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 3
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "JASMY",
+      "net_return": -25.5,
+      "total_trades": 9,
+      "wins": 2,
+      "losses": 7,
+      "win_rate": 22.2,
+      "avg_win_pct": 10.22,
+      "avg_loss_pct": -6.2,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "FLUX",
+      "net_return": -25.65,
+      "total_trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.62,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ZKP",
+      "net_return": -25.76,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.04,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GLM",
+      "net_return": -25.8,
+      "total_trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.92,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "CELR",
+      "net_return": -25.88,
+      "total_trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.52,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "PUNDIX",
+      "net_return": -25.98,
+      "total_trades": 6,
+      "wins": 1,
+      "losses": 5,
+      "win_rate": 16.7,
+      "avg_win_pct": 11.73,
+      "avg_loss_pct": -7.74,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "LPT",
+      "net_return": -26.0,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.55,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SIGN",
+      "net_return": -26.29,
+      "total_trades": 7,
+      "wins": 1,
+      "losses": 6,
+      "win_rate": 14.3,
+      "avg_win_pct": 11.45,
+      "avg_loss_pct": -5.97,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SOPH",
+      "net_return": -26.53,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.79,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "FIL",
+      "net_return": -26.71,
+      "total_trades": 7,
+      "wins": 1,
+      "losses": 6,
+      "win_rate": 14.3,
+      "avg_win_pct": 10.57,
+      "avg_loss_pct": -6.61,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MEGA",
+      "net_return": -26.79,
+      "total_trades": 8,
+      "wins": 2,
+      "losses": 6,
+      "win_rate": 25.0,
+      "avg_win_pct": 13.12,
+      "avg_loss_pct": -8.7,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ILV",
+      "net_return": -27.37,
+      "total_trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.06,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "KAT",
+      "net_return": -28.39,
+      "total_trades": 8,
+      "wins": 1,
+      "losses": 7,
+      "win_rate": 12.5,
+      "avg_win_pct": 10.05,
+      "avg_loss_pct": -6.19,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DOT",
+      "net_return": -28.61,
+      "total_trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.16,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ARB",
+      "net_return": -28.95,
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 20.0,
+      "avg_win_pct": 10.49,
+      "avg_loss_pct": -6.38,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 8,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ATOM",
+      "net_return": -29.01,
+      "total_trades": 8,
+      "wins": 1,
+      "losses": 7,
+      "win_rate": 12.5,
+      "avg_win_pct": 13.21,
+      "avg_loss_pct": -6.03,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "KMNO",
+      "net_return": -29.1,
+      "total_trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.51,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "VTHO",
+      "net_return": -29.11,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.56,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "1INCH",
+      "net_return": -29.53,
+      "total_trades": 6,
+      "wins": 0,
+      "losses": 6,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -5.9,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SPELL",
+      "net_return": -29.84,
+      "total_trades": 9,
+      "wins": 1,
+      "losses": 8,
+      "win_rate": 11.1,
+      "avg_win_pct": 24.52,
+      "avg_loss_pct": -6.65,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 8,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ACH",
+      "net_return": -30.11,
+      "total_trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.19,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "APT",
+      "net_return": -30.36,
+      "total_trades": 7,
+      "wins": 1,
+      "losses": 6,
+      "win_rate": 14.3,
+      "avg_win_pct": 12.44,
+      "avg_loss_pct": -7.92,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BICO",
+      "net_return": -30.73,
+      "total_trades": 12,
+      "wins": 2,
+      "losses": 10,
+      "win_rate": 16.7,
+      "avg_win_pct": 31.99,
+      "avg_loss_pct": -8.54,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 10,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GMT",
+      "net_return": -32.14,
+      "total_trades": 5,
+      "wins": 0,
+      "losses": 5,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.94,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ORCA",
+      "net_return": -32.93,
+      "total_trades": 6,
+      "wins": 0,
+      "losses": 6,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.08,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ME",
+      "net_return": -34.16,
+      "total_trades": 12,
+      "wins": 2,
+      "losses": 10,
+      "win_rate": 16.7,
+      "avg_win_pct": 12.62,
+      "avg_loss_pct": -6.74,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 10,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BCH",
+      "net_return": -34.48,
+      "total_trades": 10,
+      "wins": 2,
+      "losses": 8,
+      "win_rate": 20.0,
+      "avg_win_pct": 11.7,
+      "avg_loss_pct": -7.55,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 8,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SHELL",
+      "net_return": -34.95,
+      "total_trades": 6,
+      "wins": 0,
+      "losses": 6,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.78,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SENT",
+      "net_return": -35.55,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -9.43,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "ID",
+      "net_return": -35.97,
+      "total_trades": 23,
+      "wins": 6,
+      "losses": 17,
+      "win_rate": 26.1,
+      "avg_win_pct": 16.92,
+      "avg_loss_pct": -7.49,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 6,
+        "EXIT_STOP_LOSS": 17
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GALA",
+      "net_return": -36.04,
+      "total_trades": 9,
+      "wins": 1,
+      "losses": 8,
+      "win_rate": 11.1,
+      "avg_win_pct": 10.71,
+      "avg_loss_pct": -6.46,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 8,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "0G",
+      "net_return": -36.14,
+      "total_trades": 12,
+      "wins": 2,
+      "losses": 10,
+      "win_rate": 16.7,
+      "avg_win_pct": 12.76,
+      "avg_loss_pct": -6.59,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 10,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SEI",
+      "net_return": -36.77,
+      "total_trades": 9,
+      "wins": 1,
+      "losses": 8,
+      "win_rate": 11.1,
+      "avg_win_pct": 10.3,
+      "avg_loss_pct": -6.16,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 8,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "FOGO",
+      "net_return": -36.88,
+      "total_trades": 4,
+      "wins": 0,
+      "losses": 4,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -10.59,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "STX",
+      "net_return": -37.82,
+      "total_trades": 8,
+      "wins": 1,
+      "losses": 7,
+      "win_rate": 12.5,
+      "avg_win_pct": 11.14,
+      "avg_loss_pct": -7.85,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "MAV",
+      "net_return": -38.63,
+      "total_trades": 7,
+      "wins": 0,
+      "losses": 7,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.47,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HIVE",
+      "net_return": -40.62,
+      "total_trades": 6,
+      "wins": 0,
+      "losses": 6,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -7.48,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 6
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "EDEN",
+      "net_return": -41.14,
+      "total_trades": 9,
+      "wins": 1,
+      "losses": 8,
+      "win_rate": 11.1,
+      "avg_win_pct": 17.86,
+      "avg_loss_pct": -8.15,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 8,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "SAHARA",
+      "net_return": -42.43,
+      "total_trades": 14,
+      "wins": 2,
+      "losses": 12,
+      "win_rate": 14.3,
+      "avg_win_pct": 12.67,
+      "avg_loss_pct": -6.22,
+      "exit_reasons": {
+        "EXIT_TAKE_PROFIT": 2,
+        "EXIT_STOP_LOSS": 12
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "GUN",
+      "net_return": -44.61,
+      "total_trades": 18,
+      "wins": 4,
+      "losses": 14,
+      "win_rate": 22.2,
+      "avg_win_pct": 12.33,
+      "avg_loss_pct": -7.07,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 14,
+        "EXIT_TAKE_PROFIT": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "BARD",
+      "net_return": -45.36,
+      "total_trades": 9,
+      "wins": 0,
+      "losses": 9,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.53,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "LA",
+      "net_return": -46.89,
+      "total_trades": 17,
+      "wins": 4,
+      "losses": 13,
+      "win_rate": 23.5,
+      "avg_win_pct": 12.89,
+      "avg_loss_pct": -7.99,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 13,
+        "EXIT_TAKE_PROFIT": 4
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "FET",
+      "net_return": -47.42,
+      "total_trades": 9,
+      "wins": 0,
+      "losses": 9,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -6.74,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "HIGH",
+      "net_return": -48.51,
+      "total_trades": 10,
+      "wins": 1,
+      "losses": 9,
+      "win_rate": 10.0,
+      "avg_win_pct": 21.92,
+      "avg_loss_pct": -8.86,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-04-20 08:00:00",
+      "data_end": "2026-06-19 00:00:00"
+    },
+    {
+      "symbol": "CHZ",
+      "net_return": -49.63,
+      "total_trades": 13,
+      "wins": 2,
+      "losses": 11,
+      "win_rate": 15.4,
+      "avg_win_pct": 14.29,
+      "avg_loss_pct": -8.07,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 11,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "FIDA",
+      "net_return": -52.68,
+      "total_trades": 16,
+      "wins": 2,
+      "losses": 14,
+      "win_rate": 12.5,
+      "avg_win_pct": 16.47,
+      "avg_loss_pct": -7.06,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 14,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "COS",
+      "net_return": -54.12,
+      "total_trades": 9,
+      "wins": 0,
+      "losses": 9,
+      "win_rate": 0.0,
+      "avg_win_pct": 0,
+      "avg_loss_pct": -8.05,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 9
+      },
+      "bars": 180,
+      "data_start": "2026-04-20 08:00:00",
+      "data_end": "2026-06-19 00:00:00"
+    },
+    {
+      "symbol": "TLM",
+      "net_return": -56.02,
+      "total_trades": 22,
+      "wins": 5,
+      "losses": 17,
+      "win_rate": 22.7,
+      "avg_win_pct": 16.91,
+      "avg_loss_pct": -8.85,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 17,
+        "EXIT_TAKE_PROFIT": 5
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "DEXE",
+      "net_return": -62.29,
+      "total_trades": 7,
+      "wins": 2,
+      "losses": 5,
+      "win_rate": 28.6,
+      "avg_win_pct": 25.24,
+      "avg_loss_pct": -23.16,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 5,
+        "EXIT_TAKE_PROFIT": 2
+      },
+      "bars": 180,
+      "data_start": "2026-05-26 00:00:00",
+      "data_end": "2026-07-24 16:00:00"
+    },
+    {
+      "symbol": "NFP",
+      "net_return": -70.8,
+      "total_trades": 8,
+      "wins": 1,
+      "losses": 7,
+      "win_rate": 12.5,
+      "avg_win_pct": 73.43,
+      "avg_loss_pct": -18.77,
+      "exit_reasons": {
+        "EXIT_STOP_LOSS": 7,
+        "EXIT_TAKE_PROFIT": 1
+      },
+      "bars": 180,
+      "data_start": "2026-05-11 08:00:00",
+      "data_end": "2026-07-10 00:00:00"
+    }
+  ]
+}
