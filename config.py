@@ -463,3 +463,33 @@ if os.getenv("BINANCE_ALL_SYMBOLS", "").lower() in ("true", "1", "yes"):
             WATCHED_SYMBOLS = sorted(_all)
     except Exception:
         pass
+
+# ── Multi-Alpha Strategy Stack ──
+# Three-strategy alpha stack for 10-25% monthly portfolio growth:
+#   Module 1: Z-Score Funding Rate Squeeze (high asymmetry, PF 2.93)
+#   Module 2: Structural Spot Basket Rebalancing (consistent cashflow, 3-7% monthly)
+#   Module 3: Microstructure Order Book Absorption (high win-rate swings)
+MULTI_ALPHA_ENABLED = os.getenv("MULTI_ALPHA_ENABLED", "false").lower() == "true"
+
+# Module allocation (% of equity per module)
+MULTI_ALPHA_M1_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M1_ALLOCATION_PCT", "40"))
+MULTI_ALPHA_M2_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M2_ALLOCATION_PCT", "35"))
+MULTI_ALPHA_M3_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M3_ALLOCATION_PCT", "25"))
+
+# Module enable/disable
+MULTI_ALPHA_M1_ENABLED = os.getenv("MULTI_ALPHA_M1_ENABLED", "true").lower() == "true"
+MULTI_ALPHA_M2_ENABLED = os.getenv("MULTI_ALPHA_M2_ENABLED", "true").lower() == "true"
+MULTI_ALPHA_M3_ENABLED = os.getenv("MULTI_ALPHA_M3_ENABLED", "true").lower() == "true"
+
+# Fractional Kelly parameters
+MULTI_ALPHA_KELLY_FRACTION = float(os.getenv("MULTI_ALPHA_KELLY_FRACTION", "0.25"))
+MULTI_ALPHA_MAX_RISK_PER_TRADE_PCT = float(os.getenv("MULTI_ALPHA_MAX_RISK_PER_TRADE_PCT", "2.0"))
+MULTI_ALPHA_MAX_PORTFOLIO_EXPOSURE_PCT = float(os.getenv("MULTI_ALPHA_MAX_PORTFOLIO_EXPOSURE_PCT", "80"))
+
+# Circuit breaker parameters
+MULTI_ALPHA_MONTHLY_MAX_DD_PCT = float(os.getenv("MULTI_ALPHA_MONTHLY_MAX_DD_PCT", "15"))
+MULTI_ALPHA_MAX_TOTAL_POSITIONS = int(os.getenv("MULTI_ALPHA_MAX_TOTAL_POSITIONS", "10"))
+MULTI_ALPHA_PER_STRATEGY_MAX_OPEN = int(os.getenv("MULTI_ALPHA_PER_STRATEGY_MAX_OPEN", "3"))
+
+# Scan interval (seconds) - 15 minutes default
+MULTI_ALPHA_SCAN_INTERVAL = int(os.getenv("MULTI_ALPHA_SCAN_INTERVAL", "900"))

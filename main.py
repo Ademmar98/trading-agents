@@ -14,7 +14,11 @@ HEADLESS = "--headless" in sys.argv or os.getenv("HEADLESS", "").lower() == "tru
 # Reset flag: delete all data and start fresh
 RESET = "--reset" in sys.argv
 
-from config import DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT, OPTIMIZER_ENABLED, STARTUP_BACKTESTS_ENABLED, MULTI_AGENT_MODE
+from config import (DATA_DIR, INITIAL_BALANCE, TRADING_INTERVAL_MINUTES, BROKER_TYPE,
+                    BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET,
+                    TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, WATCHED_SYMBOLS, LOCK_PORT,
+                    OPTIMIZER_ENABLED, STARTUP_BACKTESTS_ENABLED, MULTI_AGENT_MODE,
+                    MULTI_ALPHA_ENABLED, MULTI_ALPHA_SCAN_INTERVAL)
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
 from core.portfolio import load_portfolio, save_portfolio, Portfolio
@@ -574,6 +578,62 @@ def main():
         else:
             console.print("[dim]Optimizer disabled (OPTIMIZER_ENABLED=false)[/dim]")
             memory.log("system", "Optimizer disabled — no live param mutation")
+
+    # ── Multi-Alpha Orchestrator Thread ──
+    # Runs the 3-strategy alpha stack (Z-Score Funding + Basket Rebalancing +
+    # Microstructure Absorption) on a 15-minute scan interval. Each module
+    # generates signals independently; the orchestrator applies fractional
+    # Kelly sizing and circuit breakers before execution.
+    if MULTI_ALPHA_ENABLED:
+        def multi_alpha_loop():
+            from core.strategies.multi_alpha_runner import MultiAlphaOrchestrator, AlphaConfig
+            from core.strategies.multi_alpha_runner import (
+                AlphaConfig, CircuitBreakerConfig, KellyConfig,
+            )
+            from config import (
+                MULTI_ALPHA_M1_ALLOCATION_PCT, MULTI_ALPHA_M2_ALLOCATION_PCT,
+                MULTI_ALPHA_M3_ALLOCATION_PCT, MULTI_ALPHA_KELLY_FRACTION,
+                MULTI_ALPHA_MAX_RISK_PER_TRADE_PCT, MULTI_ALPHA_MAX_PORTFOLIO_EXPOSURE_PCT,
+                MULTI_ALPHA_MONTHLY_MAX_DD_PCT, MULTI_ALPHA_MAX_TOTAL_POSITIONS,
+                MULTI_ALPHA_PER_STRATEGY_MAX_OPEN, MULTI_ALPHA_M1_ENABLED,
+                MULTI_ALPHA_M2_ENABLED, MULTI_ALPHA_M3_ENABLED,
+            )
+
+            alpha_config = AlphaConfig(
+                scan_interval=MULTI_ALPHA_SCAN_INTERVAL,
+                module1_allocation_pct=MULTI_ALPHA_M1_ALLOCATION_PCT,
+                module2_allocation_pct=MULTI_ALPHA_M2_ALLOCATION_PCT,
+                module3_allocation_pct=MULTI_ALPHA_M3_ALLOCATION_PCT,
+                kelly_fraction=MULTI_ALPHA_KELLY_FRACTION,
+                max_risk_per_trade_pct=MULTI_ALPHA_MAX_RISK_PER_TRADE_PCT,
+                max_portfolio_exposure_pct=MULTI_ALPHA_MAX_PORTFOLIO_EXPOSURE_PCT,
+                monthly_max_drawdown_pct=MULTI_ALPHA_MONTHLY_MAX_DD_PCT,
+                max_total_positions=MULTI_ALPHA_MAX_TOTAL_POSITIONS,
+                per_strategy_max_open=MULTI_ALPHA_PER_STRATEGY_MAX_OPEN,
+                module1_enabled=MULTI_ALPHA_M1_ENABLED,
+                module2_enabled=MULTI_ALPHA_M2_ENABLED,
+                module3_enabled=MULTI_ALPHA_M3_ENABLED,
+            )
+
+            orchestrator = MultiAlphaOrchestrator(alpha_config)
+            memory.log("system", "Multi-alpha orchestrator started")
+
+            while True:
+                try:
+                    portfolio = load_portfolio()
+                    equity = portfolio.equity if portfolio else INITIAL_BALANCE
+                    summary = orchestrator.run_cycle(equity)
+                    memory.write("analyses", "multi_alpha_cycle", summary)
+                except Exception as e:
+                    memory.log_error("multi_alpha", str(e))
+                time.sleep(MULTI_ALPHA_SCAN_INTERVAL)
+
+        alpha_thread = threading.Thread(target=multi_alpha_loop, daemon=True, name="multi-alpha")
+        alpha_thread.start()
+        console.print(f"[dim]Multi-alpha orchestrator started (scan every {MULTI_ALPHA_SCAN_INTERVAL}s)[/dim]")
+        memory.log("system", f"Multi-alpha thread started (interval={MULTI_ALPHA_SCAN_INTERVAL}s)")
+    else:
+        console.print("[dim]Multi-alpha orchestrator disabled (MULTI_ALPHA_ENABLED=false)[/dim]")
 
     try:
         if HEADLESS:
