@@ -1,43 +1,43 @@
 {
   "initial_capital": 10000,
-  "final_equity": 9975.819044116633,
-  "total_return_pct": -0.24,
-  "avg_monthly_return_pct": -0.04,
-  "max_drawdown_pct": 2.5,
-  "total_trades": 228,
-  "wins": 113,
-  "losses": 115,
-  "win_rate": 49.6,
+  "final_equity": 10021.161189165494,
+  "total_return_pct": 0.21,
+  "avg_monthly_return_pct": 0.04,
+  "max_drawdown_pct": 2.3,
+  "total_trades": 151,
+  "wins": 80,
+  "losses": 71,
+  "win_rate": 53.0,
   "monthly_returns": [
     {
       "month": "2026-02",
-      "return_pct": -0.44,
-      "equity": 9956.01
+      "return_pct": -0.17,
+      "equity": 9982.97
     },
     {
       "month": "2026-03",
-      "return_pct": 0.16,
-      "equity": 9971.9
+      "return_pct": 0.31,
+      "equity": 10014.19
     },
     {
       "month": "2026-04",
-      "return_pct": -0.3,
-      "equity": 9942.47
+      "return_pct": 0.17,
+      "equity": 10031.68
     },
     {
       "month": "2026-05",
-      "return_pct": 0.42,
-      "equity": 9984.62
+      "return_pct": 0.43,
+      "equity": 10074.57
     },
     {
       "month": "2026-06",
-      "return_pct": -1.0,
-      "equity": 9884.32
+      "return_pct": -1.29,
+      "equity": 9944.79
     },
     {
       "month": "2026-07",
-      "return_pct": 0.93,
-      "equity": 9975.82
+      "return_pct": 0.77,
+      "equity": 10021.16
     }
   ],
   "trade_log": [
@@ -64,28 +64,6 @@
       "hold_bars": 10
     },
     {
-      "time": "2026-02-15 04:00:00",
-      "module": "module1",
-      "symbol": "XRPUSDT",
-      "entry": 1.5269,
-      "exit": 1.6151214285714286,
-      "pnl": 14.49,
-      "pnl_pct": 5.78,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 1
-    },
-    {
-      "time": "2026-02-15 08:00:00",
-      "module": "module1",
-      "symbol": "XRPUSDT",
-      "entry": 1.6497,
-      "exit": 1.576042857142857,
-      "pnl": -11.21,
-      "pnl_pct": -4.46,
-      "reason": "STOP_LOSS",
-      "hold_bars": 1
-    },
-    {
       "time": "2026-02-15 12:00:00",
       "module": "module3",
       "symbol": "BNBUSDT",
@@ -97,59 +75,15 @@
       "hold_bars": 15
     },
     {
-      "time": "2026-02-15 12:00:00",
-      "module": "module1",
-      "symbol": "FETUSDT",
-      "entry": 0.1822,
-      "exit": 0.17281428571428573,
-      "pnl": -12.92,
-      "pnl_pct": -5.15,
-      "reason": "STOP_LOSS",
-      "hold_bars": 5
-    },
-    {
-      "time": "2026-02-15 16:00:00",
-      "module": "module1",
-      "symbol": "XRPUSDT",
-      "entry": 1.5624,
-      "exit": 1.4757714285714285,
-      "pnl": -13.91,
-      "pnl_pct": -5.54,
-      "reason": "STOP_LOSS",
-      "hold_bars": 2
-    },
-    {
       "time": "2026-02-19 08:00:00",
       "module": "module3",
       "symbol": "SUIUSDT",
       "entry": 0.9885,
       "exit": 0.9084464285714285,
-      "pnl": -16.24,
+      "pnl": -16.26,
       "pnl_pct": -8.1,
       "reason": "STOP_LOSS",
       "hold_bars": 23
-    },
-    {
-      "time": "2026-02-19 12:00:00",
-      "module": "module1",
-      "symbol": "ADAUSDT",
-      "entry": 0.2842,
-      "exit": 0.2697,
-      "pnl": -12.79,
-      "pnl_pct": -5.1,
-      "reason": "STOP_LOSS",
-      "hold_bars": 24
-    },
-    {
-      "time": "2026-02-19 12:00:00",
-      "module": "module1",
-      "symbol": "LINKUSDT",
-      "entry": 8.87,
-      "exit": 8.481428571428571,
-      "pnl": -10.98,
-      "pnl_pct": -4.38,
-      "reason": "STOP_LOSS",
-      "hold_bars": 24
     },
     {
       "time": "2026-02-19 12:00:00",
@@ -157,21 +91,21 @@
       "symbol": "AVAXUSDT",
       "entry": 9.18,
       "exit": 8.692499999999999,
-      "pnl": -10.64,
+      "pnl": -10.66,
       "pnl_pct": -5.31,
       "reason": "STOP_LOSS",
       "hold_bars": 23
     },
     {
-      "time": "2026-02-19 12:00:00",
-      "module": "module1",
-      "symbol": "AAVEUSDT",
-      "entry": 126.84,
-      "exit": 120.35857142857142,
-      "pnl": -12.79,
-      "pnl_pct": -5.11,
-      "reason": "STOP_LOSS",
-      "hold_bars": 12
+      "time": "2026-02-20 16:00:00",
+      "module": "module3",
+      "symbol": "ADAUSDT",
+      "entry": 0.2722,
+      "exit": 0.2903071428571429,
+      "pnl": 13.33,
+      "pnl_pct": 6.65,
+      "reason": "TAKE_PROFIT",
+      "hold_bars": 8
     },
     {
       "time": "2026-02-21 08:00:00",
@@ -179,43 +113,10 @@
       "symbol": "BNBUSDT",
       "entry": 600.39,
       "exit": 630.0321428571428,
-      "pnl": 9.83,
+      "pnl": 9.89,
       "pnl_pct": 4.94,
       "reason": "TAKE_PROFIT",
       "hold_bars": 11
-    },
-    {
-      "time": "2026-02-21 08:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 3.208,
-      "exit": 3.6706428571428575,
-      "pnl": 35.88,
-      "pnl_pct": 14.42,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 11
-    },
-    {
-      "time": "2026-02-21 16:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 1.041,
-      "exit": 1.0571785714285715,
-      "pnl": 3.87,
-      "pnl_pct": 1.55,
-      "reason": "STOP_LOSS",
-      "hold_bars": 7
-    },
-    {
-      "time": "2026-02-22 08:00:00",
-      "module": "module3",
-      "symbol": "SUIUSDT",
-      "entry": 0.9154,
-      "exit": 0.9314928571428571,
-      "pnl": 3.52,
-      "pnl_pct": 1.76,
-      "reason": "STOP_LOSS",
-      "hold_bars": 18
     },
     {
       "time": "2026-02-23 00:00:00",
@@ -223,31 +124,9 @@
       "symbol": "BNBUSDT",
       "entry": 615.91,
       "exit": 598.3492857142857,
-      "pnl": -5.7,
+      "pnl": -5.72,
       "pnl_pct": -2.85,
       "reason": "STOP_LOSS",
-      "hold_bars": 3
-    },
-    {
-      "time": "2026-02-23 00:00:00",
-      "module": "module3",
-      "symbol": "AVAXUSDT",
-      "entry": 8.88,
-      "exit": 8.494285714285715,
-      "pnl": -8.69,
-      "pnl_pct": -4.34,
-      "reason": "STOP_LOSS",
-      "hold_bars": 3
-    },
-    {
-      "time": "2026-02-23 12:00:00",
-      "module": "module3",
-      "symbol": "ADAUSDT",
-      "entry": 0.2611,
-      "exit": 0.27436428571428567,
-      "pnl": 10.15,
-      "pnl_pct": 5.08,
-      "reason": "TAKE_PROFIT",
       "hold_bars": 3
     },
     {
@@ -256,7 +135,7 @@
       "symbol": "XRPUSDT",
       "entry": 1.4537,
       "exit": 1.3292,
-      "pnl": -17.15,
+      "pnl": -17.19,
       "pnl_pct": -8.56,
       "reason": "STOP_LOSS",
       "hold_bars": 50
@@ -267,7 +146,7 @@
       "symbol": "BNBUSDT",
       "entry": 590.03,
       "exit": 612.5171428571429,
-      "pnl": 7.61,
+      "pnl": 7.64,
       "pnl_pct": 3.81,
       "reason": "TAKE_PROFIT",
       "hold_bars": 15
@@ -275,46 +154,24 @@
     {
       "time": "2026-02-25 12:00:00",
       "module": "module3",
-      "symbol": "ADAUSDT",
-      "entry": 0.267,
-      "exit": 0.28317857142857145,
-      "pnl": 12.12,
-      "pnl_pct": 6.06,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 12
-    },
-    {
-      "time": "2026-02-25 12:00:00",
-      "module": "module3",
       "symbol": "XRPUSDT",
       "entry": 1.3323,
       "exit": 1.4202642857142858,
-      "pnl": 13.18,
+      "pnl": 13.22,
       "pnl_pct": 6.6,
       "reason": "TAKE_PROFIT",
       "hold_bars": 9
     },
     {
-      "time": "2026-02-26 04:00:00",
-      "module": "module1",
+      "time": "2026-02-28 04:00:00",
+      "module": "module3",
       "symbol": "AAVEUSDT",
-      "entry": 122.98,
-      "exit": 116.41857142857144,
-      "pnl": -13.36,
-      "pnl_pct": -5.34,
+      "entry": 116.95,
+      "exit": 108.08928571428571,
+      "pnl": -15.19,
+      "pnl_pct": -7.58,
       "reason": "STOP_LOSS",
-      "hold_bars": 3
-    },
-    {
-      "time": "2026-02-27 16:00:00",
-      "module": "module1",
-      "symbol": "SUIUSDT",
-      "entry": 0.9473,
-      "exit": 0.8942571428571429,
-      "pnl": -14.02,
-      "pnl_pct": -5.6,
-      "reason": "STOP_LOSS",
-      "hold_bars": 13
+      "hold_bars": 45
     },
     {
       "time": "2026-02-28 04:00:00",
@@ -322,7 +179,7 @@
       "symbol": "ADAUSDT",
       "entry": 0.2883,
       "exit": 0.26512142857142856,
-      "pnl": -16.08,
+      "pnl": -16.13,
       "pnl_pct": -8.04,
       "reason": "STOP_LOSS",
       "hold_bars": 9
@@ -330,11 +187,11 @@
     {
       "time": "2026-02-28 04:00:00",
       "module": "module3",
-      "symbol": "FETUSDT",
-      "entry": 0.162,
-      "exit": 0.14896428571428572,
-      "pnl": -16.1,
-      "pnl_pct": -8.05,
+      "symbol": "SUIUSDT",
+      "entry": 0.9324,
+      "exit": 0.8491142857142857,
+      "pnl": -17.92,
+      "pnl_pct": -8.93,
       "reason": "STOP_LOSS",
       "hold_bars": 9
     },
@@ -344,7 +201,7 @@
       "symbol": "BNBUSDT",
       "entry": 597.5,
       "exit": 626.5871428571429,
-      "pnl": 9.69,
+      "pnl": 9.72,
       "pnl_pct": 4.87,
       "reason": "TAKE_PROFIT",
       "hold_bars": 5
@@ -355,21 +212,21 @@
       "symbol": "XRPUSDT",
       "entry": 1.3027,
       "exit": 1.3963214285714285,
-      "pnl": 14.31,
+      "pnl": 14.35,
       "pnl_pct": 7.19,
       "reason": "TAKE_PROFIT",
       "hold_bars": 5
     },
     {
-      "time": "2026-03-02 16:00:00",
+      "time": "2026-03-01 00:00:00",
       "module": "module3",
-      "symbol": "AAVEUSDT",
-      "entry": 114.17,
-      "exit": 125.56785714285715,
-      "pnl": 19.97,
-      "pnl_pct": 9.98,
+      "symbol": "ADAUSDT",
+      "entry": 0.265,
+      "exit": 0.28741428571428573,
+      "pnl": 16.89,
+      "pnl_pct": 8.46,
       "reason": "TAKE_PROFIT",
-      "hold_bars": 25
+      "hold_bars": 5
     },
     {
       "time": "2026-03-06 12:00:00",
@@ -377,32 +234,10 @@
       "symbol": "AAVEUSDT",
       "entry": 109.99,
       "exit": 113.62785714285714,
-      "pnl": 6.61,
+      "pnl": 6.63,
       "pnl_pct": 3.31,
       "reason": "STOP_LOSS",
       "hold_bars": 18
-    },
-    {
-      "time": "2026-03-06 12:00:00",
-      "module": "module1",
-      "symbol": "SUIUSDT",
-      "entry": 0.9778,
-      "exit": 0.9128857142857143,
-      "pnl": -16.6,
-      "pnl_pct": -6.64,
-      "reason": "STOP_LOSS",
-      "hold_bars": 12
-    },
-    {
-      "time": "2026-03-07 04:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 1.329,
-      "exit": 1.2115714285714285,
-      "pnl": -22.09,
-      "pnl_pct": -8.84,
-      "reason": "STOP_LOSS",
-      "hold_bars": 27
     },
     {
       "time": "2026-03-11 16:00:00",
@@ -410,7 +245,7 @@
       "symbol": "FETUSDT",
       "entry": 0.1485,
       "exit": 0.15654285714285712,
-      "pnl": 10.83,
+      "pnl": 10.86,
       "pnl_pct": 5.42,
       "reason": "STOP_LOSS",
       "hold_bars": 52
@@ -421,43 +256,10 @@
       "symbol": "BNBUSDT",
       "entry": 628.02,
       "exit": 660.1114285714285,
-      "pnl": 10.21,
+      "pnl": 10.25,
       "pnl_pct": 5.11,
       "reason": "TAKE_PROFIT",
       "hold_bars": 39
-    },
-    {
-      "time": "2026-03-13 12:00:00",
-      "module": "module1",
-      "symbol": "LINKUSDT",
-      "entry": 9.04,
-      "exit": 9.584285714285713,
-      "pnl": 15.02,
-      "pnl_pct": 6.02,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 6
-    },
-    {
-      "time": "2026-03-14 08:00:00",
-      "module": "module1",
-      "symbol": "AVAXUSDT",
-      "entry": 9.95,
-      "exit": 9.572857142857142,
-      "pnl": -9.47,
-      "pnl_pct": -3.79,
-      "reason": "STOP_LOSS",
-      "hold_bars": 8
-    },
-    {
-      "time": "2026-03-15 12:00:00",
-      "module": "module1",
-      "symbol": "FETUSDT",
-      "entry": 0.1793,
-      "exit": 0.20062142857142856,
-      "pnl": 29.7,
-      "pnl_pct": 11.89,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 14
     },
     {
       "time": "2026-03-16 04:00:00",
@@ -465,21 +267,10 @@
       "symbol": "ADAUSDT",
       "entry": 0.2651,
       "exit": 0.2895928571428572,
-      "pnl": 18.48,
+      "pnl": 18.52,
       "pnl_pct": 9.24,
       "reason": "TAKE_PROFIT",
       "hold_bars": 76
-    },
-    {
-      "time": "2026-03-16 16:00:00",
-      "module": "module1",
-      "symbol": "FETUSDT",
-      "entry": 0.2187,
-      "exit": 0.24488571428571426,
-      "pnl": 30.06,
-      "pnl_pct": 11.97,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 2
     },
     {
       "time": "2026-03-18 12:00:00",
@@ -493,23 +284,12 @@
       "hold_bars": 9
     },
     {
-      "time": "2026-03-18 12:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 3.263,
-      "exit": 3.1358571428571427,
-      "pnl": -9.81,
-      "pnl_pct": -3.9,
-      "reason": "STOP_LOSS",
-      "hold_bars": 9
-    },
-    {
       "time": "2026-03-18 20:00:00",
       "module": "module3",
       "symbol": "SUIUSDT",
       "entry": 1.0318,
       "exit": 0.9681571428571429,
-      "pnl": -12.43,
+      "pnl": -12.42,
       "pnl_pct": -6.17,
       "reason": "STOP_LOSS",
       "hold_bars": 10
@@ -520,32 +300,10 @@
       "symbol": "BNBUSDT",
       "entry": 648.82,
       "exit": 624.0057142857144,
-      "pnl": -7.69,
+      "pnl": -7.7,
       "pnl_pct": -3.82,
       "reason": "STOP_LOSS",
       "hold_bars": 21
-    },
-    {
-      "time": "2026-03-22 00:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 3.142,
-      "exit": 2.986,
-      "pnl": -12.47,
-      "pnl_pct": -4.96,
-      "reason": "STOP_LOSS",
-      "hold_bars": 11
-    },
-    {
-      "time": "2026-03-22 08:00:00",
-      "module": "module1",
-      "symbol": "FETUSDT",
-      "entry": 0.2334,
-      "exit": 0.2118,
-      "pnl": -23.24,
-      "pnl_pct": -9.25,
-      "reason": "STOP_LOSS",
-      "hold_bars": 13
     },
     {
       "time": "2026-03-22 16:00:00",
@@ -559,37 +317,26 @@
       "hold_bars": 25
     },
     {
-      "time": "2026-03-23 04:00:00",
-      "module": "module1",
-      "symbol": "XRPUSDT",
-      "entry": 1.4408,
-      "exit": 1.3630857142857142,
-      "pnl": -13.56,
-      "pnl_pct": -5.39,
-      "reason": "STOP_LOSS",
-      "hold_bars": 28
-    },
-    {
       "time": "2026-03-23 08:00:00",
       "module": "module3",
       "symbol": "ADAUSDT",
       "entry": 0.2517,
       "exit": 0.26380714285714285,
-      "pnl": 9.61,
+      "pnl": 9.65,
       "pnl_pct": 4.81,
       "reason": "TAKE_PROFIT",
       "hold_bars": 4
     },
     {
-      "time": "2026-03-26 04:00:00",
+      "time": "2026-03-26 12:00:00",
       "module": "module3",
-      "symbol": "LINKUSDT",
-      "entry": 8.97,
-      "exit": 9.11392857142857,
-      "pnl": 3.22,
-      "pnl_pct": 1.6,
+      "symbol": "XRPUSDT",
+      "entry": 1.4319,
+      "exit": 1.353775,
+      "pnl": -10.97,
+      "pnl_pct": -5.46,
       "reason": "STOP_LOSS",
-      "hold_bars": 40
+      "hold_bars": 42
     },
     {
       "time": "2026-03-26 16:00:00",
@@ -597,7 +344,7 @@
       "symbol": "NEARUSDT",
       "entry": 1.283,
       "exit": 1.206035714285714,
-      "pnl": -11.98,
+      "pnl": -12.05,
       "pnl_pct": -6.0,
       "reason": "STOP_LOSS",
       "hold_bars": 13
@@ -608,7 +355,7 @@
       "symbol": "BNBUSDT",
       "entry": 634.84,
       "exit": 618.5310714285714,
-      "pnl": -5.15,
+      "pnl": -5.16,
       "pnl_pct": -2.57,
       "reason": "STOP_LOSS",
       "hold_bars": 32
@@ -619,7 +366,7 @@
       "symbol": "AVAXUSDT",
       "entry": 9.02,
       "exit": 8.598571428571429,
-      "pnl": -9.32,
+      "pnl": -9.36,
       "pnl_pct": -4.67,
       "reason": "STOP_LOSS",
       "hold_bars": 18
@@ -630,7 +377,7 @@
       "symbol": "XRPUSDT",
       "entry": 1.3604,
       "exit": 1.3045964285714287,
-      "pnl": -8.19,
+      "pnl": -8.23,
       "pnl_pct": -4.1,
       "reason": "STOP_LOSS",
       "hold_bars": 20
@@ -641,7 +388,7 @@
       "symbol": "ADAUSDT",
       "entry": 0.2398,
       "exit": 0.2516285714285714,
-      "pnl": 9.82,
+      "pnl": 9.86,
       "pnl_pct": 4.93,
       "reason": "TAKE_PROFIT",
       "hold_bars": 3
@@ -652,7 +399,7 @@
       "symbol": "AVAXUSDT",
       "entry": 8.6,
       "exit": 8.992142857142857,
-      "pnl": 9.08,
+      "pnl": 9.12,
       "pnl_pct": 4.56,
       "reason": "TAKE_PROFIT",
       "hold_bars": 3
@@ -663,7 +410,7 @@
       "symbol": "BNBUSDT",
       "entry": 611.07,
       "exit": 590.9396428571429,
-      "pnl": -6.57,
+      "pnl": -6.6,
       "pnl_pct": -3.29,
       "reason": "STOP_LOSS",
       "hold_bars": 35
@@ -674,32 +421,10 @@
       "symbol": "ADAUSDT",
       "entry": 0.2436,
       "exit": 0.2579357142857143,
-      "pnl": 11.74,
+      "pnl": 11.79,
       "pnl_pct": 5.88,
       "reason": "TAKE_PROFIT",
       "hold_bars": 35
-    },
-    {
-      "time": "2026-04-06 08:00:00",
-      "module": "module1",
-      "symbol": "LINKUSDT",
-      "entry": 8.82,
-      "exit": 9.135,
-      "pnl": 8.9,
-      "pnl_pct": 3.57,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 3
-    },
-    {
-      "time": "2026-04-06 08:00:00",
-      "module": "module1",
-      "symbol": "SUIUSDT",
-      "entry": 0.8709,
-      "exit": 0.9083357142857142,
-      "pnl": 10.71,
-      "pnl_pct": 4.3,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 3
     },
     {
       "time": "2026-04-06 20:00:00",
@@ -707,7 +432,7 @@
       "symbol": "XRPUSDT",
       "entry": 1.3196,
       "exit": 1.3278178571428572,
-      "pnl": 1.24,
+      "pnl": 1.25,
       "pnl_pct": 0.62,
       "reason": "STOP_LOSS",
       "hold_bars": 40
@@ -718,21 +443,10 @@
       "symbol": "BNBUSDT",
       "entry": 591.82,
       "exit": 600.0296428571429,
-      "pnl": 2.76,
+      "pnl": 2.78,
       "pnl_pct": 1.39,
       "reason": "STOP_LOSS",
       "hold_bars": 28
-    },
-    {
-      "time": "2026-04-06 20:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 1.295,
-      "exit": 1.2462857142857142,
-      "pnl": -9.4,
-      "pnl_pct": -3.76,
-      "reason": "STOP_LOSS",
-      "hold_bars": 3
     },
     {
       "time": "2026-04-07 08:00:00",
@@ -740,7 +454,7 @@
       "symbol": "AAVEUSDT",
       "entry": 93.0,
       "exit": 88.49285714285715,
-      "pnl": -9.68,
+      "pnl": -9.72,
       "pnl_pct": -4.85,
       "reason": "STOP_LOSS",
       "hold_bars": 3
@@ -748,10 +462,21 @@
     {
       "time": "2026-04-07 20:00:00",
       "module": "module3",
+      "symbol": "FETUSDT",
+      "entry": 0.2267,
+      "exit": 0.24815,
+      "pnl": 18.97,
+      "pnl_pct": 9.46,
+      "reason": "TAKE_PROFIT",
+      "hold_bars": 6
+    },
+    {
+      "time": "2026-04-07 20:00:00",
+      "module": "module3",
       "symbol": "AVAXUSDT",
       "entry": 8.69,
       "exit": 9.330714285714285,
-      "pnl": 14.73,
+      "pnl": 14.78,
       "pnl_pct": 7.37,
       "reason": "TAKE_PROFIT",
       "hold_bars": 5
@@ -762,32 +487,10 @@
       "symbol": "BNBUSDT",
       "entry": 597.1,
       "exit": 618.19,
-      "pnl": 7.05,
+      "pnl": 7.07,
       "pnl_pct": 3.53,
       "reason": "TAKE_PROFIT",
       "hold_bars": 3
-    },
-    {
-      "time": "2026-04-07 20:00:00",
-      "module": "module3",
-      "symbol": "ADAUSDT",
-      "entry": 0.2423,
-      "exit": 0.2569785714285714,
-      "pnl": 12.09,
-      "pnl_pct": 6.06,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 3
-    },
-    {
-      "time": "2026-04-08 20:00:00",
-      "module": "module1",
-      "symbol": "ADAUSDT",
-      "entry": 0.2627,
-      "exit": 0.25071428571428567,
-      "pnl": -11.42,
-      "pnl_pct": -4.56,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
     },
     {
       "time": "2026-04-12 00:00:00",
@@ -795,21 +498,10 @@
       "symbol": "LINKUSDT",
       "entry": 8.75,
       "exit": 9.036428571428571,
-      "pnl": 6.55,
+      "pnl": 6.58,
       "pnl_pct": 3.27,
       "reason": "STOP_LOSS",
       "hold_bars": 18
-    },
-    {
-      "time": "2026-04-12 00:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 1.408,
-      "exit": 1.34,
-      "pnl": -12.08,
-      "pnl_pct": -4.83,
-      "reason": "STOP_LOSS",
-      "hold_bars": 2
     },
     {
       "time": "2026-04-12 12:00:00",
@@ -817,7 +509,7 @@
       "symbol": "ADAUSDT",
       "entry": 0.2482,
       "exit": 0.23736071428571426,
-      "pnl": -8.74,
+      "pnl": -8.78,
       "pnl_pct": -4.37,
       "reason": "STOP_LOSS",
       "hold_bars": 6
@@ -828,7 +520,7 @@
       "symbol": "BNBUSDT",
       "entry": 595.5,
       "exit": 615.1007142857144,
-      "pnl": 6.58,
+      "pnl": 6.62,
       "pnl_pct": 3.29,
       "reason": "TAKE_PROFIT",
       "hold_bars": 11
@@ -839,7 +531,7 @@
       "symbol": "XRPUSDT",
       "entry": 1.3302,
       "exit": 1.3794428571428572,
-      "pnl": 7.4,
+      "pnl": 7.45,
       "pnl_pct": 3.7,
       "reason": "TAKE_PROFIT",
       "hold_bars": 11
@@ -850,7 +542,7 @@
       "symbol": "ADAUSDT",
       "entry": 0.2384,
       "exit": 0.24150714285714284,
-      "pnl": 2.6,
+      "pnl": 2.62,
       "pnl_pct": 1.3,
       "reason": "STOP_LOSS",
       "hold_bars": 10
@@ -861,7 +553,7 @@
       "symbol": "INJUSDT",
       "entry": 2.971,
       "exit": 3.1297857142857146,
-      "pnl": 10.7,
+      "pnl": 10.76,
       "pnl_pct": 5.34,
       "reason": "TAKE_PROFIT",
       "hold_bars": 6
@@ -872,41 +564,19 @@
       "symbol": "NEARUSDT",
       "entry": 1.37,
       "exit": 1.389714285714286,
-      "pnl": 2.88,
+      "pnl": 2.9,
       "pnl_pct": 1.44,
       "reason": "STOP_LOSS",
       "hold_bars": 11
     },
     {
-      "time": "2026-04-17 04:00:00",
-      "module": "module1",
-      "symbol": "AVAXUSDT",
-      "entry": 9.43,
-      "exit": 9.539642857142857,
-      "pnl": 2.91,
-      "pnl_pct": 1.16,
-      "reason": "STOP_LOSS",
-      "hold_bars": 56
-    },
-    {
-      "time": "2026-04-18 16:00:00",
-      "module": "module1",
+      "time": "2026-04-17 00:00:00",
+      "module": "module3",
       "symbol": "FETUSDT",
-      "entry": 0.2425,
-      "exit": 0.21974285714285713,
-      "pnl": -23.42,
-      "pnl_pct": -9.38,
-      "reason": "STOP_LOSS",
-      "hold_bars": 149
-    },
-    {
-      "time": "2026-04-18 16:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 3.37,
-      "exit": 3.2167142857142856,
-      "pnl": -11.39,
-      "pnl_pct": -4.55,
+      "entry": 0.2293,
+      "exit": 0.23377857142857145,
+      "pnl": 3.93,
+      "pnl_pct": 1.95,
       "reason": "STOP_LOSS",
       "hold_bars": 15
     },
@@ -916,21 +586,10 @@
       "symbol": "AAVEUSDT",
       "entry": 103.76,
       "exit": 92.31,
-      "pnl": -22.04,
+      "pnl": -22.26,
       "pnl_pct": -11.04,
       "reason": "STOP_LOSS",
       "hold_bars": 3
-    },
-    {
-      "time": "2026-04-26 04:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 3.607,
-      "exit": 3.8538571428571435,
-      "pnl": 17.05,
-      "pnl_pct": 6.84,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 4
     },
     {
       "time": "2026-04-27 04:00:00",
@@ -938,21 +597,10 @@
       "symbol": "AAVEUSDT",
       "entry": 92.55,
       "exit": 96.58214285714286,
-      "pnl": 8.68,
+      "pnl": 8.77,
       "pnl_pct": 4.36,
       "reason": "STOP_LOSS",
       "hold_bars": 48
-    },
-    {
-      "time": "2026-04-27 12:00:00",
-      "module": "module1",
-      "symbol": "XRPUSDT",
-      "entry": 1.4327,
-      "exit": 1.385657142857143,
-      "pnl": -8.18,
-      "pnl_pct": -3.28,
-      "reason": "STOP_LOSS",
-      "hold_bars": 42
     },
     {
       "time": "2026-04-28 00:00:00",
@@ -960,7 +608,7 @@
       "symbol": "FETUSDT",
       "entry": 0.2193,
       "exit": 0.20162142857142856,
-      "pnl": -16.1,
+      "pnl": -16.26,
       "pnl_pct": -8.06,
       "reason": "STOP_LOSS",
       "hold_bars": 56
@@ -971,7 +619,7 @@
       "symbol": "NEARUSDT",
       "entry": 1.394,
       "exit": 1.3081071428571427,
-      "pnl": -12.35,
+      "pnl": -12.43,
       "pnl_pct": -6.16,
       "reason": "STOP_LOSS",
       "hold_bars": 74
@@ -982,7 +630,7 @@
       "symbol": "BNBUSDT",
       "entry": 625.87,
       "exit": 614.5128571428572,
-      "pnl": -3.63,
+      "pnl": -3.66,
       "pnl_pct": -1.81,
       "reason": "STOP_LOSS",
       "hold_bars": 15
@@ -993,7 +641,7 @@
       "symbol": "FETUSDT",
       "entry": 0.2025,
       "exit": 0.19335714285714287,
-      "pnl": -9.0,
+      "pnl": -9.08,
       "pnl_pct": -4.51,
       "reason": "STOP_LOSS",
       "hold_bars": 10
@@ -1004,7 +652,7 @@
       "symbol": "ADAUSDT",
       "entry": 0.2417,
       "exit": 0.247625,
-      "pnl": 4.87,
+      "pnl": 4.92,
       "pnl_pct": 2.45,
       "reason": "STOP_LOSS",
       "hold_bars": 20
@@ -1015,7 +663,7 @@
       "symbol": "XRPUSDT",
       "entry": 1.3534,
       "exit": 1.404442857142857,
-      "pnl": 7.5,
+      "pnl": 7.57,
       "pnl_pct": 3.77,
       "reason": "TAKE_PROFIT",
       "hold_bars": 26
@@ -1026,32 +674,21 @@
       "symbol": "BNBUSDT",
       "entry": 613.31,
       "exit": 629.0471428571427,
-      "pnl": 5.1,
+      "pnl": 5.15,
       "pnl_pct": 2.57,
       "reason": "TAKE_PROFIT",
       "hold_bars": 27
     },
     {
-      "time": "2026-05-04 04:00:00",
-      "module": "module1",
-      "symbol": "SUIUSDT",
-      "entry": 0.9254,
-      "exit": 0.95225,
-      "pnl": 7.22,
-      "pnl_pct": 2.9,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 4
-    },
-    {
-      "time": "2026-05-04 12:00:00",
-      "module": "module1",
+      "time": "2026-05-05 16:00:00",
+      "module": "module3",
       "symbol": "FETUSDT",
-      "entry": 0.2087,
-      "exit": 0.20134285714285713,
-      "pnl": -8.77,
-      "pnl_pct": -3.53,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
+      "entry": 0.2025,
+      "exit": 0.2165357142857143,
+      "pnl": 13.93,
+      "pnl_pct": 6.93,
+      "reason": "TAKE_PROFIT",
+      "hold_bars": 8
     },
     {
       "time": "2026-05-06 00:00:00",
@@ -1059,7 +696,7 @@
       "symbol": "NEARUSDT",
       "entry": 1.275,
       "exit": 1.3199999999999998,
-      "pnl": 7.02,
+      "pnl": 7.08,
       "pnl_pct": 3.53,
       "reason": "TAKE_PROFIT",
       "hold_bars": 13
@@ -1070,43 +707,21 @@
       "symbol": "AAVEUSDT",
       "entry": 92.11,
       "exit": 96.265,
-      "pnl": 8.99,
+      "pnl": 9.07,
       "pnl_pct": 4.51,
       "reason": "TAKE_PROFIT",
       "hold_bars": 12
     },
     {
-      "time": "2026-05-06 12:00:00",
-      "module": "module1",
-      "symbol": "SUIUSDT",
-      "entry": 1.0301,
-      "exit": 0.9889285714285714,
-      "pnl": -9.97,
-      "pnl_pct": -4.0,
-      "reason": "STOP_LOSS",
-      "hold_bars": 1
-    },
-    {
-      "time": "2026-05-07 20:00:00",
-      "module": "module1",
-      "symbol": "BNBUSDT",
-      "entry": 652.56,
-      "exit": 638.7328571428571,
-      "pnl": -5.28,
-      "pnl_pct": -2.12,
-      "reason": "STOP_LOSS",
-      "hold_bars": 9
-    },
-    {
-      "time": "2026-05-08 04:00:00",
-      "module": "module1",
+      "time": "2026-05-08 12:00:00",
+      "module": "module3",
       "symbol": "INJUSDT",
-      "entry": 3.76,
-      "exit": 4.001714285714286,
-      "pnl": 15.98,
-      "pnl_pct": 6.43,
+      "entry": 3.822,
+      "exit": 4.116214285714285,
+      "pnl": 15.52,
+      "pnl_pct": 7.7,
       "reason": "TAKE_PROFIT",
-      "hold_bars": 36
+      "hold_bars": 6
     },
     {
       "time": "2026-05-08 16:00:00",
@@ -1114,21 +729,10 @@
       "symbol": "AVAXUSDT",
       "entry": 9.41,
       "exit": 9.934999999999999,
-      "pnl": 11.12,
+      "pnl": 11.25,
       "pnl_pct": 5.58,
       "reason": "TAKE_PROFIT",
       "hold_bars": 7
-    },
-    {
-      "time": "2026-05-10 12:00:00",
-      "module": "module1",
-      "symbol": "SUIUSDT",
-      "entry": 1.0832,
-      "exit": 1.1709928571428572,
-      "pnl": 20.23,
-      "pnl_pct": 8.1,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 9
     },
     {
       "time": "2026-05-10 16:00:00",
@@ -1136,65 +740,10 @@
       "symbol": "XRPUSDT",
       "entry": 1.3907,
       "exit": 1.4470357142857144,
-      "pnl": 8.07,
+      "pnl": 8.17,
       "pnl_pct": 4.05,
       "reason": "TAKE_PROFIT",
       "hold_bars": 19
-    },
-    {
-      "time": "2026-05-10 16:00:00",
-      "module": "module1",
-      "symbol": "SUIUSDT",
-      "entry": 1.225,
-      "exit": 1.3465857142857143,
-      "pnl": 24.83,
-      "pnl_pct": 9.93,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 1
-    },
-    {
-      "time": "2026-05-10 20:00:00",
-      "module": "module1",
-      "symbol": "FETUSDT",
-      "entry": 0.2318,
-      "exit": 0.23704285714285714,
-      "pnl": 5.65,
-      "pnl_pct": 2.26,
-      "reason": "STOP_LOSS",
-      "hold_bars": 8
-    },
-    {
-      "time": "2026-05-12 08:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 4.461,
-      "exit": 4.795928571428572,
-      "pnl": 18.85,
-      "pnl_pct": 7.51,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 6
-    },
-    {
-      "time": "2026-05-12 12:00:00",
-      "module": "module1",
-      "symbol": "ADAUSDT",
-      "entry": 0.2815,
-      "exit": 0.27187142857142854,
-      "pnl": -8.56,
-      "pnl_pct": -3.42,
-      "reason": "STOP_LOSS",
-      "hold_bars": 12
-    },
-    {
-      "time": "2026-05-12 12:00:00",
-      "module": "module1",
-      "symbol": "AVAXUSDT",
-      "entry": 10.24,
-      "exit": 9.808571428571428,
-      "pnl": -10.58,
-      "pnl_pct": -4.21,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
     },
     {
       "time": "2026-05-12 16:00:00",
@@ -1202,43 +751,10 @@
       "symbol": "NEARUSDT",
       "entry": 1.522,
       "exit": 1.6332142857142857,
-      "pnl": 14.68,
+      "pnl": 14.78,
       "pnl_pct": 7.31,
       "reason": "TAKE_PROFIT",
       "hold_bars": 7
-    },
-    {
-      "time": "2026-05-13 00:00:00",
-      "module": "module1",
-      "symbol": "BNBUSDT",
-      "entry": 652.26,
-      "exit": 679.7592857142856,
-      "pnl": 10.59,
-      "pnl_pct": 4.22,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 3
-    },
-    {
-      "time": "2026-05-13 04:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 4.655,
-      "exit": 5.238714285714286,
-      "pnl": 31.49,
-      "pnl_pct": 12.54,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 4
-    },
-    {
-      "time": "2026-05-13 12:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 1.688,
-      "exit": 1.568,
-      "pnl": -17.9,
-      "pnl_pct": -7.11,
-      "reason": "STOP_LOSS",
-      "hold_bars": 3
     },
     {
       "time": "2026-05-14 12:00:00",
@@ -1246,7 +762,7 @@
       "symbol": "BTCUSDT",
       "entry": 78827.21,
       "exit": 81202.87785714287,
-      "pnl": 6.08,
+      "pnl": 6.11,
       "pnl_pct": 3.01,
       "reason": "TAKE_PROFIT",
       "hold_bars": 6
@@ -1257,21 +773,10 @@
       "symbol": "XRPUSDT",
       "entry": 1.424,
       "exit": 1.5107857142857144,
-      "pnl": 12.24,
+      "pnl": 12.33,
       "pnl_pct": 6.09,
       "reason": "TAKE_PROFIT",
       "hold_bars": 13
-    },
-    {
-      "time": "2026-05-15 12:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 5.446,
-      "exit": 4.772,
-      "pnl": -31.2,
-      "pnl_pct": -12.38,
-      "reason": "STOP_LOSS",
-      "hold_bars": 12
     },
     {
       "time": "2026-05-15 12:00:00",
@@ -1279,7 +784,7 @@
       "symbol": "SUIUSDT",
       "entry": 1.1547,
       "exit": 1.0705392857142857,
-      "pnl": -14.73,
+      "pnl": -14.79,
       "pnl_pct": -7.29,
       "reason": "STOP_LOSS",
       "hold_bars": 2
@@ -1290,21 +795,10 @@
       "symbol": "LINKUSDT",
       "entry": 10.27,
       "exit": 9.750357142857142,
-      "pnl": -10.18,
+      "pnl": -10.24,
       "pnl_pct": -5.06,
       "reason": "STOP_LOSS",
       "hold_bars": 23
-    },
-    {
-      "time": "2026-05-16 04:00:00",
-      "module": "module1",
-      "symbol": "ADAUSDT",
-      "entry": 0.2691,
-      "exit": 0.25665714285714286,
-      "pnl": -11.61,
-      "pnl_pct": -4.62,
-      "reason": "STOP_LOSS",
-      "hold_bars": 22
     },
     {
       "time": "2026-05-17 20:00:00",
@@ -1312,7 +806,7 @@
       "symbol": "ETHUSDT",
       "entry": 2222.85,
       "exit": 2137.7875,
-      "pnl": -7.7,
+      "pnl": -7.76,
       "pnl_pct": -3.83,
       "reason": "STOP_LOSS",
       "hold_bars": 14
@@ -1323,21 +817,10 @@
       "symbol": "BTCUSDT",
       "entry": 79150.27,
       "exit": 76578.48607142858,
-      "pnl": -6.53,
+      "pnl": -6.58,
       "pnl_pct": -3.25,
       "reason": "STOP_LOSS",
       "hold_bars": 18
-    },
-    {
-      "time": "2026-05-21 00:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 1.626,
-      "exit": 1.7459999999999998,
-      "pnl": 18.49,
-      "pnl_pct": 7.38,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 13
     },
     {
       "time": "2026-05-21 12:00:00",
@@ -1345,21 +828,10 @@
       "symbol": "BTCUSDT",
       "entry": 76409.46,
       "exit": 77102.67214285715,
-      "pnl": 1.82,
+      "pnl": 1.83,
       "pnl_pct": 0.91,
       "reason": "STOP_LOSS",
       "hold_bars": 18
-    },
-    {
-      "time": "2026-05-22 00:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 1.807,
-      "exit": 1.9885,
-      "pnl": 25.21,
-      "pnl_pct": 10.04,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 3
     },
     {
       "time": "2026-05-22 16:00:00",
@@ -1367,7 +839,7 @@
       "symbol": "ADAUSDT",
       "entry": 0.2554,
       "exit": 0.24245357142857146,
-      "pnl": -10.17,
+      "pnl": -10.26,
       "pnl_pct": -5.07,
       "reason": "STOP_LOSS",
       "hold_bars": 39
@@ -1378,21 +850,10 @@
       "symbol": "ETHUSDT",
       "entry": 2131.0,
       "exit": 2071.039285714286,
-      "pnl": -5.64,
+      "pnl": -5.69,
       "pnl_pct": -2.81,
       "reason": "STOP_LOSS",
       "hold_bars": 29
-    },
-    {
-      "time": "2026-05-22 20:00:00",
-      "module": "module1",
-      "symbol": "FETUSDT",
-      "entry": 0.2108,
-      "exit": 0.19764285714285712,
-      "pnl": -15.71,
-      "pnl_pct": -6.24,
-      "reason": "STOP_LOSS",
-      "hold_bars": 2
     },
     {
       "time": "2026-05-23 04:00:00",
@@ -1400,7 +861,7 @@
       "symbol": "XRPUSDT",
       "entry": 1.3652,
       "exit": 1.3216821428571428,
-      "pnl": -6.42,
+      "pnl": -6.45,
       "pnl_pct": -3.19,
       "reason": "STOP_LOSS",
       "hold_bars": 6
@@ -1411,7 +872,7 @@
       "symbol": "BTCUSDT",
       "entry": 74609.36,
       "exit": 76931.68357142858,
-      "pnl": 6.24,
+      "pnl": 6.28,
       "pnl_pct": 3.11,
       "reason": "TAKE_PROFIT",
       "hold_bars": 4
@@ -1422,32 +883,10 @@
       "symbol": "ETHUSDT",
       "entry": 2065.54,
       "exit": 2085.2742857142857,
-      "pnl": 1.92,
+      "pnl": 1.93,
       "pnl_pct": 0.96,
       "reason": "STOP_LOSS",
       "hold_bars": 20
-    },
-    {
-      "time": "2026-05-26 20:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 2.855,
-      "exit": 2.589857142857143,
-      "pnl": -23.3,
-      "pnl_pct": -9.29,
-      "reason": "STOP_LOSS",
-      "hold_bars": 3
-    },
-    {
-      "time": "2026-05-27 20:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 5.342,
-      "exit": 5.5005,
-      "pnl": 7.44,
-      "pnl_pct": 2.97,
-      "reason": "STOP_LOSS",
-      "hold_bars": 25
     },
     {
       "time": "2026-05-27 20:00:00",
@@ -1455,7 +894,7 @@
       "symbol": "SUIUSDT",
       "entry": 1.0328,
       "exit": 0.9557464285714284,
-      "pnl": -14.97,
+      "pnl": -15.06,
       "pnl_pct": -7.46,
       "reason": "STOP_LOSS",
       "hold_bars": 18
@@ -1466,19 +905,8 @@
       "symbol": "BTCUSDT",
       "entry": 76518.1,
       "exit": 74577.82142857143,
-      "pnl": -5.09,
+      "pnl": -5.12,
       "pnl_pct": -2.54,
-      "reason": "STOP_LOSS",
-      "hold_bars": 8
-    },
-    {
-      "time": "2026-05-27 20:00:00",
-      "module": "module1",
-      "symbol": "BNBUSDT",
-      "entry": 660.28,
-      "exit": 647.27,
-      "pnl": -4.94,
-      "pnl_pct": -1.97,
       "reason": "STOP_LOSS",
       "hold_bars": 8
     },
@@ -1488,7 +916,7 @@
       "symbol": "ADAUSDT",
       "entry": 0.2443,
       "exit": 0.23376428571428567,
-      "pnl": -8.67,
+      "pnl": -8.71,
       "pnl_pct": -4.31,
       "reason": "STOP_LOSS",
       "hold_bars": 32
@@ -1499,21 +927,10 @@
       "symbol": "XRPUSDT",
       "entry": 1.3076,
       "exit": 1.3571642857142858,
-      "pnl": 7.58,
+      "pnl": 7.64,
       "pnl_pct": 3.79,
       "reason": "TAKE_PROFIT",
       "hold_bars": 13
-    },
-    {
-      "time": "2026-05-31 16:00:00",
-      "module": "module1",
-      "symbol": "BNBUSDT",
-      "entry": 740.03,
-      "exit": 712.9285714285713,
-      "pnl": -9.15,
-      "pnl_pct": -3.66,
-      "reason": "STOP_LOSS",
-      "hold_bars": 4
     },
     {
       "time": "2026-06-01 16:00:00",
@@ -1521,21 +938,10 @@
       "symbol": "BTCUSDT",
       "entry": 73258.01,
       "exit": 71031.39392857143,
-      "pnl": -6.07,
+      "pnl": -6.12,
       "pnl_pct": -3.04,
       "reason": "STOP_LOSS",
       "hold_bars": 28
-    },
-    {
-      "time": "2026-06-01 16:00:00",
-      "module": "module1",
-      "symbol": "INJUSDT",
-      "entry": 6.285,
-      "exit": 7.200642857142857,
-      "pnl": 36.37,
-      "pnl_pct": 14.57,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 21
     },
     {
       "time": "2026-06-02 04:00:00",
@@ -1543,7 +949,7 @@
       "symbol": "BTCUSDT",
       "entry": 71595.24,
       "exit": 69937.80071428572,
-      "pnl": -4.64,
+      "pnl": -4.66,
       "pnl_pct": -2.32,
       "reason": "STOP_LOSS",
       "hold_bars": 3
@@ -1554,7 +960,7 @@
       "symbol": "ETHUSDT",
       "entry": 2024.84,
       "exit": 1947.6114285714286,
-      "pnl": -7.62,
+      "pnl": -7.69,
       "pnl_pct": -3.81,
       "reason": "STOP_LOSS",
       "hold_bars": 34
@@ -1565,7 +971,7 @@
       "symbol": "SUIUSDT",
       "entry": 0.8794,
       "exit": 0.8220607142857143,
-      "pnl": -13.03,
+      "pnl": -13.14,
       "pnl_pct": -6.52,
       "reason": "STOP_LOSS",
       "hold_bars": 12
@@ -1576,21 +982,10 @@
       "symbol": "BTCUSDT",
       "entry": 70118.42,
       "exit": 68041.11642857142,
-      "pnl": -5.93,
+      "pnl": -5.96,
       "pnl_pct": -2.96,
       "reason": "STOP_LOSS",
       "hold_bars": 2
-    },
-    {
-      "time": "2026-06-02 16:00:00",
-      "module": "module1",
-      "symbol": "FETUSDT",
-      "entry": 0.2731,
-      "exit": 0.24361428571428573,
-      "pnl": -26.97,
-      "pnl_pct": -10.8,
-      "reason": "STOP_LOSS",
-      "hold_bars": 19
     },
     {
       "time": "2026-06-03 00:00:00",
@@ -1598,7 +993,7 @@
       "symbol": "ETHUSDT",
       "entry": 1914.81,
       "exit": 1830.5367857142855,
-      "pnl": -8.79,
+      "pnl": -8.83,
       "pnl_pct": -4.4,
       "reason": "STOP_LOSS",
       "hold_bars": 3
@@ -1609,7 +1004,7 @@
       "symbol": "BTCUSDT",
       "entry": 67304.28,
       "exit": 64777.50321428571,
-      "pnl": -7.5,
+      "pnl": -7.54,
       "pnl_pct": -3.75,
       "reason": "STOP_LOSS",
       "hold_bars": 8
@@ -1620,7 +1015,7 @@
       "symbol": "XRPUSDT",
       "entry": 1.222,
       "exit": 1.1664642857142857,
-      "pnl": -9.07,
+      "pnl": -9.12,
       "pnl_pct": -4.54,
       "reason": "STOP_LOSS",
       "hold_bars": 9
@@ -1631,7 +1026,7 @@
       "symbol": "ETHUSDT",
       "entry": 1828.24,
       "exit": 1717.7292857142859,
-      "pnl": -12.03,
+      "pnl": -12.12,
       "pnl_pct": -6.04,
       "reason": "STOP_LOSS",
       "hold_bars": 6
@@ -1642,7 +1037,7 @@
       "symbol": "ETHUSDT",
       "entry": 1809.24,
       "exit": 1670.9007142857145,
-      "pnl": -15.17,
+      "pnl": -15.29,
       "pnl_pct": -7.65,
       "reason": "STOP_LOSS",
       "hold_bars": 7
@@ -1653,7 +1048,7 @@
       "symbol": "BNBUSDT",
       "entry": 618.99,
       "exit": 577.09,
-      "pnl": -13.43,
+      "pnl": -13.54,
       "pnl_pct": -6.77,
       "reason": "STOP_LOSS",
       "hold_bars": 7
@@ -1664,7 +1059,7 @@
       "symbol": "BTCUSDT",
       "entry": 64142.75,
       "exit": 60628.75,
-      "pnl": -10.89,
+      "pnl": -10.98,
       "pnl_pct": -5.48,
       "reason": "STOP_LOSS",
       "hold_bars": 10
@@ -1675,7 +1070,7 @@
       "symbol": "ETHUSDT",
       "entry": 1679.21,
       "exit": 1536.0689285714286,
-      "pnl": -16.86,
+      "pnl": -17.0,
       "pnl_pct": -8.52,
       "reason": "STOP_LOSS",
       "hold_bars": 6
@@ -1686,7 +1081,7 @@
       "symbol": "BTCUSDT",
       "entry": 60438.01,
       "exit": 62104.60071428572,
-      "pnl": 5.45,
+      "pnl": 5.49,
       "pnl_pct": 2.76,
       "reason": "STOP_LOSS",
       "hold_bars": 24
@@ -1697,7 +1092,7 @@
       "symbol": "ETHUSDT",
       "entry": 1575.14,
       "exit": 1631.1125,
-      "pnl": 7.01,
+      "pnl": 7.07,
       "pnl_pct": 3.55,
       "reason": "STOP_LOSS",
       "hold_bars": 21
@@ -1708,7 +1103,7 @@
       "symbol": "BNBUSDT",
       "entry": 593.26,
       "exit": 604.1321428571429,
-      "pnl": 3.63,
+      "pnl": 3.65,
       "pnl_pct": 1.83,
       "reason": "STOP_LOSS",
       "hold_bars": 57
@@ -1719,21 +1114,10 @@
       "symbol": "AVAXUSDT",
       "entry": 6.434,
       "exit": 6.736357142857143,
-      "pnl": 9.29,
+      "pnl": 9.36,
       "pnl_pct": 4.7,
       "reason": "TAKE_PROFIT",
       "hold_bars": 1
-    },
-    {
-      "time": "2026-06-15 00:00:00",
-      "module": "module1",
-      "symbol": "ADAUSDT",
-      "entry": 0.1705,
-      "exit": 0.1846214285714286,
-      "pnl": 20.45,
-      "pnl_pct": 8.28,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 15
     },
     {
       "time": "2026-06-15 08:00:00",
@@ -1741,43 +1125,10 @@
       "symbol": "XRPUSDT",
       "entry": 1.1277,
       "exit": 1.21755,
-      "pnl": 15.73,
+      "pnl": 15.85,
       "pnl_pct": 7.97,
       "reason": "TAKE_PROFIT",
       "hold_bars": 35
-    },
-    {
-      "time": "2026-06-15 08:00:00",
-      "module": "module1",
-      "symbol": "ETHUSDT",
-      "entry": 1660.08,
-      "exit": 1756.02,
-      "pnl": 14.27,
-      "pnl_pct": 5.78,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 17
-    },
-    {
-      "time": "2026-06-15 12:00:00",
-      "module": "module1",
-      "symbol": "LINKUSDT",
-      "entry": 8.197,
-      "exit": 8.515857142857142,
-      "pnl": 9.64,
-      "pnl_pct": 3.89,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 3
-    },
-    {
-      "time": "2026-06-15 20:00:00",
-      "module": "module1",
-      "symbol": "BTCUSDT",
-      "entry": 65746.45,
-      "exit": 66330.27035714286,
-      "pnl": 2.2,
-      "pnl_pct": 0.89,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
     },
     {
       "time": "2026-06-16 08:00:00",
@@ -1785,21 +1136,10 @@
       "symbol": "INJUSDT",
       "entry": 5.321,
       "exit": 6.065642857142857,
-      "pnl": 27.64,
+      "pnl": 27.86,
       "pnl_pct": 13.99,
       "reason": "TAKE_PROFIT",
       "hold_bars": 35
-    },
-    {
-      "time": "2026-06-16 12:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 2.488,
-      "exit": 2.318,
-      "pnl": -16.99,
-      "pnl_pct": -6.83,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
     },
     {
       "time": "2026-06-17 16:00:00",
@@ -1807,19 +1147,19 @@
       "symbol": "ADAUSDT",
       "entry": 0.1786,
       "exit": 0.16549285714285716,
-      "pnl": -14.61,
+      "pnl": -14.65,
       "pnl_pct": -7.34,
       "reason": "STOP_LOSS",
       "hold_bars": 11
     },
     {
       "time": "2026-06-18 12:00:00",
-      "module": "module1",
+      "module": "module3",
       "symbol": "ETHUSDT",
       "entry": 1782.44,
-      "exit": 1705.4328571428573,
-      "pnl": -10.76,
-      "pnl_pct": -4.32,
+      "exit": 1686.1810714285716,
+      "pnl": -10.81,
+      "pnl_pct": -5.4,
       "reason": "STOP_LOSS",
       "hold_bars": 12
     },
@@ -1829,32 +1169,10 @@
       "symbol": "BNBUSDT",
       "entry": 606.47,
       "exit": 585.1575,
-      "pnl": -7.0,
+      "pnl": -7.04,
       "pnl_pct": -3.51,
       "reason": "STOP_LOSS",
       "hold_bars": 12
-    },
-    {
-      "time": "2026-06-18 12:00:00",
-      "module": "module1",
-      "symbol": "AVAXUSDT",
-      "entry": 6.79,
-      "exit": 6.453714285714286,
-      "pnl": -12.33,
-      "pnl_pct": -4.95,
-      "reason": "STOP_LOSS",
-      "hold_bars": 12
-    },
-    {
-      "time": "2026-06-18 16:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 2.339,
-      "exit": 2.1384285714285713,
-      "pnl": -21.35,
-      "pnl_pct": -8.58,
-      "reason": "STOP_LOSS",
-      "hold_bars": 13
     },
     {
       "time": "2026-06-21 20:00:00",
@@ -1862,21 +1180,32 @@
       "symbol": "ETHUSDT",
       "entry": 1682.23,
       "exit": 1706.7975,
-      "pnl": 2.9,
+      "pnl": 2.91,
       "pnl_pct": 1.46,
       "reason": "STOP_LOSS",
       "hold_bars": 20
     },
     {
-      "time": "2026-06-23 08:00:00",
+      "time": "2026-06-21 20:00:00",
+      "module": "module3",
+      "symbol": "BNBUSDT",
+      "entry": 573.74,
+      "exit": 584.8675000000001,
+      "pnl": 3.87,
+      "pnl_pct": 1.94,
+      "reason": "STOP_LOSS",
+      "hold_bars": 20
+    },
+    {
+      "time": "2026-06-22 12:00:00",
       "module": "module3",
       "symbol": "XRPUSDT",
-      "entry": 1.1808,
-      "exit": 1.095942857142857,
-      "pnl": -14.3,
-      "pnl_pct": -7.19,
-      "reason": "STOP_LOSS",
-      "hold_bars": 34
+      "entry": 1.1248,
+      "exit": 1.162,
+      "pnl": 6.61,
+      "pnl_pct": 3.31,
+      "reason": "TAKE_PROFIT",
+      "hold_bars": 4
     },
     {
       "time": "2026-06-23 12:00:00",
@@ -1884,8 +1213,19 @@
       "symbol": "ADAUSDT",
       "entry": 0.1566,
       "exit": 0.1500642857142857,
-      "pnl": -8.26,
+      "pnl": -8.34,
       "pnl_pct": -4.17,
+      "reason": "STOP_LOSS",
+      "hold_bars": 10
+    },
+    {
+      "time": "2026-06-24 04:00:00",
+      "module": "module3",
+      "symbol": "NEARUSDT",
+      "entry": 2.121,
+      "exit": 1.9529642857142857,
+      "pnl": -15.83,
+      "pnl_pct": -7.92,
       "reason": "STOP_LOSS",
       "hold_bars": 10
     },
@@ -1895,7 +1235,7 @@
       "symbol": "BTCUSDT",
       "entry": 64301.85,
       "exit": 61855.52857142857,
-      "pnl": -7.57,
+      "pnl": -7.61,
       "pnl_pct": -3.8,
       "reason": "STOP_LOSS",
       "hold_bars": 41
@@ -1904,34 +1244,23 @@
       "time": "2026-06-24 16:00:00",
       "module": "module3",
       "symbol": "ETHUSDT",
-      "entry": 1660.9,
-      "exit": 1589.4910714285716,
-      "pnl": -8.5,
-      "pnl_pct": -4.3,
+      "entry": 1659.78,
+      "exit": 1585.7157142857143,
+      "pnl": -8.91,
+      "pnl_pct": -4.46,
       "reason": "STOP_LOSS",
-      "hold_bars": 8
+      "hold_bars": 7
     },
     {
       "time": "2026-06-24 16:00:00",
       "module": "module3",
-      "symbol": "BNBUSDT",
-      "entry": 574.67,
-      "exit": 556.4932142857143,
-      "pnl": -6.25,
-      "pnl_pct": -3.16,
+      "symbol": "XRPUSDT",
+      "entry": 1.0958,
+      "exit": 1.0558357142857147,
+      "pnl": -7.27,
+      "pnl_pct": -3.65,
       "reason": "STOP_LOSS",
-      "hold_bars": 7
-    },
-    {
-      "time": "2026-06-26 12:00:00",
-      "module": "module1",
-      "symbol": "AAVEUSDT",
-      "entry": 82.2,
-      "exit": 92.56928571428571,
-      "pnl": 31.07,
-      "pnl_pct": 12.61,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 7
+      "hold_bars": 2
     },
     {
       "time": "2026-07-01 00:00:00",
@@ -1939,7 +1268,7 @@
       "symbol": "BTCUSDT",
       "entry": 60250.0,
       "exit": 57911.546428571426,
-      "pnl": -7.66,
+      "pnl": -7.73,
       "pnl_pct": -3.88,
       "reason": "STOP_LOSS",
       "hold_bars": 39
@@ -1950,7 +1279,7 @@
       "symbol": "ETHUSDT",
       "entry": 1584.58,
       "exit": 1689.0764285714286,
-      "pnl": 13.0,
+      "pnl": 13.12,
       "pnl_pct": 6.59,
       "reason": "TAKE_PROFIT",
       "hold_bars": 47
@@ -1961,43 +1290,10 @@
       "symbol": "BTCUSDT",
       "entry": 59197.13,
       "exit": 61796.17142857142,
-      "pnl": 8.67,
+      "pnl": 8.73,
       "pnl_pct": 4.39,
       "reason": "TAKE_PROFIT",
       "hold_bars": 9
-    },
-    {
-      "time": "2026-07-03 12:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 1.923,
-      "exit": 2.107285714285714,
-      "pnl": 23.66,
-      "pnl_pct": 9.58,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 9
-    },
-    {
-      "time": "2026-07-03 16:00:00",
-      "module": "module1",
-      "symbol": "AVAXUSDT",
-      "entry": 6.499,
-      "exit": 6.9252142857142855,
-      "pnl": 16.21,
-      "pnl_pct": 6.56,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 19
-    },
-    {
-      "time": "2026-07-03 20:00:00",
-      "module": "module1",
-      "symbol": "FETUSDT",
-      "entry": 0.176,
-      "exit": 0.19067857142857142,
-      "pnl": 20.61,
-      "pnl_pct": 8.34,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 26
     },
     {
       "time": "2026-07-05 12:00:00",
@@ -2005,7 +1301,7 @@
       "symbol": "BNBUSDT",
       "entry": 555.57,
       "exit": 581.655,
-      "pnl": 9.25,
+      "pnl": 9.34,
       "pnl_pct": 4.7,
       "reason": "TAKE_PROFIT",
       "hold_bars": 65
@@ -2016,7 +1312,7 @@
       "symbol": "FETUSDT",
       "entry": 0.1777,
       "exit": 0.16951428571428573,
-      "pnl": -9.18,
+      "pnl": -13.76,
       "pnl_pct": -4.61,
       "reason": "STOP_LOSS",
       "hold_bars": 7
@@ -2027,21 +1323,10 @@
       "symbol": "AAVEUSDT",
       "entry": 86.12,
       "exit": 93.89857142857143,
-      "pnl": 17.88,
+      "pnl": 17.99,
       "pnl_pct": 9.03,
       "reason": "TAKE_PROFIT",
       "hold_bars": 24
-    },
-    {
-      "time": "2026-07-06 12:00:00",
-      "module": "module1",
-      "symbol": "BNBUSDT",
-      "entry": 587.34,
-      "exit": 574.4414285714286,
-      "pnl": -5.47,
-      "pnl_pct": -2.2,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
     },
     {
       "time": "2026-07-06 12:00:00",
@@ -2049,32 +1334,10 @@
       "symbol": "INJUSDT",
       "entry": 4.663,
       "exit": 4.731535714285714,
-      "pnl": 2.93,
+      "pnl": 4.4,
       "pnl_pct": 1.47,
       "reason": "STOP_LOSS",
       "hold_bars": 6
-    },
-    {
-      "time": "2026-07-06 12:00:00",
-      "module": "module1",
-      "symbol": "BTCUSDT",
-      "entry": 62483.84,
-      "exit": 61311.799999999996,
-      "pnl": -4.67,
-      "pnl_pct": -1.88,
-      "reason": "STOP_LOSS",
-      "hold_bars": 1
-    },
-    {
-      "time": "2026-07-08 00:00:00",
-      "module": "module1",
-      "symbol": "BNBUSDT",
-      "entry": 584.74,
-      "exit": 569.0985714285715,
-      "pnl": -6.67,
-      "pnl_pct": -2.67,
-      "reason": "STOP_LOSS",
-      "hold_bars": 9
     },
     {
       "time": "2026-07-08 00:00:00",
@@ -2082,7 +1345,7 @@
       "symbol": "ADAUSDT",
       "entry": 0.1813,
       "exit": 0.17088571428571428,
-      "pnl": -11.45,
+      "pnl": -17.19,
       "pnl_pct": -5.74,
       "reason": "STOP_LOSS",
       "hold_bars": 6
@@ -2093,7 +1356,7 @@
       "symbol": "AVAXUSDT",
       "entry": 6.764,
       "exit": 6.437571428571428,
-      "pnl": -9.62,
+      "pnl": -9.63,
       "pnl_pct": -4.83,
       "reason": "STOP_LOSS",
       "hold_bars": 5
@@ -2121,26 +1384,15 @@
       "hold_bars": 12
     },
     {
-      "time": "2026-07-08 08:00:00",
-      "module": "module1",
-      "symbol": "BTCUSDT",
-      "entry": 63545.98,
-      "exit": 62113.73571428572,
-      "pnl": -5.62,
-      "pnl_pct": -2.25,
+      "time": "2026-07-08 12:00:00",
+      "module": "module2",
+      "symbol": "XRPUSDT",
+      "entry": 1.112,
+      "exit": 1.0716,
+      "pnl": -10.87,
+      "pnl_pct": -3.63,
       "reason": "STOP_LOSS",
-      "hold_bars": 11
-    },
-    {
-      "time": "2026-07-08 08:00:00",
-      "module": "module1",
-      "symbol": "ETHUSDT",
-      "entry": 1788.57,
-      "exit": 1734.9499999999998,
-      "pnl": -7.47,
-      "pnl_pct": -3.0,
-      "reason": "STOP_LOSS",
-      "hold_bars": 11
+      "hold_bars": 4
     },
     {
       "time": "2026-07-11 12:00:00",
@@ -2148,7 +1400,7 @@
       "symbol": "AAVEUSDT",
       "entry": 91.18,
       "exit": 98.88178571428573,
-      "pnl": 16.84,
+      "pnl": 25.28,
       "pnl_pct": 8.45,
       "reason": "TAKE_PROFIT",
       "hold_bars": 23
@@ -2159,43 +1411,21 @@
       "symbol": "LINKUSDT",
       "entry": 7.637,
       "exit": 8.110357142857142,
-      "pnl": 12.28,
+      "pnl": 12.31,
       "pnl_pct": 6.2,
       "reason": "TAKE_PROFIT",
       "hold_bars": 20
     },
     {
       "time": "2026-07-11 20:00:00",
-      "module": "module2",
-      "symbol": "XRPUSDT",
-      "entry": 1.094,
-      "exit": 1.0997714285714284,
-      "pnl": 1.05,
-      "pnl_pct": 0.53,
-      "reason": "STOP_LOSS",
-      "hold_bars": 22
-    },
-    {
-      "time": "2026-07-11 20:00:00",
       "module": "module3",
       "symbol": "AVAXUSDT",
-      "entry": 6.441,
+      "entry": 6.394,
       "exit": 6.637464285714286,
-      "pnl": 6.04,
-      "pnl_pct": 3.05,
+      "pnl": 7.58,
+      "pnl_pct": 3.81,
       "reason": "STOP_LOSS",
-      "hold_bars": 21
-    },
-    {
-      "time": "2026-07-11 20:00:00",
-      "module": "module3",
-      "symbol": "SUIUSDT",
-      "entry": 0.7076,
-      "exit": 0.7291535714285714,
-      "pnl": 6.03,
-      "pnl_pct": 3.05,
-      "reason": "STOP_LOSS",
-      "hold_bars": 21
+      "hold_bars": 23
     },
     {
       "time": "2026-07-12 04:00:00",
@@ -2203,54 +1433,43 @@
       "symbol": "AVAXUSDT",
       "entry": 6.552,
       "exit": 6.340571428571428,
-      "pnl": -6.42,
+      "pnl": -6.43,
       "pnl_pct": -3.23,
       "reason": "STOP_LOSS",
       "hold_bars": 2
     },
     {
-      "time": "2026-07-13 00:00:00",
+      "time": "2026-07-12 20:00:00",
       "module": "module2",
       "symbol": "ADAUSDT",
-      "entry": 0.1696,
-      "exit": 0.16081428571428572,
-      "pnl": -10.3,
-      "pnl_pct": -5.18,
+      "entry": 0.1706,
+      "exit": 0.16151428571428572,
+      "pnl": -15.9,
+      "pnl_pct": -5.33,
       "reason": "STOP_LOSS",
       "hold_bars": 29
     },
     {
       "time": "2026-07-13 00:00:00",
-      "module": "module1",
+      "module": "module3",
       "symbol": "BTCUSDT",
       "entry": 62299.99,
       "exit": 63557.50714285714,
-      "pnl": 5.0,
+      "pnl": 4.01,
       "pnl_pct": 2.02,
       "reason": "STOP_LOSS",
       "hold_bars": 28
     },
     {
-      "time": "2026-07-13 00:00:00",
-      "module": "module1",
-      "symbol": "AAVEUSDT",
-      "entry": 100.01,
-      "exit": 95.14142857142858,
-      "pnl": -12.08,
-      "pnl_pct": -4.87,
+      "time": "2026-07-13 16:00:00",
+      "module": "module2",
+      "symbol": "XRPUSDT",
+      "entry": 1.0982,
+      "exit": 1.061642857142857,
+      "pnl": -9.9,
+      "pnl_pct": -3.33,
       "reason": "STOP_LOSS",
-      "hold_bars": 9
-    },
-    {
-      "time": "2026-07-13 00:00:00",
-      "module": "module1",
-      "symbol": "BNBUSDT",
-      "entry": 581.1,
-      "exit": 571.4814285714285,
-      "pnl": -4.11,
-      "pnl_pct": -1.66,
-      "reason": "STOP_LOSS",
-      "hold_bars": 3
+      "hold_bars": 27
     },
     {
       "time": "2026-07-13 16:00:00",
@@ -2258,10 +1477,21 @@
       "symbol": "AVAXUSDT",
       "entry": 6.379,
       "exit": 6.477571428571428,
-      "pnl": 3.07,
+      "pnl": 3.08,
       "pnl_pct": 1.55,
       "reason": "STOP_LOSS",
       "hold_bars": 9
+    },
+    {
+      "time": "2026-07-13 20:00:00",
+      "module": "module2",
+      "symbol": "ADAUSDT",
+      "entry": 0.1621,
+      "exit": 0.15632857142857143,
+      "pnl": -10.62,
+      "pnl_pct": -3.56,
+      "reason": "STOP_LOSS",
+      "hold_bars": 6
     },
     {
       "time": "2026-07-14 04:00:00",
@@ -2269,7 +1499,7 @@
       "symbol": "NEARUSDT",
       "entry": 1.905,
       "exit": 1.9982142857142857,
-      "pnl": 9.71,
+      "pnl": 14.59,
       "pnl_pct": 4.89,
       "reason": "TAKE_PROFIT",
       "hold_bars": 16
@@ -2277,11 +1507,11 @@
     {
       "time": "2026-07-14 12:00:00",
       "module": "module3",
-      "symbol": "XRPUSDT",
-      "entry": 1.0723,
-      "exit": 1.1077000000000001,
-      "pnl": 6.55,
-      "pnl_pct": 3.3,
+      "symbol": "INJUSDT",
+      "entry": 4.715,
+      "exit": 5.106928571428571,
+      "pnl": 16.53,
+      "pnl_pct": 8.31,
       "reason": "TAKE_PROFIT",
       "hold_bars": 9
     },
@@ -2291,10 +1521,21 @@
       "symbol": "BTCUSDT",
       "entry": 62288.23,
       "exit": 64128.86714285715,
-      "pnl": 5.86,
+      "pnl": 5.87,
       "pnl_pct": 2.96,
       "reason": "TAKE_PROFIT",
       "hold_bars": 5
+    },
+    {
+      "time": "2026-07-14 12:00:00",
+      "module": "module2",
+      "symbol": "ADAUSDT",
+      "entry": 0.1592,
+      "exit": 0.16609285714285715,
+      "pnl": 12.91,
+      "pnl_pct": 4.33,
+      "reason": "TAKE_PROFIT",
+      "hold_bars": 1
     },
     {
       "time": "2026-07-15 00:00:00",
@@ -2302,54 +1543,43 @@
       "symbol": "AVAXUSDT",
       "entry": 6.44,
       "exit": 6.74875,
-      "pnl": 9.52,
+      "pnl": 14.3,
       "pnl_pct": 4.79,
       "reason": "TAKE_PROFIT",
       "hold_bars": 4
     },
     {
-      "time": "2026-07-15 12:00:00",
+      "time": "2026-07-16 04:00:00",
       "module": "module3",
-      "symbol": "ADAUSDT",
-      "entry": 0.1589,
-      "exit": 0.16871428571428573,
-      "pnl": 12.25,
-      "pnl_pct": 6.18,
+      "symbol": "FETUSDT",
+      "entry": 0.1573,
+      "exit": 0.15882857142857143,
+      "pnl": 1.93,
+      "pnl_pct": 0.97,
+      "reason": "STOP_LOSS",
+      "hold_bars": 19
+    },
+    {
+      "time": "2026-07-16 12:00:00",
+      "module": "module2",
+      "symbol": "AAVEUSDT",
+      "entry": 96.64,
+      "exit": 92.56714285714285,
+      "pnl": -12.57,
+      "pnl_pct": -4.21,
+      "reason": "STOP_LOSS",
+      "hold_bars": 13
+    },
+    {
+      "time": "2026-07-18 00:00:00",
+      "module": "module2",
+      "symbol": "INJUSDT",
+      "entry": 4.859,
+      "exit": 5.157571428571429,
+      "pnl": 18.4,
+      "pnl_pct": 6.14,
       "reason": "TAKE_PROFIT",
-      "hold_bars": 15
-    },
-    {
-      "time": "2026-07-15 16:00:00",
-      "module": "module2",
-      "symbol": "AAVEUSDT",
-      "entry": 95.12,
-      "exit": 96.50714285714285,
-      "pnl": 2.89,
-      "pnl_pct": 1.46,
-      "reason": "STOP_LOSS",
-      "hold_bars": 16
-    },
-    {
-      "time": "2026-07-16 20:00:00",
-      "module": "module2",
-      "symbol": "AAVEUSDT",
-      "entry": 95.79,
-      "exit": 91.44857142857144,
-      "pnl": -9.04,
-      "pnl_pct": -4.53,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
-    },
-    {
-      "time": "2026-07-17 04:00:00",
-      "module": "module1",
-      "symbol": "NEARUSDT",
-      "entry": 2.046,
-      "exit": 1.935285714285714,
-      "pnl": -13.45,
-      "pnl_pct": -5.41,
-      "reason": "STOP_LOSS",
-      "hold_bars": 16
+      "hold_bars": 7
     },
     {
       "time": "2026-07-19 00:00:00",
@@ -2357,98 +1587,54 @@
       "symbol": "BTCUSDT",
       "entry": 62828.11,
       "exit": 64874.57928571429,
-      "pnl": 6.48,
+      "pnl": 6.5,
       "pnl_pct": 3.26,
       "reason": "TAKE_PROFIT",
       "hold_bars": 11
     },
     {
       "time": "2026-07-20 00:00:00",
-      "module": "module2",
-      "symbol": "FETUSDT",
-      "entry": 0.1587,
-      "exit": 0.15314285714285714,
-      "pnl": -6.97,
-      "pnl_pct": -3.5,
-      "reason": "STOP_LOSS",
-      "hold_bars": 49
-    },
-    {
-      "time": "2026-07-20 04:00:00",
       "module": "module3",
-      "symbol": "LINKUSDT",
-      "entry": 8.203,
-      "exit": 8.338714285714287,
-      "pnl": 3.29,
-      "pnl_pct": 1.65,
+      "symbol": "FETUSDT",
+      "entry": 0.1584,
+      "exit": 0.15232857142857145,
+      "pnl": -7.66,
+      "pnl_pct": -3.83,
       "reason": "STOP_LOSS",
-      "hold_bars": 17
+      "hold_bars": 22
     },
     {
       "time": "2026-07-20 20:00:00",
       "module": "module2",
       "symbol": "ADAUSDT",
-      "entry": 0.163,
-      "exit": 0.17189285714285715,
-      "pnl": 10.88,
-      "pnl_pct": 5.46,
+      "entry": 0.1632,
+      "exit": 0.1719857142857143,
+      "pnl": 16.13,
+      "pnl_pct": 5.38,
       "reason": "TAKE_PROFIT",
-      "hold_bars": 28
-    },
-    {
-      "time": "2026-07-21 00:00:00",
-      "module": "module2",
-      "symbol": "NEARUSDT",
-      "entry": 1.926,
-      "exit": 1.9951071428571427,
-      "pnl": 7.14,
-      "pnl_pct": 3.59,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 6
+      "hold_bars": 34
     },
     {
       "time": "2026-07-21 04:00:00",
       "module": "module3",
       "symbol": "FETUSDT",
-      "entry": 0.1527,
-      "exit": 0.1590214285714286,
-      "pnl": 8.24,
-      "pnl_pct": 4.14,
+      "entry": 0.1514,
+      "exit": 0.15729285714285718,
+      "pnl": 7.78,
+      "pnl_pct": 3.89,
       "reason": "TAKE_PROFIT",
-      "hold_bars": 6
-    },
-    {
-      "time": "2026-07-21 12:00:00",
-      "module": "module2",
-      "symbol": "AAVEUSDT",
-      "entry": 91.19,
-      "exit": 95.9025,
-      "pnl": 10.3,
-      "pnl_pct": 5.17,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 28
-    },
-    {
-      "time": "2026-07-21 12:00:00",
-      "module": "module1",
-      "symbol": "XRPUSDT",
-      "entry": 1.1126,
-      "exit": 1.1472071428571429,
-      "pnl": 7.74,
-      "pnl_pct": 3.11,
-      "reason": "TAKE_PROFIT",
-      "hold_bars": 6
+      "hold_bars": 7
     },
     {
       "time": "2026-07-22 04:00:00",
-      "module": "module3",
-      "symbol": "BNBUSDT",
-      "entry": 564.78,
-      "exit": 569.7325000000001,
-      "pnl": 1.74,
-      "pnl_pct": 0.88,
+      "module": "module2",
+      "symbol": "NEARUSDT",
+      "entry": 1.965,
+      "exit": 1.8682857142857143,
+      "pnl": -14.74,
+      "pnl_pct": -4.92,
       "reason": "STOP_LOSS",
-      "hold_bars": 29
+      "hold_bars": 32
     },
     {
       "time": "2026-07-22 04:00:00",
@@ -2456,32 +1642,21 @@
       "symbol": "AVAXUSDT",
       "entry": 6.455,
       "exit": 6.520142857142857,
-      "pnl": 2.01,
+      "pnl": 2.02,
       "pnl_pct": 1.01,
       "reason": "STOP_LOSS",
       "hold_bars": 16
     },
     {
-      "time": "2026-07-22 16:00:00",
+      "time": "2026-07-24 00:00:00",
       "module": "module3",
-      "symbol": "NEARUSDT",
-      "entry": 1.954,
-      "exit": 1.8615,
-      "pnl": -9.46,
-      "pnl_pct": -4.73,
+      "symbol": "AAVEUSDT",
+      "entry": 92.5,
+      "exit": 94.79142857142857,
+      "pnl": 4.94,
+      "pnl_pct": 2.48,
       "reason": "STOP_LOSS",
-      "hold_bars": 7
-    },
-    {
-      "time": "2026-07-23 12:00:00",
-      "module": "module1",
-      "symbol": "ETHUSDT",
-      "entry": 1943.03,
-      "exit": 1889.5414285714285,
-      "pnl": -6.88,
-      "pnl_pct": -2.75,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
+      "hold_bars": 45
     },
     {
       "time": "2026-07-24 00:00:00",
@@ -2489,7 +1664,7 @@
       "symbol": "INJUSDT",
       "entry": 5.113,
       "exit": 5.357642857142857,
-      "pnl": 9.56,
+      "pnl": 14.37,
       "pnl_pct": 4.78,
       "reason": "TAKE_PROFIT",
       "hold_bars": 6
@@ -2500,64 +1675,42 @@
       "symbol": "SUIUSDT",
       "entry": 0.7559,
       "exit": 0.7254535714285715,
-      "pnl": -8.05,
+      "pnl": -8.06,
       "pnl_pct": -4.03,
       "reason": "STOP_LOSS",
       "hold_bars": 14
     },
     {
-      "time": "2026-07-24 12:00:00",
-      "module": "module1",
-      "symbol": "BTCUSDT",
-      "entry": 64958.36,
-      "exit": 63843.36,
-      "pnl": -4.28,
-      "pnl_pct": -1.72,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
-    },
-    {
-      "time": "2026-07-24 12:00:00",
-      "module": "module3",
-      "symbol": "BNBUSDT",
-      "entry": 567.66,
-      "exit": 557.5992857142857,
-      "pnl": -3.54,
-      "pnl_pct": -1.77,
-      "reason": "STOP_LOSS",
-      "hold_bars": 6
-    },
-    {
       "time": "2026-07-25 04:00:00",
-      "module": "module2",
+      "module": "module3",
       "symbol": "NEARUSDT",
-      "entry": 1.86,
-      "exit": 1.7792857142857146,
-      "pnl": -8.67,
-      "pnl_pct": -4.34,
+      "entry": 1.88,
+      "exit": 1.7778571428571428,
+      "pnl": -10.87,
+      "pnl_pct": -5.43,
       "reason": "STOP_LOSS",
-      "hold_bars": 15
+      "hold_bars": 18
     },
     {
       "time": "2026-07-25 12:00:00",
       "module": "module2",
       "symbol": "AVAXUSDT",
-      "entry": 6.282,
-      "exit": 6.552535714285715,
-      "pnl": 8.61,
+      "entry": 6.285,
+      "exit": 6.555892857142857,
+      "pnl": 12.94,
       "pnl_pct": 4.31,
       "reason": "TAKE_PROFIT",
-      "hold_bars": 8
+      "hold_bars": 11
     }
   ],
   "exit_reasons": {
     "TAKE_PROFIT": {
-      "count": 80,
-      "total_pnl": 1102.0000000000002
+      "count": 55,
+      "total_pnl": 664.1599999999999
     },
     "STOP_LOSS": {
-      "count": 148,
-      "total_pnl": -1126.1399999999996
+      "count": 96,
+      "total_pnl": -642.9599999999999
     }
   }
 }

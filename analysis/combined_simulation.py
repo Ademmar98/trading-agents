@@ -35,7 +35,16 @@ class Position:
 
 
 class CombinedSimulator:
-    def __init__(self, initial_capital=10_000):
+    def __init__(self, initial_capital=10_000, sl_atr=None, tp_atr=None,
+                 fee_rate=0.0, quiet=False):
+        # sl_atr/tp_atr override the per-module ATR multipliers when set (used
+        # by the SL/TP grid search). None keeps the original per-module values.
+        self.sl_atr = sl_atr
+        self.tp_atr = tp_atr
+        self.fee_rate = fee_rate  # round-trip, charged half on entry/half on exit
+        self.quiet = quiet
+        self.fees_paid = 0.0
+
         self.initial_capital = initial_capital
         self.cash = initial_capital
         self.positions: List[Position] = []
@@ -55,14 +64,14 @@ class CombinedSimulator:
         self.per_module_max = 3
         self.kelly_fraction = 0.25
 
-        # Weights (all modules active)
-        self.m1_weight = 0.50
-        self.m2_weight = 0.20
-        self.m3_weight = 0.30
+        # Weights (optimized: M1 disabled, M2-only, M3 supplementary)
+        self.m1_weight = 0.00
+        self.m2_weight = 0.60
+        self.m3_weight = 0.40
 
         # Per-module position size as % of equity (fractional Kelly applied)
-        self.m1_position_pct = 0.10  # 10% of equity per M1 trade
-        self.m2_position_pct = 0.08  # 8% of equity per M2 rebalance
+        self.m1_position_pct = 0.00  # DISABLED
+        self.m2_position_pct = 0.12  # 12% of equity per M2 trade
         self.m3_position_pct = 0.08  # 8% of equity per M3 trade
 
         self.current_month = None
@@ -289,9 +298,9 @@ class CombinedSimulator:
         all_times = sorted(set().union(*[set(d.index) for d in prepared.values()]))
         print(f"Time range: {all_times[0]} to {all_times[-1]}")
         print(f"Total bars: {len(all_times)}")
-        print(f"\nConfig: M1=50%, M2=20%, M3=30%, Kelly={self.kelly_fraction}x")
-        print(f"Position sizing: M1={self.m1_position_pct*100}%, M2={self.m2_position_pct*100}%, M3={self.m3_position_pct*100}% of equity")
-        print(f"Stops: M1=2.0x ATR, M2=2.0x ATR, M3=2.5x ATR")
+        print(f"\nConfig: M1=DISABLED, M2=60%, M3=40%, Kelly={self.kelly_fraction}x")
+        print(f"Position sizing: M2={self.m2_position_pct*100}%, M3={self.m3_position_pct*100}% of equity")
+        print(f"Stops: M2=2.0x ATR, M3=2.5x ATR")
         print(f"Time exits: DISABLED")
         print(f"M2 trend filter: BTC > 200-SMA only")
         print()
