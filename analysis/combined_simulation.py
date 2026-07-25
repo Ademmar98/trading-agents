@@ -55,13 +55,14 @@ class CombinedSimulator:
         self.per_module_max = 3
         self.kelly_fraction = 0.25
 
-        # Weights (M2 disabled)
-        self.m1_weight = 0.70
+        # Weights (all modules active)
+        self.m1_weight = 0.50
+        self.m2_weight = 0.20
         self.m3_weight = 0.30
-        self.m2_weight = 0.0
 
         # Per-module position size as % of equity (fractional Kelly applied)
         self.m1_position_pct = 0.10  # 10% of equity per M1 trade
+        self.m2_position_pct = 0.08  # 8% of equity per M2 rebalance
         self.m3_position_pct = 0.08  # 8% of equity per M3 trade
 
         self.current_month = None
@@ -98,6 +99,7 @@ class CombinedSimulator:
         df["sma50"] = df["close"].rolling(50).mean()
         df["sma20"] = df["close"].rolling(20).mean()
         df["sma10"] = df["close"].rolling(10).mean()
+        df["sma200"] = df["close"].rolling(200).mean()
         df["std20"] = df["close"].rolling(20).std()
         df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
         df["vol_sma"] = df["volume"].rolling(20).mean()
@@ -201,6 +203,8 @@ class CombinedSimulator:
         eq = self._equity()
         if module == "module1":
             size = eq * self.m1_position_pct
+        elif module == "module2":
+            size = eq * self.m2_position_pct
         elif module == "module3":
             size = eq * self.m3_position_pct
         else:
@@ -285,8 +289,11 @@ class CombinedSimulator:
         all_times = sorted(set().union(*[set(d.index) for d in prepared.values()]))
         print(f"Time range: {all_times[0]} to {all_times[-1]}")
         print(f"Total bars: {len(all_times)}")
-        print(f"\nConfig: M1=70%, M3=30%, Kelly={self.kelly_fraction}x")
-        print(f"Position sizing: M1={self.m1_position_pct*100}%, M3={self.m3_position_pct*100}% of equity")
+        print(f"\nConfig: M1=50%, M2=20%, M3=30%, Kelly={self.kelly_fraction}x")
+        print(f"Position sizing: M1={self.m1_position_pct*100}%, M2={self.m2_position_pct*100}%, M3={self.m3_position_pct*100}% of equity")
+        print(f"Stops: M1=2.0x ATR, M2=2.0x ATR, M3=2.5x ATR")
+        print(f"Time exits: DISABLED")
+        print(f"M2 trend filter: BTC > 200-SMA only")
         print()
 
         for ts in all_times:
@@ -334,10 +341,6 @@ class CombinedSimulator:
                         if new_sl > pos.stop_loss:
                             pos.stop_loss = new_sl
 
-                # Time-based exit: close after 15 bars (60h) if not hit SL/TP
-                if pos.hold_bars >= 15:
-                    self._close(pos, close, ts, "TIME_EXIT")
-
             if halted:
                 continue
 
@@ -369,7 +372,7 @@ class CombinedSimulator:
 
                 if (not np.isnan(fs) and fs < zscore_threshold and above_sma and oi_exp):
                     entry = bar["close"]
-                    sl = entry - 1.5 * atr_val
+                    sl = entry - 2.0 * atr_val  # Widened from 1.5x
                     tp = entry + 3.0 * atr_val
                     self._open("module1", sym, entry, sl, tp, ts)
 
@@ -385,9 +388,29 @@ class CombinedSimulator:
                     # Standard config
                     if (cvd_dev < -0.3 and rv > 1.2 and ppct6 < -0.005):
                         entry = bar["close"]
-                        sl = entry - 2.0 * atr_val
+                        sl = entry - 2.5 * atr_val  # Widened from 2.0x
                         tp = entry + 3.0 * atr_val
                         self._open("module3", sym, entry, sl, tp, ts)
+
+                # ======== MODULE 2: Basket Rebalancing (Trend-Filtered) ========
+                # Only rebalance when BTC > 200-SMA (uptrend filter)
+                btc_df = prepared.get("BTCUSDT")
+                if btc_df is not None and ts in btc_df.index:
+                    btc_bar = btc_df.loc[ts]
+                    btc_above_200sma = btc_bar["close"] > btc_bar.get("sma200", 0)
+
+                    if btc_above_200sma and not np.isnan(btc_bar.get("sma200", np.nan)):
+                        # Inverse-volatility weight for this symbol
+                        # Buy if price dropped >5% below recent high (mean reversion)
+                        recent_high = df["close"].iloc[max(0, idx-30):idx+1].max()
+                        drop_pct = (bar["close"] - recent_high) / recent_high
+
+                        # Only buy if dropped > 5% (threshold rebalancing)
+                        if drop_pct < -0.05:
+                            entry = bar["close"]
+                            sl = entry - 2.0 * atr_val
+                            tp = entry + 2.5 * atr_val  # Conservative TP for rebalancing
+                            self._open("module2", sym, entry, sl, tp, ts)
 
         # ======== RESULTS ========
         final_eq = self.equity_curve[-1] if self.equity_curve else self.initial_capital
