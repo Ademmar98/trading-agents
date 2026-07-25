@@ -471,14 +471,17 @@ if os.getenv("BINANCE_ALL_SYMBOLS", "").lower() in ("true", "1", "yes"):
 #   Module 3: Microstructure Order Book Absorption (high win-rate swings)
 MULTI_ALPHA_ENABLED = os.getenv("MULTI_ALPHA_ENABLED", "false").lower() == "true"
 
-# Module allocation (% of equity per module)
-MULTI_ALPHA_M1_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M1_ALLOCATION_PCT", "40"))
-MULTI_ALPHA_M2_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M2_ALLOCATION_PCT", "35"))
-MULTI_ALPHA_M3_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M3_ALLOCATION_PCT", "25"))
+# Capital allocation: Module 2 DISABLED (failed validation, -6.15%/mo)
+# Module 1: 70% (validated, PF 1.54)
+# Module 2: 0% (DISABLED -- rebalancing loses in downtrends)
+# Module 3: 30% (PF 3.16, 48% WR, profitable but WR below target)
+MULTI_ALPHA_M1_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M1_ALLOCATION_PCT", "70"))
+MULTI_ALPHA_M2_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M2_ALLOCATION_PCT", "0"))
+MULTI_ALPHA_M3_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M3_ALLOCATION_PCT", "30"))
 
-# Module enable/disable
+# Module enable/disable -- M2 disabled per backtest failure
 MULTI_ALPHA_M1_ENABLED = os.getenv("MULTI_ALPHA_M1_ENABLED", "true").lower() == "true"
-MULTI_ALPHA_M2_ENABLED = os.getenv("MULTI_ALPHA_M2_ENABLED", "true").lower() == "true"
+MULTI_ALPHA_M2_ENABLED = os.getenv("MULTI_ALPHA_M2_ENABLED", "false").lower() == "true"
 MULTI_ALPHA_M3_ENABLED = os.getenv("MULTI_ALPHA_M3_ENABLED", "true").lower() == "true"
 
 # Fractional Kelly parameters

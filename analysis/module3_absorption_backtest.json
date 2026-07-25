@@ -1,0 +1,770 @@
+{
+  "timestamp": "2026-07-25T22:48:07.553111",
+  "symbols_scanned": 18,
+  "configs_tested": 3,
+  "results": {
+    "Aggressive": {
+      "config": {
+        "name": "Aggressive",
+        "cvd_threshold": 0.15,
+        "min_premium_pct": 0.02,
+        "sl_atr_mult": 0.5,
+        "min_rr": 1.5,
+        "default_tp_pct": 4.0
+      },
+      "symbols_traded": 15,
+      "total_trades": 133,
+      "total_wins": 52,
+      "total_losses": 81,
+      "aggregate_win_rate": 39.1,
+      "aggregate_pf": 1.71,
+      "avg_return_per_trade": 0.79,
+      "per_symbol": [
+        {
+          "symbol": "BTCUSDT",
+          "total_trades": 5,
+          "wins": 2,
+          "losses": 3,
+          "win_rate": 40.0,
+          "total_return_pct": -0.1,
+          "avg_trade_return": -0.02,
+          "avg_win": 2.15,
+          "avg_loss": -1.47,
+          "profit_factor": 0.98,
+          "avg_hold_bars": 12.6,
+          "exit_reasons": {
+            "stop_loss": 3,
+            "end_of_data": 1,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "total_trades": 4,
+          "wins": 0,
+          "losses": 4,
+          "win_rate": 0.0,
+          "total_return_pct": -9.97,
+          "avg_trade_return": -2.49,
+          "avg_win": 0,
+          "avg_loss": -2.49,
+          "profit_factor": 0.0,
+          "avg_hold_bars": 12.2,
+          "exit_reasons": {
+            "stop_loss": 3,
+            "end_of_data": 1
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "total_trades": 4,
+          "wins": 2,
+          "losses": 2,
+          "win_rate": 50.0,
+          "total_return_pct": 3.09,
+          "avg_trade_return": 0.77,
+          "avg_win": 3.58,
+          "avg_loss": -2.04,
+          "profit_factor": 1.76,
+          "avg_hold_bars": 21.8,
+          "exit_reasons": {
+            "stop_loss": 2,
+            "timeout": 1,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "total_trades": 5,
+          "wins": 1,
+          "losses": 4,
+          "win_rate": 20.0,
+          "total_return_pct": -1.44,
+          "avg_trade_return": -0.29,
+          "avg_win": 4.0,
+          "avg_loss": -1.36,
+          "profit_factor": 0.74,
+          "avg_hold_bars": 19.4,
+          "exit_reasons": {
+            "stop_loss": 3,
+            "timeout": 1,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "ADAUSDT",
+          "total_trades": 8,
+          "wins": 3,
+          "losses": 5,
+          "win_rate": 37.5,
+          "total_return_pct": 10.58,
+          "avg_trade_return": 1.32,
+          "avg_win": 6.82,
+          "avg_loss": -1.97,
+          "profit_factor": 2.07,
+          "avg_hold_bars": 14.0,
+          "exit_reasons": {
+            "stop_loss": 5,
+            "take_profit": 3
+          }
+        },
+        {
+          "symbol": "SUIUSDT",
+          "total_trades": 8,
+          "wins": 4,
+          "losses": 4,
+          "win_rate": 50.0,
+          "total_return_pct": 1.29,
+          "avg_trade_return": 0.16,
+          "avg_win": 4.37,
+          "avg_loss": -4.05,
+          "profit_factor": 1.08,
+          "avg_hold_bars": 19.1,
+          "exit_reasons": {
+            "stop_loss": 4,
+            "end_of_data": 1,
+            "timeout": 1,
+            "take_profit": 2
+          }
+        },
+        {
+          "symbol": "NEARUSDT",
+          "total_trades": 14,
+          "wins": 5,
+          "losses": 9,
+          "win_rate": 35.7,
+          "total_return_pct": 49.71,
+          "avg_trade_return": 3.55,
+          "avg_win": 14.17,
+          "avg_loss": -2.35,
+          "profit_factor": 3.35,
+          "avg_hold_bars": 14.1,
+          "exit_reasons": {
+            "stop_loss": 9,
+            "timeout": 1,
+            "take_profit": 4
+          }
+        },
+        {
+          "symbol": "INJUSDT",
+          "total_trades": 13,
+          "wins": 8,
+          "losses": 5,
+          "win_rate": 61.5,
+          "total_return_pct": 47.19,
+          "avg_trade_return": 3.63,
+          "avg_win": 7.76,
+          "avg_loss": -2.97,
+          "profit_factor": 4.18,
+          "avg_hold_bars": 14.6,
+          "exit_reasons": {
+            "stop_loss": 5,
+            "take_profit": 8
+          }
+        },
+        {
+          "symbol": "AAVEUSDT",
+          "total_trades": 10,
+          "wins": 3,
+          "losses": 7,
+          "win_rate": 30.0,
+          "total_return_pct": 5.69,
+          "avg_trade_return": 0.57,
+          "avg_win": 7.81,
+          "avg_loss": -2.53,
+          "profit_factor": 1.32,
+          "avg_hold_bars": 22.2,
+          "exit_reasons": {
+            "stop_loss": 7,
+            "timeout": 1,
+            "take_profit": 2
+          }
+        },
+        {
+          "symbol": "FETUSDT",
+          "total_trades": 5,
+          "wins": 1,
+          "losses": 4,
+          "win_rate": 20.0,
+          "total_return_pct": -6.08,
+          "avg_trade_return": -1.22,
+          "avg_win": 4.0,
+          "avg_loss": -2.52,
+          "profit_factor": 0.4,
+          "avg_hold_bars": 3.8,
+          "exit_reasons": {
+            "stop_loss": 4,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "SEIUSDT",
+          "total_trades": 10,
+          "wins": 4,
+          "losses": 6,
+          "win_rate": 40.0,
+          "total_return_pct": 13.05,
+          "avg_trade_return": 1.3,
+          "avg_win": 5.82,
+          "avg_loss": -1.7,
+          "profit_factor": 2.28,
+          "avg_hold_bars": 9.4,
+          "exit_reasons": {
+            "stop_loss": 6,
+            "take_profit": 4
+          }
+        },
+        {
+          "symbol": "TIAUSDT",
+          "total_trades": 13,
+          "wins": 4,
+          "losses": 9,
+          "win_rate": 30.8,
+          "total_return_pct": 3.0,
+          "avg_trade_return": 0.23,
+          "avg_win": 9.81,
+          "avg_loss": -4.03,
+          "profit_factor": 1.08,
+          "avg_hold_bars": 19.2,
+          "exit_reasons": {
+            "timeout": 3,
+            "take_profit": 3,
+            "stop_loss": 7
+          }
+        },
+        {
+          "symbol": "AVAXUSDT",
+          "total_trades": 14,
+          "wins": 5,
+          "losses": 9,
+          "win_rate": 35.7,
+          "total_return_pct": -5.28,
+          "avg_trade_return": -0.38,
+          "avg_win": 3.64,
+          "avg_loss": -2.61,
+          "profit_factor": 0.77,
+          "avg_hold_bars": 18.2,
+          "exit_reasons": {
+            "stop_loss": 8,
+            "timeout": 2,
+            "take_profit": 4
+          }
+        },
+        {
+          "symbol": "LINKUSDT",
+          "total_trades": 5,
+          "wins": 3,
+          "losses": 2,
+          "win_rate": 60.0,
+          "total_return_pct": 17.73,
+          "avg_trade_return": 3.55,
+          "avg_win": 7.95,
+          "avg_loss": -3.06,
+          "profit_factor": 3.89,
+          "avg_hold_bars": 22.4,
+          "exit_reasons": {
+            "stop_loss": 2,
+            "timeout": 1,
+            "take_profit": 2
+          }
+        },
+        {
+          "symbol": "RENDERUSDT",
+          "total_trades": 15,
+          "wins": 7,
+          "losses": 8,
+          "win_rate": 46.7,
+          "total_return_pct": 17.89,
+          "avg_trade_return": 1.19,
+          "avg_win": 5.04,
+          "avg_loss": -2.17,
+          "profit_factor": 2.03,
+          "avg_hold_bars": 22.2,
+          "exit_reasons": {
+            "stop_loss": 8,
+            "timeout": 4,
+            "take_profit": 3
+          }
+        }
+      ]
+    },
+    "Standard": {
+      "config": {
+        "name": "Standard",
+        "cvd_threshold": 0.25,
+        "min_premium_pct": 0.05,
+        "sl_atr_mult": 0.5,
+        "min_rr": 2.0,
+        "default_tp_pct": 5.0
+      },
+      "symbols_traded": 15,
+      "total_trades": 107,
+      "total_wins": 39,
+      "total_losses": 68,
+      "aggregate_win_rate": 36.4,
+      "aggregate_pf": 1.69,
+      "avg_return_per_trade": 0.81,
+      "per_symbol": [
+        {
+          "symbol": "BTCUSDT",
+          "total_trades": 4,
+          "wins": 1,
+          "losses": 3,
+          "win_rate": 25.0,
+          "total_return_pct": 1.76,
+          "avg_trade_return": 0.44,
+          "avg_win": 5.0,
+          "avg_loss": -1.08,
+          "profit_factor": 1.54,
+          "avg_hold_bars": 10.8,
+          "exit_reasons": {
+            "stop_loss": 2,
+            "end_of_data": 1,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "ETHUSDT",
+          "total_trades": 3,
+          "wins": 1,
+          "losses": 2,
+          "win_rate": 33.3,
+          "total_return_pct": -6.66,
+          "avg_trade_return": -2.22,
+          "avg_win": 0.01,
+          "avg_loss": -3.34,
+          "profit_factor": 0.0,
+          "avg_hold_bars": 12.0,
+          "exit_reasons": {
+            "stop_loss": 2,
+            "end_of_data": 1
+          }
+        },
+        {
+          "symbol": "BNBUSDT",
+          "total_trades": 2,
+          "wins": 1,
+          "losses": 1,
+          "win_rate": 50.0,
+          "total_return_pct": 0.4,
+          "avg_trade_return": 0.2,
+          "avg_win": 2.37,
+          "avg_loss": -1.97,
+          "profit_factor": 1.2,
+          "avg_hold_bars": 27.5,
+          "exit_reasons": {
+            "stop_loss": 1,
+            "timeout": 1
+          }
+        },
+        {
+          "symbol": "XRPUSDT",
+          "total_trades": 2,
+          "wins": 1,
+          "losses": 1,
+          "win_rate": 50.0,
+          "total_return_pct": 1.49,
+          "avg_trade_return": 0.74,
+          "avg_win": 2.81,
+          "avg_loss": -1.32,
+          "profit_factor": 2.13,
+          "avg_hold_bars": 13.5,
+          "exit_reasons": {
+            "stop_loss": 1,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "ADAUSDT",
+          "total_trades": 5,
+          "wins": 1,
+          "losses": 4,
+          "win_rate": 20.0,
+          "total_return_pct": 6.8,
+          "avg_trade_return": 1.36,
+          "avg_win": 13.64,
+          "avg_loss": -1.71,
+          "profit_factor": 1.99,
+          "avg_hold_bars": 14.8,
+          "exit_reasons": {
+            "stop_loss": 4,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "SUIUSDT",
+          "total_trades": 6,
+          "wins": 2,
+          "losses": 4,
+          "win_rate": 33.3,
+          "total_return_pct": -1.99,
+          "avg_trade_return": -0.33,
+          "avg_win": 6.02,
+          "avg_loss": -3.5,
+          "profit_factor": 0.86,
+          "avg_hold_bars": 18.5,
+          "exit_reasons": {
+            "stop_loss": 4,
+            "timeout": 1,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "NEARUSDT",
+          "total_trades": 13,
+          "wins": 5,
+          "losses": 8,
+          "win_rate": 38.5,
+          "total_return_pct": 52.78,
+          "avg_trade_return": 4.06,
+          "avg_win": 14.17,
+          "avg_loss": -2.26,
+          "profit_factor": 3.92,
+          "avg_hold_bars": 14.5,
+          "exit_reasons": {
+            "stop_loss": 8,
+            "timeout": 1,
+            "take_profit": 4
+          }
+        },
+        {
+          "symbol": "INJUSDT",
+          "total_trades": 11,
+          "wins": 5,
+          "losses": 6,
+          "win_rate": 45.5,
+          "total_return_pct": 14.03,
+          "avg_trade_return": 1.28,
+          "avg_win": 6.49,
+          "avg_loss": -3.07,
+          "profit_factor": 1.76,
+          "avg_hold_bars": 12.2,
+          "exit_reasons": {
+            "stop_loss": 6,
+            "take_profit": 5
+          }
+        },
+        {
+          "symbol": "AAVEUSDT",
+          "total_trades": 10,
+          "wins": 3,
+          "losses": 7,
+          "win_rate": 30.0,
+          "total_return_pct": 6.69,
+          "avg_trade_return": 0.67,
+          "avg_win": 8.14,
+          "avg_loss": -2.53,
+          "profit_factor": 1.38,
+          "avg_hold_bars": 22.2,
+          "exit_reasons": {
+            "stop_loss": 7,
+            "timeout": 1,
+            "take_profit": 2
+          }
+        },
+        {
+          "symbol": "FETUSDT",
+          "total_trades": 5,
+          "wins": 1,
+          "losses": 4,
+          "win_rate": 20.0,
+          "total_return_pct": -4.81,
+          "avg_trade_return": -0.96,
+          "avg_win": 5.0,
+          "avg_loss": -2.45,
+          "profit_factor": 0.51,
+          "avg_hold_bars": 3.8,
+          "exit_reasons": {
+            "stop_loss": 4,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "SEIUSDT",
+          "total_trades": 7,
+          "wins": 2,
+          "losses": 5,
+          "win_rate": 28.6,
+          "total_return_pct": 7.63,
+          "avg_trade_return": 1.09,
+          "avg_win": 7.78,
+          "avg_loss": -1.59,
+          "profit_factor": 1.96,
+          "avg_hold_bars": 11.1,
+          "exit_reasons": {
+            "stop_loss": 5,
+            "take_profit": 2
+          }
+        },
+        {
+          "symbol": "TIAUSDT",
+          "total_trades": 11,
+          "wins": 5,
+          "losses": 6,
+          "win_rate": 45.5,
+          "total_return_pct": 17.08,
+          "avg_trade_return": 1.55,
+          "avg_win": 9.0,
+          "avg_loss": -4.65,
+          "profit_factor": 1.61,
+          "avg_hold_bars": 20.9,
+          "exit_reasons": {
+            "timeout": 3,
+            "take_profit": 2,
+            "stop_loss": 6
+          }
+        },
+        {
+          "symbol": "AVAXUSDT",
+          "total_trades": 11,
+          "wins": 3,
+          "losses": 8,
+          "win_rate": 27.3,
+          "total_return_pct": -4.88,
+          "avg_trade_return": -0.44,
+          "avg_win": 4.88,
+          "avg_loss": -2.44,
+          "profit_factor": 0.75,
+          "avg_hold_bars": 19.2,
+          "exit_reasons": {
+            "stop_loss": 7,
+            "timeout": 2,
+            "take_profit": 2
+          }
+        },
+        {
+          "symbol": "LINKUSDT",
+          "total_trades": 4,
+          "wins": 2,
+          "losses": 2,
+          "win_rate": 50.0,
+          "total_return_pct": 13.73,
+          "avg_trade_return": 3.43,
+          "avg_win": 9.93,
+          "avg_loss": -3.06,
+          "profit_factor": 3.24,
+          "avg_hold_bars": 27.2,
+          "exit_reasons": {
+            "stop_loss": 2,
+            "timeout": 1,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "RENDERUSDT",
+          "total_trades": 13,
+          "wins": 6,
+          "losses": 7,
+          "win_rate": 46.2,
+          "total_return_pct": 16.99,
+          "avg_trade_return": 1.31,
+          "avg_win": 5.35,
+          "avg_loss": -2.16,
+          "profit_factor": 2.13,
+          "avg_hold_bars": 21.6,
+          "exit_reasons": {
+            "stop_loss": 7,
+            "timeout": 3,
+            "take_profit": 3
+          }
+        }
+      ]
+    },
+    "Conservative": {
+      "config": {
+        "name": "Conservative",
+        "cvd_threshold": 0.35,
+        "min_premium_pct": 0.1,
+        "sl_atr_mult": 0.5,
+        "min_rr": 2.5,
+        "default_tp_pct": 6.0
+      },
+      "symbols_traded": 10,
+      "total_trades": 50,
+      "total_wins": 24,
+      "total_losses": 26,
+      "aggregate_win_rate": 48.0,
+      "aggregate_pf": 3.16,
+      "avg_return_per_trade": 2.38,
+      "per_symbol": [
+        {
+          "symbol": "ADAUSDT",
+          "total_trades": 2,
+          "wins": 0,
+          "losses": 2,
+          "win_rate": 0.0,
+          "total_return_pct": -2.72,
+          "avg_trade_return": -1.36,
+          "avg_win": 0,
+          "avg_loss": -1.36,
+          "profit_factor": 0.0,
+          "avg_hold_bars": 11.0,
+          "exit_reasons": {
+            "stop_loss": 2
+          }
+        },
+        {
+          "symbol": "NEARUSDT",
+          "total_trades": 8,
+          "wins": 6,
+          "losses": 2,
+          "win_rate": 75.0,
+          "total_return_pct": 73.03,
+          "avg_trade_return": 9.13,
+          "avg_win": 12.54,
+          "avg_loss": -1.12,
+          "profit_factor": 33.75,
+          "avg_hold_bars": 23.1,
+          "exit_reasons": {
+            "timeout": 2,
+            "take_profit": 4,
+            "stop_loss": 2
+          }
+        },
+        {
+          "symbol": "INJUSDT",
+          "total_trades": 5,
+          "wins": 2,
+          "losses": 3,
+          "win_rate": 40.0,
+          "total_return_pct": 6.47,
+          "avg_trade_return": 1.29,
+          "avg_win": 6.96,
+          "avg_loss": -2.48,
+          "profit_factor": 1.87,
+          "avg_hold_bars": 15.8,
+          "exit_reasons": {
+            "stop_loss": 3,
+            "take_profit": 2
+          }
+        },
+        {
+          "symbol": "AAVEUSDT",
+          "total_trades": 2,
+          "wins": 0,
+          "losses": 2,
+          "win_rate": 0.0,
+          "total_return_pct": -4.74,
+          "avg_trade_return": -2.37,
+          "avg_win": 0,
+          "avg_loss": -2.37,
+          "profit_factor": 0.0,
+          "avg_hold_bars": 16.5,
+          "exit_reasons": {
+            "stop_loss": 2
+          }
+        },
+        {
+          "symbol": "FETUSDT",
+          "total_trades": 4,
+          "wins": 1,
+          "losses": 3,
+          "win_rate": 25.0,
+          "total_return_pct": -0.68,
+          "avg_trade_return": -0.17,
+          "avg_win": 6.0,
+          "avg_loss": -2.23,
+          "profit_factor": 0.9,
+          "avg_hold_bars": 7.8,
+          "exit_reasons": {
+            "stop_loss": 3,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "SEIUSDT",
+          "total_trades": 5,
+          "wins": 2,
+          "losses": 3,
+          "win_rate": 40.0,
+          "total_return_pct": 9.69,
+          "avg_trade_return": 1.94,
+          "avg_win": 7.78,
+          "avg_loss": -1.96,
+          "profit_factor": 2.65,
+          "avg_hold_bars": 14.2,
+          "exit_reasons": {
+            "stop_loss": 3,
+            "take_profit": 2
+          }
+        },
+        {
+          "symbol": "TIAUSDT",
+          "total_trades": 8,
+          "wins": 4,
+          "losses": 4,
+          "win_rate": 50.0,
+          "total_return_pct": 20.67,
+          "avg_trade_return": 2.58,
+          "avg_win": 9.89,
+          "avg_loss": -4.72,
+          "profit_factor": 2.09,
+          "avg_hold_bars": 23.6,
+          "exit_reasons": {
+            "timeout": 3,
+            "take_profit": 1,
+            "stop_loss": 4
+          }
+        },
+        {
+          "symbol": "AVAXUSDT",
+          "total_trades": 4,
+          "wins": 2,
+          "losses": 2,
+          "win_rate": 50.0,
+          "total_return_pct": 4.75,
+          "avg_trade_return": 1.19,
+          "avg_win": 4.94,
+          "avg_loss": -2.56,
+          "profit_factor": 1.93,
+          "avg_hold_bars": 18.5,
+          "exit_reasons": {
+            "stop_loss": 2,
+            "timeout": 1,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "LINKUSDT",
+          "total_trades": 2,
+          "wins": 2,
+          "losses": 0,
+          "win_rate": 100.0,
+          "total_return_pct": 19.86,
+          "avg_trade_return": 9.93,
+          "avg_win": 9.93,
+          "avg_loss": 0,
+          "profit_factor": 999,
+          "avg_hold_bars": 37.0,
+          "exit_reasons": {
+            "timeout": 1,
+            "take_profit": 1
+          }
+        },
+        {
+          "symbol": "RENDERUSDT",
+          "total_trades": 10,
+          "wins": 5,
+          "losses": 5,
+          "win_rate": 50.0,
+          "total_return_pct": 16.21,
+          "avg_trade_return": 1.62,
+          "avg_win": 5.7,
+          "avg_loss": -2.46,
+          "profit_factor": 2.32,
+          "avg_hold_bars": 23.5,
+          "exit_reasons": {
+            "stop_loss": 5,
+            "timeout": 3,
+            "take_profit": 2
+          }
+        }
+      ]
+    }
+  },
+  "best_config": "Conservative",
+  "best_win_rate": 48.0,
+  "best_pf": 3.16,
+  "wr_target_met": false,
+  "pf_target_met": "True"
+}

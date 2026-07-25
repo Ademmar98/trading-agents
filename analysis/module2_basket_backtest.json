@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-07-25T22:46:32.179551",
+  "basket_symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "BNBUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "AVAXUSDT",
+    "LINKUSDT"
+  ],
+  "data_bars": 539,
+  "data_start": "2026-04-27 04:00:00",
+  "data_end": "2026-07-25 20:00:00",
+  "initial_capital": 10000.0,
+  "maker_fee_bps": 2.0,
+  "cash_reserve_pct": 20.0,
+  "buy_and_hold": {
+    "total_return_pct": -17.2,
+    "max_drawdown_pct": -27.26,
+    "final_portfolio": 8279.85
+  },
+  "results": [
+    {
+      "total_return_pct": -18.55,
+      "monthly_return_pct": -6.19,
+      "max_drawdown_pct": -29.37,
+      "sharpe_ratio": -1.87,
+      "sortino_ratio": -2.66,
+      "total_rebalances": 44,
+      "total_fees": 7.17,
+      "fee_drag_pct": 0.07,
+      "final_portfolio": 8145.01,
+      "bars": 539,
+      "months": 3.0,
+      "avg_rebalance_spacing": 12.2,
+      "config": "Aggressive (1.0 sigma, 2d)"
+    },
+    {
+      "total_return_pct": -18.43,
+      "monthly_return_pct": -6.15,
+      "max_drawdown_pct": -29.28,
+      "sharpe_ratio": -1.86,
+      "sortino_ratio": -2.65,
+      "total_rebalances": 22,
+      "total_fees": 3.64,
+      "fee_drag_pct": 0.04,
+      "final_portfolio": 8157.38,
+      "bars": 539,
+      "months": 3.0,
+      "avg_rebalance_spacing": 24.5,
+      "config": "Standard (1.5 sigma, 4d)"
+    },
+    {
+      "total_return_pct": -18.53,
+      "monthly_return_pct": -6.19,
+      "max_drawdown_pct": -29.31,
+      "sharpe_ratio": -1.88,
+      "sortino_ratio": -2.67,
+      "total_rebalances": 14,
+      "total_fees": 2.38,
+      "fee_drag_pct": 0.02,
+      "final_portfolio": 8147.16,
+      "bars": 539,
+      "months": 3.0,
+      "avg_rebalance_spacing": 38.5,
+      "config": "Conservative (2.0 sigma, 6d)"
+    },
+    {
+      "total_return_pct": -18.51,
+      "monthly_return_pct": -6.18,
+      "max_drawdown_pct": -29.07,
+      "sharpe_ratio": -1.91,
+      "sortino_ratio": -2.71,
+      "total_rebalances": 5,
+      "total_fees": 0.97,
+      "fee_drag_pct": 0.01,
+      "final_portfolio": 8149.11,
+      "bars": 539,
+      "months": 3.0,
+      "avg_rebalance_spacing": 107.8,
+      "config": "Passive (2.5 sigma, 8d)"
+    }
+  ],
+  "best_config": "Standard (1.5 sigma, 4d)",
+  "best_monthly_return": -6.15,
+  "target_met": "False"
+}
