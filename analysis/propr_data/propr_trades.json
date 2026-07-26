@@ -1,0 +1,40 @@
+[
+  {
+    "symbol": "AVAX",
+    "entry_price": 6.6899,
+    "quantity": 298.25,
+    "stop_loss": 6.6287964285714285,
+    "take_profit": 6.812107142857143,
+    "features": {
+      "cvd_zscore": -0.15978143947181142,
+      "rv_annualized": 0.05640444589912855,
+      "current_price": 6.6899,
+      "dip_pct": 0.02161545548941898,
+      "price_range": 0.10253447796773774,
+      "volume_ratio": 0.15086285628840324
+    },
+    "timestamp": "2026-07-26T17:17:08.201594+00:00",
+    "order_ids": [
+      "urn:prp-order:eyyScWCcGsg9"
+    ]
+  },
+  {
+    "symbol": "SUI",
+    "entry_price": 0.7154,
+    "quantity": 2788.6,
+    "stop_loss": 0.7092167857142857,
+    "take_profit": 0.7277664285714286,
+    "features": {
+      "cvd_zscore": -0.6125795549184221,
+      "rv_annualized": 0.052118020926265385,
+      "current_price": 0.7154,
+      "dip_pct": 0.044119611982576544,
+      "price_range": 0.06173004462734831,
+      "volume_ratio": 0.5840917018632962
+    },
+    "timestamp": "2026-07-26T17:17:16.792134+00:00",
+    "order_ids": [
+      "urn:prp-order:2DdmMaMH4JgJ"
+    ]
+  }
+]
