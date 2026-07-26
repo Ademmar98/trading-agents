@@ -76,6 +76,11 @@ class CombinedSimulator:
 
         self.current_month = None
 
+        # Custom signal thresholds (set by optimizer, None = use defaults)
+        self.m3_cvd_thresh = None
+        self.m3_rv_thresh = None
+        self.m3_dip_thresh = None
+
     def load_data(self):
         base = "analysis/backtest_data"
         symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "XRPUSDT", "ADAUSDT",
@@ -417,8 +422,12 @@ class CombinedSimulator:
                 # Config: Standard (relaxed thresholds for more signals)
                 # Buy when CVD divergence (smart money accumulating), volume spike, price dipped
                 if (not np.isnan(cvd_dev) and not np.isnan(rv) and not np.isnan(ppct6)):
-                    # Standard config
-                    if (cvd_dev < -0.3 and rv > 1.2 and ppct6 < -0.005):
+                    # Use custom thresholds if set, else defaults
+                    cvd_t = self.m3_cvd_thresh if self.m3_cvd_thresh is not None else -0.3
+                    rv_t = self.m3_rv_thresh if self.m3_rv_thresh is not None else 1.2
+                    dip_t = self.m3_dip_thresh if self.m3_dip_thresh is not None else -0.005
+
+                    if (cvd_dev < cvd_t and rv > rv_t and ppct6 < dip_t):
                         entry = bar["close"]
                         sl, tp = self._sl_tp(entry, atr_val, 1.5, 3.0)
                         self._open("module3", sym, entry, sl, tp, ts)
