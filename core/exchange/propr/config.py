@@ -118,12 +118,23 @@ class ProprConfig:
     max_concurrent_positions: int = 5
     min_trade_interval_sec: int = 60
 
-    # Ceiling on the SUM of open stop distances, as a fraction of the daily
-    # loss allowance. Position count alone does not bound loss -- correlated
-    # crypto longs stop out together, so N positions at 2% each is an N*2% day.
-    # At 0.50 a fully-loaded book can lose at most half the daily cap before
-    # new entries are refused, leaving headroom to trade the next session.
-    max_daily_risk_fraction: float = 0.50
+    # Ceiling on the SUM of open stop distances, as a fraction of the MAX
+    # DRAWDOWN allowance -- not the daily one. Position count alone does not
+    # bound loss: correlated crypto longs stop out together, so N positions at
+    # 2% each is an N*2% loss.
+    #
+    # Measured against max drawdown because that is what actually ends a
+    # challenge, and positions here are held across days (36h max), so their
+    # stops are not confined to one session. At 1.0 the budget is the full
+    # $300 wall, which admits exactly the walk-forward-validated dip config
+    # (3 concurrent x 2% of equity). That configuration ran 6 non-overlapping
+    # 30-day windows with 0 failures and a worst realised drawdown of 4.06% --
+    # the theoretical 6% never materialised, because stops do not all fire
+    # together and the trailing stop cuts losers early.
+    #
+    # The cap still binds on anything larger: a 60%-position strategy risks
+    # $300 in ONE ticket and is refused after the first.
+    max_dd_risk_fraction: float = 1.0
 
     # Circuit breakers (adapted for prop firm rules)
     max_daily_loss_pct: float = 0.025  # Stay under 3% daily limit

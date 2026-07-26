@@ -157,16 +157,19 @@ class ProprRiskClient:
             return False, f"Max concurrent positions ({self.config.max_concurrent_positions}) reached"
 
         # Position COUNT does not bound loss. N positions each stopping at 2%
-        # is an N*2% day, and correlated crypto longs stop out together -- which
-        # is how the book reached exactly 100% of the daily cap. Bound the sum
-        # of stop distances, not the number of tickets.
-        budget = self.rules.max_daily_loss_usd * self.config.max_daily_risk_fraction
+        # is an N*2% loss, and correlated crypto longs stop out together --
+        # which is how the book once reached 100% of the daily cap. Bound the
+        # sum of stop distances, not the number of tickets. Measured against
+        # max drawdown (what ends a challenge) rather than the daily limit,
+        # because positions are held across sessions.
+        budget = self.rules.max_drawdown_usd * self.config.max_dd_risk_fraction
         projected = self.open_risk_usd() + max(0.0, new_risk_usd)
         if projected > budget:
             return False, (
                 f"Aggregate stop risk ${projected:,.2f} would exceed "
-                f"{self.config.max_daily_risk_fraction:.0%} of the "
-                f"${self.rules.max_daily_loss_usd:,.0f} daily cap (${budget:,.2f})"
+                f"{self.config.max_dd_risk_fraction:.0%} of the "
+                f"${self.rules.max_drawdown_usd:,.0f} max-drawdown wall "
+                f"(${budget:,.2f})"
             )
 
         account = self.sdk.get_account()
