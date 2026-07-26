@@ -191,25 +191,58 @@ class ProprRiskClient:
         qty_str = f"{quantity:.6f}"
         orders = self.sdk.market_buy(asset, qty_str)
 
-        if orders:
-            self._last_trade_time = time.time()
-            self._trades_today += 1
-            logger.info(f"OPENED LONG {asset} qty={qty_str}")
+        if not orders:
+            return []
 
-            time.sleep(3)
+        self._last_trade_time = time.time()
+        self._trades_today += 1
+        logger.info(f"OPENED LONG {asset} qty={qty_str}")
 
-            positions = self.sdk.get_open_positions(base=asset)
-            pos = positions[0] if positions else None
+        time.sleep(3)
+        pos = self._confirm_position(asset)
+
+        # A filled entry with no stop attached is the one state we must never
+        # leave behind: at this position size a single unprotected trade can
+        # breach the daily-loss limit on its own. If the stop cannot be
+        # confirmed, flatten immediately and report the entry as FAILED, so the
+        # caller never records a trade as protected when it is not.
+        if stop_price:
+            stop_ok = False
             if pos:
-                position_id = pos["positionId"]
-                if stop_price:
-                    self._place_conditional("stop_market", asset, qty_str, str(stop_price), position_id)
-                if take_profit_price:
-                    self._place_conditional("take_profit_market", asset, qty_str, str(take_profit_price), position_id)
+                stop_ok = bool(self._place_conditional(
+                    "stop_market", asset, qty_str, str(stop_price), pos["positionId"]))
             else:
-                logger.warning(f"No position found for {asset} after entry")
+                logger.error(f"No position found for {asset} after entry")
+
+            if not stop_ok:
+                logger.error(f"UNPROTECTED {asset}: stop not confirmed — flattening")
+                try:
+                    self.close_position(asset)
+                except Exception as e:
+                    logger.critical(
+                        f"FLATTEN FAILED for {asset}: {e} — position may be live "
+                        f"with NO STOP, manual action required"
+                    )
+                return []
+
+        # Take-profit is not a safety control. If it fails the position is
+        # still stop-protected, so warn and keep it rather than flattening.
+        if take_profit_price and pos:
+            if not self._place_conditional(
+                    "take_profit_market", asset, qty_str, str(take_profit_price), pos["positionId"]):
+                logger.warning(f"No take-profit on {asset}; stop is in place")
 
         return orders
+
+    def _confirm_position(self, asset: str, attempts: int = 3) -> dict | None:
+        """Poll for the freshly-opened position — the fill can lag the order ack."""
+        for i in range(attempts):
+            positions = self.sdk.get_open_positions(base=asset)
+            if positions:
+                return positions[0]
+            if i < attempts - 1:
+                time.sleep(2)
+        return None
 
     def _place_conditional(self, order_type: str, asset: str, quantity: str,
                            trigger_price: str, position_id: str) -> list[dict]:
