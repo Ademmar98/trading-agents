@@ -1,0 +1,146 @@
+{
+  "config": {
+    "name": "v4_agg_20_sl10_tp4_trail",
+    "sl_pct": 0.1,
+    "tp_pct": 0.04,
+    "pos_size_pct": 0.2,
+    "max_concurrent": 3,
+    "trail_activation": 0.025,
+    "trail_distance": 0.02,
+    "max_hold": 36
+  },
+  "windows": [
+    {
+      "window": 0,
+      "start": "2026-06-26",
+      "end": "2026-07-26",
+      "symbols": 12,
+      "strat": {
+        "trades": 17,
+        "return_pct": 3.3,
+        "win_rate": 64.7,
+        "profit_factor": 2.62,
+        "max_dd_pct": 1.19,
+        "max_dd_usd": 61.7,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "buy_hold": {
+        "return_pct": 5.401935037946548,
+        "max_dd_usd": 422.85451225061024,
+        "max_dd_pct": 8.457090245012205,
+        "failed": true
+      }
+    },
+    {
+      "window": 1,
+      "start": "2026-05-27",
+      "end": "2026-06-26",
+      "symbols": 12,
+      "strat": {
+        "trades": 15,
+        "return_pct": 2.74,
+        "win_rate": 80.0,
+        "profit_factor": 1.88,
+        "max_dd_pct": 3.03,
+        "max_dd_usd": 158.83,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "buy_hold": {
+        "return_pct": -18.884244496777647,
+        "max_dd_usd": 1408.579694447567,
+        "max_dd_pct": 28.171593888951342,
+        "failed": true
+      }
+    },
+    {
+      "window": 2,
+      "start": "2026-04-27",
+      "end": "2026-05-27",
+      "symbols": 12,
+      "strat": {
+        "trades": 20,
+        "return_pct": 1.39,
+        "win_rate": 60.0,
+        "profit_factor": 1.38,
+        "max_dd_pct": 4.06,
+        "max_dd_usd": 207.38,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "buy_hold": {
+        "return_pct": 9.629103006989581,
+        "max_dd_usd": 732.271953218672,
+        "max_dd_pct": 14.645439064373441,
+        "failed": true
+      }
+    },
+    {
+      "window": 3,
+      "start": "2026-03-28",
+      "end": "2026-04-27",
+      "symbols": 12,
+      "strat": {
+        "trades": 7,
+        "return_pct": 0.27,
+        "win_rate": 57.1,
+        "profit_factor": 1.17,
+        "max_dd_pct": 1.91,
+        "max_dd_usd": 97.38,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "buy_hold": {
+        "return_pct": 8.396171708156718,
+        "max_dd_usd": 565.4483264157207,
+        "max_dd_pct": 11.308966528314413,
+        "failed": true
+      }
+    },
+    {
+      "window": 4,
+      "start": "2026-02-26",
+      "end": "2026-03-28",
+      "symbols": 12,
+      "strat": {
+        "trades": 11,
+        "return_pct": -3.51,
+        "win_rate": 45.5,
+        "profit_factor": 0.19,
+        "max_dd_pct": 3.73,
+        "max_dd_usd": 186.64,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "buy_hold": {
+        "return_pct": -0.32504377764980275,
+        "max_dd_usd": 874.934776430905,
+        "max_dd_pct": 17.4986955286181,
+        "failed": true
+      }
+    },
+    {
+      "window": 5,
+      "start": "2026-01-27",
+      "end": "2026-02-26",
+      "symbols": 12,
+      "strat": {
+        "trades": 14,
+        "return_pct": 1.59,
+        "win_rate": 71.4,
+        "profit_factor": 1.74,
+        "max_dd_pct": 2.21,
+        "max_dd_usd": 113.49,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "buy_hold": {
+        "return_pct": -27.688209619062178,
+        "max_dd_usd": 1802.1117411175992,
+        "max_dd_pct": 36.04223482235198,
+        "failed": true
+      }
+    }
+  ]
+}
