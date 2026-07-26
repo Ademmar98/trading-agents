@@ -214,6 +214,8 @@ class ProprRiskClient:
     def _place_conditional(self, order_type: str, asset: str, quantity: str,
                            trigger_price: str, position_id: str) -> list[dict]:
         from ulid import ULID
+        import requests as req
+
         order = {
             "accountId": self.account_id,
             "intentId": str(ULID()),
@@ -229,17 +231,26 @@ class ProprRiskClient:
             "quantity": quantity,
             "triggerPrice": trigger_price,
             "reduceOnly": True,
+            "closePosition": True,
             "positionId": position_id,
         }
+
+        url = f"{self.config.api_url}/accounts/{self.account_id}/orders"
+        headers = {
+            "X-API-Key": self.config.api_key,
+            "Content-Type": "application/json",
+        }
         try:
-            result = self.sdk.create_orders([order])
+            r = req.post(url, headers=headers, json={"orders": [order]}, timeout=10)
+            if r.status_code >= 400:
+                logger.warning(f"SL/TP failed for {asset}: {r.status_code} {r.text[:200]}")
+                return []
+            result = r.json().get("data", [])
             if result:
                 status = result[0].get("status", "unknown")
                 logger.info(f"  {order_type} placed for {asset}: status={status}")
-            else:
-                logger.warning(f"  {order_type} empty response for {asset}")
             return result
-        except ProprAPIError as e:
+        except Exception as e:
             logger.warning(f"SL/TP failed for {asset}: {e}")
             return []
 

@@ -225,7 +225,12 @@ class ChallengePasser:
         logger.info(f"Daily Loss: {self.config.rules.max_daily_loss_pct:.0%} (${self.config.rules.max_daily_loss_usd:,.0f})")
 
     def _fetch_hyperliquid_candles(self, symbol: str) -> pd.DataFrame:
-        return self.feed.get_candles(symbol, interval="1h", limit=200)
+        for attempt in range(3):
+            try:
+                return self.feed.get_candles(symbol, interval="1h", limit=200)
+            except Exception:
+                time.sleep(1 + attempt)
+        return pd.DataFrame()
 
     def _calculate_atr(self, df: pd.DataFrame, period: int = 14) -> float:
         if len(df) < period + 1:
@@ -292,11 +297,17 @@ class ChallengePasser:
             self._save_trades()
 
     def _scan_opportunities(self):
+        open_positions = self.client.get_open_positions()
+        held_assets = {p["base"] for p in open_positions}
+
         for symbol in self.config.symbols:
             if not RUNNING:
                 break
 
             try:
+                if symbol in held_assets:
+                    continue
+
                 can, reason = self.client.can_trade()
                 if not can:
                     logger.info(f"Cannot trade: {reason}")
@@ -315,7 +326,7 @@ class ChallengePasser:
                     logger.info(f"SIGNAL: {symbol} — {reason}")
                     self._execute_trade(symbol, features)
 
-                time.sleep(0.1)
+                time.sleep(0.3)
 
             except Exception as e:
                 logger.error(f"Error scanning {symbol}: {e}")
