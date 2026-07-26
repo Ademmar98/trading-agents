@@ -13,3 +13,7 @@ uvicorn>=0.27.0
 coverage>=7.0.0
 pytest-cov>=5.0.0
 tzdata>=2024.1
+# Propr module (core/exchange/propr). NOTE: python-ulid, NOT ulid-py --
+# challenge_passer does `from ulid import ULID`, which ulid-py does not provide.
+python-ulid>=4.0.0
+python-dotenv>=1.0.0
