@@ -62,17 +62,17 @@ class CombinedSimulator:
         self.max_exposure = 0.80
         self.max_positions = 8
         self.per_module_max = 3
-        self.kelly_fraction = 0.25
+        self.kelly_fraction = 1.0  # Full Kelly (was 0.25)
 
-        # Weights (optimized: M1 disabled, M2-only, M3 supplementary)
+        # Weights (optimized: M2+M3 with full Kelly)
         self.m1_weight = 0.00
-        self.m2_weight = 0.60
-        self.m3_weight = 0.40
+        self.m2_weight = 0.50
+        self.m3_weight = 0.50
 
         # Per-module position size as % of equity (fractional Kelly applied)
         self.m1_position_pct = 0.00  # DISABLED
-        self.m2_position_pct = 0.12  # 12% of equity per M2 trade
-        self.m3_position_pct = 0.08  # 8% of equity per M3 trade
+        self.m2_position_pct = 0.35  # 35% of equity per M2 trade
+        self.m3_position_pct = 0.30  # 30% of equity per M3 trade
 
         self.current_month = None
 
@@ -113,6 +113,7 @@ class CombinedSimulator:
         df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
         df["vol_sma"] = df["volume"].rolling(20).mean()
         df["rel_vol"] = df["volume"] / df["vol_sma"]
+        df["roll_max_31"] = df["close"].rolling(31, min_periods=1).max()
         df["price_pct"] = df["close"].pct_change()
         df["price_pct_6h"] = df["close"].pct_change(6)
         df["price_pct_24h"] = df["close"].pct_change(6)  # ~24h at 4h bars
@@ -195,6 +196,12 @@ class CombinedSimulator:
             return True
         return False
 
+    def _sl_tp(self, entry, atr, sl_default, tp_default):
+        """Resolve SL/TP prices, honouring grid-search overrides when set."""
+        sl_m = self.sl_atr if self.sl_atr is not None else sl_default
+        tp_m = self.tp_atr if self.tp_atr is not None else tp_default
+        return entry - sl_m * atr, entry + tp_m * atr
+
     def _open(self, module, symbol, entry, sl, tp, ts):
         open_count = len([p for p in self.positions if p.status == "open"])
         if open_count >= self.max_positions:
@@ -230,7 +237,10 @@ class CombinedSimulator:
             size_usd=size, entry_time=ts, stop_loss=sl, take_profit=tp,
         )
         self.positions.append(pos)
-        self.cash -= size
+        # Half the round-trip cost on entry.
+        entry_fee = size * self.fee_rate / 2
+        self.fees_paid += entry_fee
+        self.cash -= size + entry_fee
 
     def _close(self, pos, exit_price, ts, reason):
         pos.status = "closed"
@@ -238,10 +248,14 @@ class CombinedSimulator:
         pos.exit_time = ts
 
         pct = (exit_price - pos.entry_price) / pos.entry_price
-        pos.pnl_pct = pct * 100
-        pos.pnl = pos.size_usd * pct
+        gross = pos.size_usd * pct
+        exit_fee = (pos.size_usd + gross) * self.fee_rate / 2
+        self.fees_paid += exit_fee
 
-        self.cash += pos.size_usd + pos.pnl
+        pos.pnl = gross - exit_fee - (pos.size_usd * self.fee_rate / 2)
+        pos.pnl_pct = pos.pnl / pos.size_usd * 100
+
+        self.cash += pos.size_usd + gross - exit_fee
         self.total_trades += 1
         if pos.pnl > 0:
             self.wins += 1
@@ -255,22 +269,29 @@ class CombinedSimulator:
             "reason": reason, "hold_bars": pos.hold_bars,
         })
 
-    def run(self):
-        print("=" * 70)
-        print("COMBINED PAPER-TRADING SIMULATION v3")
-        print("=" * 70)
+    def run(self, prepared=None, times=None):
+        """
+        prepared: pre-built {symbol: DataFrame} to reuse across grid-search runs.
+        times:    explicit bar timestamps to iterate (an IS or OOS slice).
+        """
+        p = print if not self.quiet else (lambda *a, **k: None)
 
-        data = self.load_data()
-        print(f"Loaded {len(data)} symbols")
+        p("=" * 70)
+        p("COMBINED PAPER-TRADING SIMULATION v3")
+        p("=" * 70)
 
-        prepared = {}
-        for sym, d in data.items():
-            try:
-                prepared[sym] = self.prepare(d)
-            except Exception as e:
-                print(f"  Skip {sym}: {e}")
+        if prepared is None:
+            data = self.load_data()
+            p(f"Loaded {len(data)} symbols")
 
-        print(f"Prepared {len(prepared)} symbols")
+            prepared = {}
+            for sym, d in data.items():
+                try:
+                    prepared[sym] = self.prepare(d)
+                except Exception as e:
+                    p(f"  Skip {sym}: {e}")
+
+        p(f"Prepared {len(prepared)} symbols")
 
         # Check M1 signal availability
         m1_signals = 0
@@ -281,8 +302,8 @@ class CombinedSimulator:
                 below1 = (zs < -1.0).sum()
                 m1_signals += below2
                 if below2 > 0:
-                    print(f"  {sym}: {below2} bars with zscore < -2.0")
-        print(f"Total M1 signal opportunities (zscore < -2.0): {m1_signals}")
+                    p(f"  {sym}: {below2} bars with zscore < -2.0")
+        p(f"Total M1 signal opportunities (zscore < -2.0): {m1_signals}")
 
         # Check M3 signal availability
         m3_signals = 0
@@ -293,17 +314,20 @@ class CombinedSimulator:
                 dip_ok = (df["price_pct_6h"] < -0.01).sum()
                 combined = ((df["cvd_dev"] < -0.5) & (df["rel_vol"] > 1.3) & (df["price_pct_6h"] < -0.01)).sum()
                 m3_signals += combined
-        print(f"Total M3 signal opportunities: {m3_signals}")
+        p(f"Total M3 signal opportunities: {m3_signals}")
 
         all_times = sorted(set().union(*[set(d.index) for d in prepared.values()]))
-        print(f"Time range: {all_times[0]} to {all_times[-1]}")
-        print(f"Total bars: {len(all_times)}")
-        print(f"\nConfig: M1=DISABLED, M2=60%, M3=40%, Kelly={self.kelly_fraction}x")
-        print(f"Position sizing: M2={self.m2_position_pct*100}%, M3={self.m3_position_pct*100}% of equity")
-        print(f"Stops: M2=2.0x ATR, M3=2.5x ATR")
-        print(f"Time exits: DISABLED")
-        print(f"M2 trend filter: BTC > 200-SMA only")
-        print()
+        if times is not None:
+            wanted = set(times)
+            all_times = [t for t in all_times if t in wanted]
+        p(f"Time range: {all_times[0]} to {all_times[-1]}")
+        p(f"Total bars: {len(all_times)}")
+        p(f"\nConfig: M1=DISABLED, M2=60%, M3=40%, Kelly={self.kelly_fraction}x")
+        p(f"Position sizing: M2={self.m2_position_pct*100}%, M3={self.m3_position_pct*100}% of equity")
+        p(f"Stops: M2=2.0x ATR, M3=2.5x ATR")
+        p(f"Time exits: DISABLED")
+        p(f"M2 trend filter: BTC > 200-SMA only")
+        p()
 
         for ts in all_times:
             month_key = (ts.year, ts.month)
@@ -381,8 +405,7 @@ class CombinedSimulator:
 
                 if (not np.isnan(fs) and fs < zscore_threshold and above_sma and oi_exp):
                     entry = bar["close"]
-                    sl = entry - 2.0 * atr_val  # Widened from 1.5x
-                    tp = entry + 3.0 * atr_val
+                    sl, tp = self._sl_tp(entry, atr_val, 2.0, 3.0)
                     self._open("module1", sym, entry, sl, tp, ts)
 
                 # ======== MODULE 3: Microstructure Absorption ========
@@ -397,8 +420,7 @@ class CombinedSimulator:
                     # Standard config
                     if (cvd_dev < -0.3 and rv > 1.2 and ppct6 < -0.005):
                         entry = bar["close"]
-                        sl = entry - 2.5 * atr_val  # Widened from 2.0x
-                        tp = entry + 3.0 * atr_val
+                        sl, tp = self._sl_tp(entry, atr_val, 1.5, 3.0)
                         self._open("module3", sym, entry, sl, tp, ts)
 
                 # ======== MODULE 2: Basket Rebalancing (Trend-Filtered) ========
@@ -411,23 +433,44 @@ class CombinedSimulator:
                     if btc_above_200sma and not np.isnan(btc_bar.get("sma200", np.nan)):
                         # Inverse-volatility weight for this symbol
                         # Buy if price dropped >5% below recent high (mean reversion)
-                        recent_high = df["close"].iloc[max(0, idx-30):idx+1].max()
+                        # Precomputed in prepare(); identical to
+                        # close.iloc[max(0, idx-30):idx+1].max() but hoisted out
+                        # of the per-bar loop (it dominated grid-search runtime).
+                        recent_high = bar["roll_max_31"]
                         drop_pct = (bar["close"] - recent_high) / recent_high
 
                         # Only buy if dropped > 5% (threshold rebalancing)
                         if drop_pct < -0.05:
                             entry = bar["close"]
-                            sl = entry - 2.0 * atr_val
-                            tp = entry + 2.5 * atr_val  # Conservative TP for rebalancing
+                            sl, tp = self._sl_tp(entry, atr_val, 1.5, 2.5)
                             self._open("module2", sym, entry, sl, tp, ts)
+
+        # Force-close anything still open at the last available price. Without
+        # this, _equity() carries open positions at their ENTRY cost, so their
+        # unrealised PnL is silently excluded from the final return -- and a
+        # grid search would reward configs that simply leave losers open.
+        if all_times:
+            last_ts = all_times[-1]
+            for pos in self.positions:
+                if pos.status != "open":
+                    continue
+                sym_df = prepared.get(pos.symbol)
+                if sym_df is None or len(sym_df) == 0:
+                    continue
+                upto = sym_df.loc[:last_ts]
+                if len(upto) == 0:
+                    continue
+                self._close(pos, upto["close"].iloc[-1], last_ts, "END_OF_DATA")
+            self.equity_curve.append(self._equity())
+            self.timestamps.append(last_ts)
 
         # ======== RESULTS ========
         final_eq = self.equity_curve[-1] if self.equity_curve else self.initial_capital
 
-        print()
-        print("=" * 70)
-        print("RESULTS")
-        print("=" * 70)
+        p()
+        p("=" * 70)
+        p("RESULTS")
+        p("=" * 70)
 
         total_ret = (final_eq - self.initial_capital) / self.initial_capital * 100
 
@@ -446,18 +489,19 @@ class CombinedSimulator:
         avg_monthly = np.mean([r[1] for r in monthly_rets]) if monthly_rets else 0
         max_dd = max((self.peak_equity - e) / self.peak_equity for e in self.equity_curve) * 100
 
-        print(f"\n  Final Equity:     ${final_eq:,.2f}")
-        print(f"  Total Return:     {total_ret:+.2f}%")
-        print(f"  Avg Monthly:      {avg_monthly:+.2f}%")
-        print(f"  Max Drawdown:     {max_dd:.1f}%")
+        p(f"\n  Final Equity:     ${final_eq:,.2f}")
+        p(f"  Total Return:     {total_ret:+.2f}%")
+        p(f"  Avg Monthly:      {avg_monthly:+.2f}%")
+        p(f"  Max Drawdown:     {max_dd:.1f}%")
 
-        print(f"\n  Monthly Returns:")
+        p(f"\n  Monthly Returns:")
         for key, ret, eq in monthly_rets:
-            print(f"    {key}: {ret:+.2f}%  (${eq:,.2f})")
+            p(f"    {key}: {ret:+.2f}%  (${eq:,.2f})")
 
         wr = self.wins / max(self.total_trades, 1) * 100
-        print(f"\n  Trades:           {self.total_trades}")
-        print(f"  Win Rate:         {wr:.1f}%")
+        pf = 0.0
+        p(f"\n  Trades:           {self.total_trades}")
+        p(f"  Win Rate:         {wr:.1f}%")
 
         if self.total_trades > 0:
             wins_pnl = [t["pnl"] for t in self.trade_log if t["pnl"] > 0]
@@ -468,35 +512,35 @@ class CombinedSimulator:
             gross_loss = sum(loss_pnl)
             pf = gross_win / gross_loss if gross_loss > 0 else 999
 
-            print(f"  Avg Win:          ${avg_win:,.2f}")
-            print(f"  Avg Loss:         ${avg_loss:,.2f}")
-            print(f"  Profit Factor:    {pf:.2f}")
-            print(f"  Expectancy:       ${(gross_win - gross_loss) / self.total_trades:+,.2f} per trade")
+            p(f"  Avg Win:          ${avg_win:,.2f}")
+            p(f"  Avg Loss:         ${avg_loss:,.2f}")
+            p(f"  Profit Factor:    {pf:.2f}")
+            p(f"  Expectancy:       ${(gross_win - gross_loss) / self.total_trades:+,.2f} per trade")
 
-        print(f"\n  By Module:")
+        p(f"\n  By Module:")
         for mod in ["module1", "module2", "module3"]:
             trades = [t for t in self.trade_log if t["module"] == mod]
             if trades:
                 mw = len([t for t in trades if t["pnl"] > 0])
                 mp = sum(t["pnl"] for t in trades)
                 mwr = mw / len(trades) * 100
-                print(f"    {mod.upper()}: {len(trades)} trades, {mwr:.0f}% WR, ${mp:+.2f} PnL")
+                p(f"    {mod.upper()}: {len(trades)} trades, {mwr:.0f}% WR, ${mp:+.2f} PnL")
             else:
                 label = "DISABLED" if mod == "module2" else "NO SIGNALS"
-                print(f"    {mod.upper()}: {label}")
+                p(f"    {mod.upper()}: {label}")
 
         if self.trade_log:
-            print(f"\n  Top 5 Trades:")
+            p(f"\n  Top 5 Trades:")
             st = sorted(self.trade_log, key=lambda t: t["pnl"], reverse=True)
             for t in st[:5]:
-                print(f"    {t['symbol']:12s} ({t['module']:8s}): {t['pnl_pct']:+6.2f}%  ${t['pnl']:+8.2f}  [{t['reason']}]")
+                p(f"    {t['symbol']:12s} ({t['module']:8s}): {t['pnl_pct']:+6.2f}%  ${t['pnl']:+8.2f}  [{t['reason']}]")
 
-            print(f"\n  Bottom 5 Trades:")
+            p(f"\n  Bottom 5 Trades:")
             for t in st[-5:]:
-                print(f"    {t['symbol']:12s} ({t['module']:8s}): {t['pnl_pct']:+6.2f}%  ${t['pnl']:+8.2f}  [{t['reason']}]")
+                p(f"    {t['symbol']:12s} ({t['module']:8s}): {t['pnl_pct']:+6.2f}%  ${t['pnl']:+8.2f}  [{t['reason']}]")
 
         # Exit reason breakdown
-        print(f"\n  Exit Reasons:")
+        p(f"\n  Exit Reasons:")
         reasons = {}
         for t in self.trade_log:
             r = t["reason"]
@@ -505,7 +549,7 @@ class CombinedSimulator:
             reasons[r]["count"] += 1
             reasons[r]["total_pnl"] += t["pnl"]
         for r, v in sorted(reasons.items(), key=lambda x: x[1]["count"], reverse=True):
-            print(f"    {r:15s}: {v['count']:3d} trades, ${v['total_pnl']:+8.2f}")
+            p(f"    {r:15s}: {v['count']:3d} trades, ${v['total_pnl']:+8.2f}")
 
         # Save
         results = {
@@ -521,14 +565,19 @@ class CombinedSimulator:
             "monthly_returns": [{"month": m, "return_pct": round(r, 2), "equity": round(e, 2)} for m, r, e in monthly_rets],
             "trade_log": self.trade_log,
             "exit_reasons": reasons,
+            "profit_factor": round(pf, 3) if self.total_trades > 0 else 0.0,
+            "net_return": round(total_ret, 3),
+            "fees_paid": round(self.fees_paid, 2),
         }
 
-        with open("analysis/combined_simulation_results.json", "w") as f:
-            json.dump(results, f, indent=2, default=str)
+        if not self.quiet:
+            with open("analysis/combined_simulation_results.json", "w") as f:
+                json.dump(results, f, indent=2, default=str)
+            p(f"\n  Saved: analysis/combined_simulation_results.json")
 
-        print(f"\n  Saved: analysis/combined_simulation_results.json")
+        return results
 
 
 if __name__ == "__main__":
-    sim = CombinedSimulator(initial_capital=10_000)
+    sim = CombinedSimulator(initial_capital=10_000, fee_rate=0.001, sl_atr=1.5, tp_atr=3.0)
     sim.run()
