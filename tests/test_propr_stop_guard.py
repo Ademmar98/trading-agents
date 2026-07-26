@@ -20,11 +20,15 @@ class FakeSDK:
     """Records calls; lets each test choose what the exchange 'returns'."""
 
     def __init__(self, position_after_entry=True, sl_ok=True, tp_ok=True,
-                 close_raises=False):
+                 close_raises=False, positions=None, orders=None,
+                 orders_raise=False):
         self._position_after_entry = position_after_entry
         self.sl_ok = sl_ok
         self.tp_ok = tp_ok
         self._close_raises = close_raises
+        self._positions = positions
+        self._orders = orders or []
+        self._orders_raise = orders_raise
         self.closed = []
         self.buys = []
 
@@ -33,9 +37,20 @@ class FakeSDK:
         return [{"orderId": "entry-1", "status": "filled"}]
 
     def get_open_positions(self, base=None):
+        if self._positions is not None:
+            return self._positions
         if not self._position_after_entry:
             return []
         return [{"positionId": "pos-1", "base": base or "BTC"}]
+
+    def get_orders(self, status=None, limit=20, **kw):
+        if self._orders_raise:
+            raise RuntimeError("orders endpoint down")
+        return [o for o in self._orders if o.get("status") == status]
+
+    def get_account(self):
+        return {"availableBalance": "5000", "balance": "5000",
+                "totalUnrealizedPnl": "0"}
 
     def close_position(self, base, quote="USDC"):
         if self._close_raises:
@@ -53,7 +68,9 @@ def build_client(sdk, monkeypatch):
     client._last_trade_time = 0.0
     client._trades_today = 0
 
-    monkeypatch.setattr(client, "can_trade", lambda: (True, "OK"))
+    # can_trade now takes new_risk_usd; accept anything, these tests exercise
+    # the stop guard rather than the risk gate.
+    monkeypatch.setattr(client, "can_trade", lambda *a, **k: (True, "OK"))
 
     def fake_conditional(order_type, asset, quantity, trigger_price, position_id):
         ok = sdk.sl_ok if order_type == "stop_market" else sdk.tp_ok
@@ -118,6 +135,117 @@ def test_flatten_failure_does_not_raise(monkeypatch):
     orders = client.open_long("BTC", 0.01, stop_price=90_000)
 
     assert orders == [], "must still report failure when the flatten errors"
+
+
+# ---------------------------------------------------------------------------
+# Aggregate stop-risk gate
+#
+# The live book reached exactly 100% of the $150 daily cap: two $1,996
+# positions, each stopping 3.75% away, $75 risk apiece. Position COUNT was
+# within limits the whole time -- counting tickets does not bound loss.
+# ---------------------------------------------------------------------------
+
+def risk_client(sdk, start=5000.0):
+    from core.exchange.propr.config import AccountSize, ChallengeType
+    cfg = ProprConfig(api_key="test", account_size=AccountSize.K5,
+                      challenge_type=ChallengeType.CLASSIC_1STEP)
+    c = ProprRiskClient.__new__(ProprRiskClient)
+    c.config = cfg
+    c.sdk = sdk
+    c.account_id = "acct-1"
+    c._last_trade_time = 0.0
+    c._trades_today = 0
+    c._circuit_breaker_until = 0.0
+    c._starting_balance = start
+    c._high_water_mark = start
+    c._day_start_balance = start
+    c._day_start_date = None
+    c._daily_realized_pnl = 0.0
+    c._monthly_realized_pnl = 0.0
+    c._closed_positions = []
+    return c
+
+
+def _pos(base, qty, entry):
+    return {"positionId": f"p-{base}", "base": base, "quantity": qty,
+            "entryPrice": entry}
+
+
+def _stop(base, trigger, status="pending"):
+    return {"base": base, "type": "stop_market", "status": status,
+            "triggerPrice": trigger}
+
+
+def test_no_positions_means_no_risk():
+    assert risk_client(FakeSDK(positions=[])).open_risk_usd() == 0.0
+
+
+def test_stop_in_pending_status_is_counted(monkeypatch):
+    """Regression: conditional orders rest in 'pending', not 'open'. Reading
+    only 'open' made every stop look missing and risk look like full notional."""
+    sdk = FakeSDK(positions=[_pos("SUI", 2788.6, 0.7157)],
+                  orders=[_stop("SUI", 0.6889, status="pending")])
+    risk = risk_client(sdk).open_risk_usd()
+    assert 70 < risk < 80, f"expected ~$75 of stop risk, got ${risk:.2f}"
+
+
+def test_position_without_stop_counts_full_notional():
+    sdk = FakeSDK(positions=[_pos("SUI", 2788.6, 0.7157)], orders=[])
+    risk = risk_client(sdk).open_risk_usd()
+    assert risk > 1900, f"a stopless position is unbounded, got ${risk:.2f}"
+
+
+def test_orders_api_failure_fails_safe():
+    """If stops cannot be read we must assume the worst, not assume zero."""
+    sdk = FakeSDK(positions=[_pos("SUI", 2788.6, 0.7157)], orders_raise=True)
+    c = risk_client(sdk)
+    assert c.open_risk_usd() > 1900
+    ok, reason = c.can_trade()
+    assert not ok and "Aggregate stop risk" in reason
+
+
+def test_live_book_would_have_been_refused():
+    """The exact book from the account: 2x $1,996 at 3.75% stops = $150 risk,
+    100% of the daily cap. Budget is 60% of $150 = $90, so this must refuse."""
+    sdk = FakeSDK(
+        positions=[_pos("SUI", 2788.6, 0.7157), _pos("AVAX", 298.25, 6.6909)],
+        orders=[_stop("SUI", 0.6889), _stop("AVAX", 6.44)],
+    )
+    c = risk_client(sdk)
+    risk = c.open_risk_usd()
+    assert 145 < risk < 155, f"expected ~$150 total risk, got ${risk:.2f}"
+
+    ok, reason = c.can_trade()
+    assert not ok, "a book at 100% of the daily cap must refuse new entries"
+    assert "Aggregate stop risk" in reason
+
+
+def test_new_trade_risk_is_priced_in():
+    """One $75 position is under the $90 budget, but adding another must not be."""
+    sdk = FakeSDK(positions=[_pos("SUI", 2788.6, 0.7157)],
+                  orders=[_stop("SUI", 0.6889)])
+    c = risk_client(sdk)
+
+    ok, _ = c.can_trade()
+    assert ok, "$75 of risk is inside the $90 budget on its own"
+
+    ok, reason = c.can_trade(new_risk_usd=75.0)
+    assert not ok, "the gate must see the book AFTER the proposed fill"
+    assert "Aggregate stop risk" in reason
+
+
+def test_open_long_refuses_when_aggregate_would_breach(monkeypatch):
+    """End to end: every entry routes through open_long, so the cap cannot be
+    bypassed by calling it directly."""
+    monkeypatch.setattr("core.exchange.propr.client.time.sleep", lambda s: None)
+    sdk = FakeSDK(positions=[_pos("SUI", 2788.6, 0.7157)],
+                  orders=[_stop("SUI", 0.6889)])
+    c = risk_client(sdk)
+
+    orders = c.open_long("AVAX", 298.25, stop_price=6.44, entry_price=6.6909)
+
+    assert orders == [], "entry breaching the aggregate cap must be refused"
+    assert sdk.buys == [], "and must never reach the exchange"
 
 
 if __name__ == "__main__":

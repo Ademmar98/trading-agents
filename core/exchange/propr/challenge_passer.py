@@ -280,6 +280,7 @@ class ChallengePasser:
             quantity=quantity,
             stop_price=sl,
             take_profit_price=tp,
+            entry_price=price,  # lets can_trade() price this trade's own stop risk
         )
 
         if orders:

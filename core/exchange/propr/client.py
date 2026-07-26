@@ -108,7 +108,46 @@ class ProprRiskClient:
 
         return None
 
-    def can_trade(self) -> tuple[bool, str]:
+    def open_risk_usd(self) -> float:
+        """Dollars lost if every open position hits its stop.
+
+        Conditional orders rest in "pending", NOT "open" -- querying the wrong
+        status makes every stop look missing. A position with no stop found
+        counts as its FULL notional at risk, which is the truth: unbounded
+        downside. That also makes an orders-API failure fail SAFE (risk reads
+        high, new entries are refused) rather than fail open.
+        """
+        positions = [p for p in self.sdk.get_open_positions()
+                     if float(p.get("quantity", 0) or 0) > 0]
+        if not positions:
+            return 0.0
+
+        stops: dict[str, float] = {}
+        for st in ("pending", "open"):
+            try:
+                for o in self.sdk.get_orders(status=st, limit=100):
+                    if "stop" not in str(o.get("type", "")).lower():
+                        continue
+                    base = o.get("base")
+                    trig = float(o.get("triggerPrice", 0) or 0)
+                    if base and trig:
+                        # Duplicate stops on one asset: a falling price reaches
+                        # the HIGHEST trigger first, so that one defines the loss.
+                        stops[base] = max(stops.get(base, 0.0), trig)
+            except Exception as e:
+                logger.warning(f"Could not read {st} orders for risk check: {e}")
+
+        total = 0.0
+        for p in positions:
+            qty = float(p.get("quantity", 0) or 0)
+            entry = float(p.get("entryPrice", 0) or 0)
+            if qty <= 0 or entry <= 0:
+                continue
+            trig = stops.get(p.get("base"))
+            total += (entry - trig) * qty if trig else entry * qty
+        return max(0.0, total)
+
+    def can_trade(self, new_risk_usd: float = 0.0) -> tuple[bool, str]:
         reason = self._check_circuit_breakers()
         if reason:
             return False, reason
@@ -116,6 +155,19 @@ class ProprRiskClient:
         positions = self.get_open_positions()
         if len(positions) >= self.config.max_concurrent_positions:
             return False, f"Max concurrent positions ({self.config.max_concurrent_positions}) reached"
+
+        # Position COUNT does not bound loss. N positions each stopping at 2%
+        # is an N*2% day, and correlated crypto longs stop out together -- which
+        # is how the book reached exactly 100% of the daily cap. Bound the sum
+        # of stop distances, not the number of tickets.
+        budget = self.rules.max_daily_loss_usd * self.config.max_daily_risk_fraction
+        projected = self.open_risk_usd() + max(0.0, new_risk_usd)
+        if projected > budget:
+            return False, (
+                f"Aggregate stop risk ${projected:,.2f} would exceed "
+                f"{self.config.max_daily_risk_fraction:.0%} of the "
+                f"${self.rules.max_daily_loss_usd:,.0f} daily cap (${budget:,.2f})"
+            )
 
         account = self.sdk.get_account()
         available = float(account["availableBalance"])
@@ -182,8 +234,16 @@ class ProprRiskClient:
         return max(0, quantity)
 
     def open_long(self, asset: str, quantity: float, stop_price: float | None = None,
-                  take_profit_price: float | None = None) -> list[dict]:
-        can, reason = self.can_trade()
+                  take_profit_price: float | None = None,
+                  entry_price: float | None = None) -> list[dict]:
+        # Price the proposed trade's own stop risk into the aggregate check, so
+        # the gate sees the book AFTER this fill rather than before it. Every
+        # entry routes through here, so no caller can bypass the cap.
+        new_risk = 0.0
+        if entry_price and stop_price and entry_price > stop_price:
+            new_risk = (entry_price - stop_price) * quantity
+
+        can, reason = self.can_trade(new_risk_usd=new_risk)
         if not can:
             logger.warning(f"Cannot trade {asset}: {reason}")
             return []
