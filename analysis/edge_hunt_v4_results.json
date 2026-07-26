@@ -1,0 +1,305 @@
+{
+  "days": 30,
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "DEXEUSDT",
+    "USD1USDT",
+    "SOLUSDT",
+    "VANAUSDT",
+    "EULUSDT",
+    "SHIBUSDT",
+    "DOGEUSDT",
+    "BANKUSDT",
+    "BNBUSDT",
+    "PEPEUSDT",
+    "ZECUSDT",
+    "EURUSDT",
+    "XRPUSDT",
+    "AEROUSDT",
+    "ESPUSDT",
+    "AAVEUSDT",
+    "ZAMAUSDT",
+    "TRXUSDT"
+  ],
+  "results": {
+    "5m|ma_cross": {
+      "trades": 1894,
+      "gross_per_trade_pct": 0.1415754874304691,
+      "pairs": 19,
+      "taker_030": {
+        "net_sum_pct": -294.603807129941,
+        "mean_pair_pct": -15.50546353315479,
+        "pairs_positive": 4,
+        "win_rate": 22.011164657547354
+      },
+      "audit_014": {
+        "net_sum_pct": 8.436192870059026,
+        "mean_pair_pct": 0.4440101510557382,
+        "pairs_positive": 5,
+        "win_rate": 27.248875025175447
+      }
+    },
+    "5m|rsi_revert": {
+      "trades": 2287,
+      "gross_per_trade_pct": 0.08962832957824718,
+      "pairs": 19,
+      "taker_030": {
+        "net_sum_pct": -440.77457931765366,
+        "mean_pair_pct": -23.198662069350192,
+        "pairs_positive": 1,
+        "win_rate": 33.75318282582135
+      },
+      "audit_014": {
+        "net_sum_pct": -74.85457931765356,
+        "mean_pair_pct": -3.9397147009291347,
+        "pairs_positive": 4,
+        "win_rate": 47.73734890944937
+      }
+    },
+    "5m|donchian": {
+      "trades": 1684,
+      "gross_per_trade_pct": 0.15019935900388884,
+      "pairs": 19,
+      "taker_030": {
+        "net_sum_pct": -258.1850763012799,
+        "mean_pair_pct": -13.588688226383152,
+        "pairs_positive": 4,
+        "win_rate": 22.71759737513353
+      },
+      "audit_014": {
+        "net_sum_pct": 11.254923698720223,
+        "mean_pair_pct": 0.5923644051958012,
+        "pairs_positive": 5,
+        "win_rate": 27.136646355970495
+      }
+    },
+    "5m|trend_pullback": {
+      "trades": 150,
+      "gross_per_trade_pct": 0.4614389269752442,
+      "pairs": 9,
+      "taker_030": {
+        "net_sum_pct": 0.5580299722642743,
+        "mean_pair_pct": 0.06200333025158603,
+        "pairs_positive": 3,
+        "win_rate": 19.372129323109714
+      },
+      "audit_014": {
+        "net_sum_pct": 24.558029972264272,
+        "mean_pair_pct": 2.7286699969182524,
+        "pairs_positive": 4,
+        "win_rate": 30.627540578520968
+      }
+    },
+    "15m|ma_cross": {
+      "trades": 628,
+      "gross_per_trade_pct": 0.9530607195488937,
+      "pairs": 20,
+      "taker_030": {
+        "net_sum_pct": 434.3883378911669,
+        "mean_pair_pct": 21.719416894558343,
+        "pairs_positive": 8,
+        "win_rate": 28.13924005957208
+      },
+      "audit_014": {
+        "net_sum_pct": 534.8683378911669,
+        "mean_pair_pct": 26.743416894558344,
+        "pairs_positive": 12,
+        "win_rate": 31.268115787649123
+      }
+    },
+    "15m|rsi_revert": {
+      "trades": 777,
+      "gross_per_trade_pct": 0.27169551776299755,
+      "pairs": 20,
+      "taker_030": {
+        "net_sum_pct": -26.608738063057615,
+        "mean_pair_pct": -1.3304369031528807,
+        "pairs_positive": 5,
+        "win_rate": 47.34512151612539
+      },
+      "audit_014": {
+        "net_sum_pct": 97.71126193694242,
+        "mean_pair_pct": 4.885563096847121,
+        "pairs_positive": 6,
+        "win_rate": 54.566885881194835
+      }
+    },
+    "15m|donchian": {
+      "trades": 538,
+      "gross_per_trade_pct": 0.8780314980053047,
+      "pairs": 20,
+      "taker_030": {
+        "net_sum_pct": 287.7623013660188,
+        "mean_pair_pct": 14.38811506830094,
+        "pairs_positive": 9,
+        "win_rate": 28.787075671494346
+      },
+      "audit_014": {
+        "net_sum_pct": 373.8423013660188,
+        "mean_pair_pct": 18.69211506830094,
+        "pairs_positive": 11,
+        "win_rate": 34.264738984008886
+      }
+    },
+    "15m|trend_pullback": {
+      "trades": 158,
+      "gross_per_trade_pct": 1.672180116989731,
+      "pairs": 12,
+      "taker_030": {
+        "net_sum_pct": 127.14418286140398,
+        "mean_pair_pct": 10.595348571783665,
+        "pairs_positive": 6,
+        "win_rate": 28.518907801118544
+      },
+      "audit_014": {
+        "net_sum_pct": 152.424182861404,
+        "mean_pair_pct": 12.702015238450334,
+        "pairs_positive": 6,
+        "win_rate": 29.60094914478779
+      }
+    },
+    "1h|ma_cross": {
+      "trades": 147,
+      "gross_per_trade_pct": 4.504324127998819,
+      "pairs": 19,
+      "taker_030": {
+        "net_sum_pct": 617.8053276408867,
+        "mean_pair_pct": 32.516069875836145,
+        "pairs_positive": 14,
+        "win_rate": 40.27360066833751
+      },
+      "audit_014": {
+        "net_sum_pct": 641.3253276408868,
+        "mean_pair_pct": 33.75396461267825,
+        "pairs_positive": 15,
+        "win_rate": 40.93149540517961
+      }
+    },
+    "1h|rsi_revert": {
+      "trades": 208,
+      "gross_per_trade_pct": -0.4811637690826388,
+      "pairs": 19,
+      "taker_030": {
+        "net_sum_pct": -57.26962458184355,
+        "mean_pair_pct": -3.01419076746545,
+        "pairs_positive": 8,
+        "win_rate": 53.244854560644036
+      },
+      "audit_014": {
+        "net_sum_pct": -23.989624581843533,
+        "mean_pair_pct": -1.262611820097028,
+        "pairs_positive": 12,
+        "win_rate": 57.07526391736919
+      }
+    },
+    "1h|donchian": {
+      "trades": 137,
+      "gross_per_trade_pct": 3.0865278212669676,
+      "pairs": 19,
+      "taker_030": {
+        "net_sum_pct": 361.4394805331602,
+        "mean_pair_pct": 19.023130554376852,
+        "pairs_positive": 9,
+        "win_rate": 36.76065162907268
+      },
+      "audit_014": {
+        "net_sum_pct": 383.35948053316014,
+        "mean_pair_pct": 20.176814764903167,
+        "pairs_positive": 11,
+        "win_rate": 37.34544695071011
+      }
+    },
+    "1h|trend_pullback": {
+      "trades": 93,
+      "gross_per_trade_pct": 2.8188548931948363,
+      "pairs": 15,
+      "taker_030": {
+        "net_sum_pct": 287.8359837035356,
+        "mean_pair_pct": 19.189065580235706,
+        "pairs_positive": 7,
+        "win_rate": 27.425925925925927
+      },
+      "audit_014": {
+        "net_sum_pct": 302.7159837035356,
+        "mean_pair_pct": 20.181065580235707,
+        "pairs_positive": 7,
+        "win_rate": 29.64814814814815
+      }
+    },
+    "4h|ma_cross": {
+      "trades": 23,
+      "gross_per_trade_pct": 67.39325840780648,
+      "pairs": 15,
+      "taker_030": {
+        "net_sum_pct": 1020.8948197595801,
+        "mean_pair_pct": 68.05965465063868,
+        "pairs_positive": 7,
+        "win_rate": 46.666666666666664
+      },
+      "audit_014": {
+        "net_sum_pct": 1024.5748197595801,
+        "mean_pair_pct": 68.30498798397201,
+        "pairs_positive": 7,
+        "win_rate": 46.666666666666664
+      }
+    },
+    "4h|rsi_revert": {
+      "trades": 52,
+      "gross_per_trade_pct": 0.9664818173734324,
+      "pairs": 19,
+      "taker_030": {
+        "net_sum_pct": 54.219893056255025,
+        "mean_pair_pct": 2.8536785819081594,
+        "pairs_positive": 15,
+        "win_rate": 72.19298245614034
+      },
+      "audit_014": {
+        "net_sum_pct": 62.53989305625503,
+        "mean_pair_pct": 3.291573318750265,
+        "pairs_positive": 15,
+        "win_rate": 75.35087719298245
+      }
+    },
+    "4h|donchian": {
+      "trades": 34,
+      "gross_per_trade_pct": 37.42366489984568,
+      "pairs": 18,
+      "taker_030": {
+        "net_sum_pct": 1114.1581141904555,
+        "mean_pair_pct": 61.89767301058086,
+        "pairs_positive": 11,
+        "win_rate": 56.94444444444444
+      },
+      "audit_014": {
+        "net_sum_pct": 1119.5981141904551,
+        "mean_pair_pct": 62.199895232803065,
+        "pairs_positive": 12,
+        "win_rate": 58.79629629629629
+      }
+    },
+    "4h|trend_pullback": {
+      "trades": 51,
+      "gross_per_trade_pct": 23.676685200574966,
+      "pairs": 16,
+      "taker_030": {
+        "net_sum_pct": 1174.5711024294396,
+        "mean_pair_pct": 73.41069390183998,
+        "pairs_positive": 8,
+        "win_rate": 24.226190476190474
+      },
+      "audit_014": {
+        "net_sum_pct": 1182.7311024294397,
+        "mean_pair_pct": 73.92069390183998,
+        "pairs_positive": 8,
+        "win_rate": 25.788690476190474
+      }
+    }
+  },
+  "buy_hold": {
+    "5m": 70.03162589160121,
+    "15m": 62.27685954975885,
+    "1h": 63.8493982859854,
+    "4h": 65.07864884433793
+  }
+}
