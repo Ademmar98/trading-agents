@@ -1,0 +1,772 @@
+{
+  "variants": [
+    {
+      "name": "core12_tp4_sz20",
+      "universe": "core12",
+      "tp": 0.04,
+      "size": 0.2,
+      "all_mean": 0.9550000000000001,
+      "oos_mean": 0.4960000000000001,
+      "oos_pos": 4,
+      "oos_n": 5,
+      "oos_worst": -3.51,
+      "worst_dd": 4.06,
+      "failures": 0,
+      "trades": 84,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 3.25,
+          "dd": 1.19,
+          "trades": 17,
+          "wr": 64.7,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 2.74,
+          "dd": 3.03,
+          "trades": 15,
+          "wr": 80.0,
+          "failed": false
+        },
+        {
+          "w": 2,
+          "ret": 1.39,
+          "dd": 4.06,
+          "trades": 20,
+          "wr": 60.0,
+          "failed": false
+        },
+        {
+          "w": 3,
+          "ret": 0.27,
+          "dd": 1.91,
+          "trades": 7,
+          "wr": 57.1,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -3.51,
+          "dd": 3.73,
+          "trades": 11,
+          "wr": 45.5,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": 1.59,
+          "dd": 2.21,
+          "trades": 14,
+          "wr": 71.4,
+          "failed": false
+        }
+      ]
+    },
+    {
+      "name": "core12_tp4_sz25",
+      "universe": "core12",
+      "tp": 0.04,
+      "size": 0.25,
+      "all_mean": 1.0566666666666664,
+      "oos_mean": 0.5659999999999998,
+      "oos_pos": 4,
+      "oos_n": 5,
+      "oos_worst": -4.32,
+      "worst_dd": 4.75,
+      "failures": 0,
+      "trades": 82,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 3.51,
+          "dd": 1.46,
+          "trades": 16,
+          "wr": 62.5,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 3.31,
+          "dd": 3.66,
+          "trades": 15,
+          "wr": 80.0,
+          "failed": false
+        },
+        {
+          "w": 2,
+          "ret": 1.78,
+          "dd": 4.75,
+          "trades": 20,
+          "wr": 60.0,
+          "failed": false
+        },
+        {
+          "w": 3,
+          "ret": 0.34,
+          "dd": 2.27,
+          "trades": 7,
+          "wr": 57.1,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -4.32,
+          "dd": 4.59,
+          "trades": 10,
+          "wr": 40.0,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": 1.72,
+          "dd": 2.64,
+          "trades": 14,
+          "wr": 71.4,
+          "failed": false
+        }
+      ]
+    },
+    {
+      "name": "core12_tp6_sz20",
+      "universe": "core12",
+      "tp": 0.06,
+      "size": 0.2,
+      "all_mean": 0.8483333333333333,
+      "oos_mean": 0.27199999999999996,
+      "oos_pos": 4,
+      "oos_n": 5,
+      "oos_worst": -3.51,
+      "worst_dd": 4.66,
+      "failures": 0,
+      "trades": 84,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 3.73,
+          "dd": 1.54,
+          "trades": 17,
+          "wr": 64.7,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 2.06,
+          "dd": 3.03,
+          "trades": 15,
+          "wr": 80.0,
+          "failed": false
+        },
+        {
+          "w": 2,
+          "ret": 0.28,
+          "dd": 4.66,
+          "trades": 20,
+          "wr": 60.0,
+          "failed": false
+        },
+        {
+          "w": 3,
+          "ret": 0.34,
+          "dd": 2.17,
+          "trades": 7,
+          "wr": 57.1,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -3.51,
+          "dd": 3.73,
+          "trades": 11,
+          "wr": 45.5,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": 2.19,
+          "dd": 2.21,
+          "trades": 14,
+          "wr": 71.4,
+          "failed": false
+        }
+      ]
+    },
+    {
+      "name": "core12_tp6_sz25",
+      "universe": "core12",
+      "tp": 0.06,
+      "size": 0.25,
+      "all_mean": 0.9133333333333332,
+      "oos_mean": 0.2819999999999999,
+      "oos_pos": 4,
+      "oos_n": 5,
+      "oos_worst": -4.32,
+      "worst_dd": 5.44,
+      "failures": 0,
+      "trades": 82,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 4.07,
+          "dd": 1.89,
+          "trades": 16,
+          "wr": 62.5,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 2.46,
+          "dd": 3.66,
+          "trades": 15,
+          "wr": 80.0,
+          "failed": false
+        },
+        {
+          "w": 2,
+          "ret": 0.43,
+          "dd": 5.44,
+          "trades": 20,
+          "wr": 60.0,
+          "failed": false
+        },
+        {
+          "w": 3,
+          "ret": 0.42,
+          "dd": 2.6,
+          "trades": 7,
+          "wr": 57.1,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -4.32,
+          "dd": 4.59,
+          "trades": 10,
+          "wr": 40.0,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": 2.42,
+          "dd": 2.64,
+          "trades": 14,
+          "wr": 71.4,
+          "failed": false
+        }
+      ]
+    },
+    {
+      "name": "core12_tp8_sz20",
+      "universe": "core12",
+      "tp": 0.08,
+      "size": 0.2,
+      "all_mean": 0.5566666666666666,
+      "oos_mean": 0.06000000000000001,
+      "oos_pos": 4,
+      "oos_n": 5,
+      "oos_worst": -3.51,
+      "worst_dd": 4.66,
+      "failures": 0,
+      "trades": 83,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 3.04,
+          "dd": 1.58,
+          "trades": 17,
+          "wr": 64.7,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 2.14,
+          "dd": 3.03,
+          "trades": 15,
+          "wr": 80.0,
+          "failed": false
+        },
+        {
+          "w": 2,
+          "ret": 0.28,
+          "dd": 4.66,
+          "trades": 20,
+          "wr": 60.0,
+          "failed": false
+        },
+        {
+          "w": 3,
+          "ret": 0.34,
+          "dd": 2.17,
+          "trades": 7,
+          "wr": 57.1,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -3.51,
+          "dd": 3.73,
+          "trades": 11,
+          "wr": 45.5,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": 1.05,
+          "dd": 2.21,
+          "trades": 13,
+          "wr": 69.2,
+          "failed": false
+        }
+      ]
+    },
+    {
+      "name": "core12_tp8_sz25",
+      "universe": "core12",
+      "tp": 0.08,
+      "size": 0.25,
+      "all_mean": 0.5599999999999999,
+      "oos_mean": 0.025999999999999978,
+      "oos_pos": 4,
+      "oos_n": 5,
+      "oos_worst": -4.32,
+      "worst_dd": 5.44,
+      "failures": 0,
+      "trades": 81,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 3.23,
+          "dd": 1.92,
+          "trades": 16,
+          "wr": 62.5,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 2.56,
+          "dd": 3.66,
+          "trades": 15,
+          "wr": 80.0,
+          "failed": false
+        },
+        {
+          "w": 2,
+          "ret": 0.43,
+          "dd": 5.44,
+          "trades": 20,
+          "wr": 60.0,
+          "failed": false
+        },
+        {
+          "w": 3,
+          "ret": 0.42,
+          "dd": 2.6,
+          "trades": 7,
+          "wr": 57.1,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -4.32,
+          "dd": 4.59,
+          "trades": 10,
+          "wr": 40.0,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": 1.04,
+          "dd": 2.64,
+          "trades": 13,
+          "wr": 69.2,
+          "failed": false
+        }
+      ]
+    },
+    {
+      "name": "wide30_tp4_sz20",
+      "universe": "wide30",
+      "tp": 0.04,
+      "size": 0.2,
+      "all_mean": -0.7566666666666668,
+      "oos_mean": -1.65,
+      "oos_pos": 2,
+      "oos_n": 5,
+      "oos_worst": -4.88,
+      "worst_dd": 6.91,
+      "failures": 3,
+      "trades": 125,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 3.71,
+          "dd": 1.7,
+          "trades": 27,
+          "wr": 63.0,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 0.6,
+          "dd": 5.81,
+          "trades": 22,
+          "wr": 72.7,
+          "failed": true
+        },
+        {
+          "w": 2,
+          "ret": -4.49,
+          "dd": 6.51,
+          "trades": 21,
+          "wr": 42.9,
+          "failed": true
+        },
+        {
+          "w": 3,
+          "ret": 2.69,
+          "dd": 2.4,
+          "trades": 15,
+          "wr": 73.3,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -2.17,
+          "dd": 4.52,
+          "trades": 18,
+          "wr": 50.0,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": -4.88,
+          "dd": 6.91,
+          "trades": 22,
+          "wr": 50.0,
+          "failed": true
+        }
+      ]
+    },
+    {
+      "name": "wide30_tp4_sz25",
+      "universe": "wide30",
+      "tp": 0.04,
+      "size": 0.25,
+      "all_mean": -0.08666666666666667,
+      "oos_mean": -0.982,
+      "oos_pos": 2,
+      "oos_n": 5,
+      "oos_worst": -4.31,
+      "worst_dd": 6.6,
+      "failures": 3,
+      "trades": 117,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 4.39,
+          "dd": 2.03,
+          "trades": 26,
+          "wr": 61.5,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 2.0,
+          "dd": 5.7,
+          "trades": 22,
+          "wr": 72.7,
+          "failed": true
+        },
+        {
+          "w": 2,
+          "ret": -4.31,
+          "dd": 6.6,
+          "trades": 20,
+          "wr": 50.0,
+          "failed": true
+        },
+        {
+          "w": 3,
+          "ret": 3.2,
+          "dd": 2.93,
+          "trades": 15,
+          "wr": 73.3,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -2.37,
+          "dd": 5.28,
+          "trades": 18,
+          "wr": 50.0,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": -3.43,
+          "dd": 5.95,
+          "trades": 16,
+          "wr": 50.0,
+          "failed": true
+        }
+      ]
+    },
+    {
+      "name": "wide30_tp6_sz20",
+      "universe": "wide30",
+      "tp": 0.06,
+      "size": 0.2,
+      "all_mean": -1.08,
+      "oos_mean": -2.0700000000000003,
+      "oos_pos": 1,
+      "oos_n": 5,
+      "oos_worst": -5.19,
+      "worst_dd": 6.86,
+      "failures": 3,
+      "trades": 127,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 3.87,
+          "dd": 1.47,
+          "trades": 27,
+          "wr": 63.0,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": -0.8,
+          "dd": 6.73,
+          "trades": 24,
+          "wr": 66.7,
+          "failed": true
+        },
+        {
+          "w": 2,
+          "ret": -5.19,
+          "dd": 6.73,
+          "trades": 21,
+          "wr": 42.9,
+          "failed": true
+        },
+        {
+          "w": 3,
+          "ret": 3.25,
+          "dd": 2.49,
+          "trades": 15,
+          "wr": 73.3,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -2.87,
+          "dd": 4.85,
+          "trades": 18,
+          "wr": 50.0,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": -4.74,
+          "dd": 6.86,
+          "trades": 22,
+          "wr": 50.0,
+          "failed": true
+        }
+      ]
+    },
+    {
+      "name": "wide30_tp6_sz25",
+      "universe": "wide30",
+      "tp": 0.06,
+      "size": 0.25,
+      "all_mean": -0.3316666666666667,
+      "oos_mean": -1.3080000000000003,
+      "oos_pos": 2,
+      "oos_n": 5,
+      "oos_worst": -5.11,
+      "worst_dd": 6.84,
+      "failures": 3,
+      "trades": 117,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 4.55,
+          "dd": 1.81,
+          "trades": 26,
+          "wr": 61.5,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 1.16,
+          "dd": 5.98,
+          "trades": 22,
+          "wr": 72.7,
+          "failed": true
+        },
+        {
+          "w": 2,
+          "ret": -5.11,
+          "dd": 6.84,
+          "trades": 20,
+          "wr": 50.0,
+          "failed": true
+        },
+        {
+          "w": 3,
+          "ret": 3.9,
+          "dd": 3.03,
+          "trades": 15,
+          "wr": 73.3,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -3.25,
+          "dd": 5.68,
+          "trades": 18,
+          "wr": 50.0,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": -3.24,
+          "dd": 5.88,
+          "trades": 16,
+          "wr": 50.0,
+          "failed": true
+        }
+      ]
+    },
+    {
+      "name": "wide30_tp8_sz20",
+      "universe": "wide30",
+      "tp": 0.08,
+      "size": 0.2,
+      "all_mean": -0.8866666666666667,
+      "oos_mean": -1.7420000000000002,
+      "oos_pos": 2,
+      "oos_n": 5,
+      "oos_worst": -5.19,
+      "worst_dd": 6.73,
+      "failures": 3,
+      "trades": 125,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 3.39,
+          "dd": 1.69,
+          "trades": 27,
+          "wr": 63.0,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 0.61,
+          "dd": 5.75,
+          "trades": 22,
+          "wr": 72.7,
+          "failed": true
+        },
+        {
+          "w": 2,
+          "ret": -5.19,
+          "dd": 6.73,
+          "trades": 21,
+          "wr": 42.9,
+          "failed": true
+        },
+        {
+          "w": 3,
+          "ret": 3.25,
+          "dd": 2.49,
+          "trades": 15,
+          "wr": 73.3,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -2.87,
+          "dd": 4.85,
+          "trades": 18,
+          "wr": 50.0,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": -4.51,
+          "dd": 6.64,
+          "trades": 22,
+          "wr": 50.0,
+          "failed": true
+        }
+      ]
+    },
+    {
+      "name": "wide30_tp8_sz25",
+      "universe": "wide30",
+      "tp": 0.08,
+      "size": 0.25,
+      "all_mean": -0.2983333333333335,
+      "oos_mean": -1.1520000000000001,
+      "oos_pos": 2,
+      "oos_n": 5,
+      "oos_worst": -5.11,
+      "worst_dd": 6.84,
+      "failures": 3,
+      "trades": 123,
+      "windows": [
+        {
+          "w": 0,
+          "ret": 3.97,
+          "dd": 2.07,
+          "trades": 26,
+          "wr": 61.5,
+          "failed": false
+        },
+        {
+          "w": 1,
+          "ret": 2.03,
+          "dd": 5.64,
+          "trades": 22,
+          "wr": 72.7,
+          "failed": true
+        },
+        {
+          "w": 2,
+          "ret": -5.11,
+          "dd": 6.84,
+          "trades": 20,
+          "wr": 50.0,
+          "failed": true
+        },
+        {
+          "w": 3,
+          "ret": 3.9,
+          "dd": 3.03,
+          "trades": 15,
+          "wr": 73.3,
+          "failed": false
+        },
+        {
+          "w": 4,
+          "ret": -3.25,
+          "dd": 5.68,
+          "trades": 18,
+          "wr": 50.0,
+          "failed": false
+        },
+        {
+          "w": 5,
+          "ret": -3.33,
+          "dd": 5.9,
+          "trades": 22,
+          "wr": 50.0,
+          "failed": true
+        }
+      ]
+    }
+  ]
+}
