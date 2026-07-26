@@ -121,9 +121,9 @@ class ProprConfig:
     # Ceiling on the SUM of open stop distances, as a fraction of the daily
     # loss allowance. Position count alone does not bound loss -- correlated
     # crypto longs stop out together, so N positions at 2% each is an N*2% day.
-    # At 0.60 a fully-loaded book can lose at most 60% of the daily cap before
+    # At 0.50 a fully-loaded book can lose at most half the daily cap before
     # new entries are refused, leaving headroom to trade the next session.
-    max_daily_risk_fraction: float = 0.60
+    max_daily_risk_fraction: float = 0.50
 
     # Circuit breakers (adapted for prop firm rules)
     max_daily_loss_pct: float = 0.025  # Stay under 3% daily limit

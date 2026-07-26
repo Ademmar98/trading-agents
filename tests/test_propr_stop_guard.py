@@ -145,10 +145,14 @@ def test_flatten_failure_does_not_raise(monkeypatch):
 # within limits the whole time -- counting tickets does not bound loss.
 # ---------------------------------------------------------------------------
 
-def risk_client(sdk, start=5000.0):
+def risk_client(sdk, start=5000.0, fraction=None):
+    """fraction pins max_daily_risk_fraction so these tests exercise the gate's
+    logic rather than whatever the shipped default happens to be."""
     from core.exchange.propr.config import AccountSize, ChallengeType
     cfg = ProprConfig(api_key="test", account_size=AccountSize.K5,
                       challenge_type=ChallengeType.CLASSIC_1STEP)
+    if fraction is not None:
+        cfg.max_daily_risk_fraction = fraction
     c = ProprRiskClient.__new__(ProprRiskClient)
     c.config = cfg
     c.sdk = sdk
@@ -204,9 +208,14 @@ def test_orders_api_failure_fails_safe():
     assert not ok and "Aggregate stop risk" in reason
 
 
+def test_default_fraction_is_conservative():
+    """The shipped default must leave real headroom under the daily cap."""
+    assert ProprConfig().max_daily_risk_fraction <= 0.50
+
+
 def test_live_book_would_have_been_refused():
     """The exact book from the account: 2x $1,996 at 3.75% stops = $150 risk,
-    100% of the daily cap. Budget is 60% of $150 = $90, so this must refuse."""
+    100% of the daily cap. Any sane budget must refuse this."""
     sdk = FakeSDK(
         positions=[_pos("SUI", 2788.6, 0.7157), _pos("AVAX", 298.25, 6.6909)],
         orders=[_stop("SUI", 0.6889), _stop("AVAX", 6.44)],
@@ -221,13 +230,13 @@ def test_live_book_would_have_been_refused():
 
 
 def test_new_trade_risk_is_priced_in():
-    """One $75 position is under the $90 budget, but adding another must not be."""
+    """One ~$75 position fits a $120 budget; a second one must not."""
     sdk = FakeSDK(positions=[_pos("SUI", 2788.6, 0.7157)],
                   orders=[_stop("SUI", 0.6889)])
-    c = risk_client(sdk)
+    c = risk_client(sdk, fraction=0.80)  # 0.80 * $150 = $120 budget
 
     ok, _ = c.can_trade()
-    assert ok, "$75 of risk is inside the $90 budget on its own"
+    assert ok, "~$75 of open risk is inside the $120 budget on its own"
 
     ok, reason = c.can_trade(new_risk_usd=75.0)
     assert not ok, "the gate must see the book AFTER the proposed fill"
