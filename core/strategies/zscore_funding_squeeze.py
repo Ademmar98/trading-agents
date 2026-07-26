@@ -1,15 +1,37 @@
 """
 Z-Score Funding Squeeze Strategy
 =================================
-Exploits short-squeeze mechanics by entering long spot positions when perpetual
-funding rates drop significantly (Z-score < -2.0) during an established uptrend,
-supported by rising Open Interest and spot/perp spread confirmation.
+WARNING: UNVALIDATED / EX-OUTLIER PF 0.91. High pair-concentration risk
+(NFP/SYN outliers), missing OI live feed, and intrabar execution
+discrepancies. Kept disabled for research reference.
 
-Backtested Results (2 Months, 37 qualified pairs):
-  - Profit Factor: 2.93
-  - Average Return: +6.54%
-  - Win Rate: 44.4%
-  - Profitable Pair Ratio: 50%
+Enters long spot positions when perpetual funding rates drop significantly
+(Z-score < -2.0) during an established uptrend. Funding is used as a SIGNAL
+ONLY -- no perp position, no leverage, no short.
+
+Research Audit Study #10 findings (source: analysis/zscore_funding_2month.json):
+  - 54 trades / 18 pairs / 2 months. Aggregate PF 1.54 (NOT the 2.93 once
+    claimed here -- that figure never reconciled with the results file).
+  - Median pair return -1.04%; only 9 of 18 pairs profitable.
+  - Removing two pairs (NFP +112%, SYN +49%) collapses PF to 0.91 and mean
+    return to -2.74%. The entire headline result is two lottery tickets.
+
+Known methodology defects, all of which flatter the result:
+  - Entry condition 3 (Open Interest expansion) is a hardcoded no-op; OI is
+    never fetched. See check_entry_conditions().
+  - 'ATR' is close-to-close diff, not True Range -- only closes are fetched,
+    so stops sit tighter than 1.5 ATR implies and real stop-outs are more
+    frequent than backtested.
+  - SL/TP evaluated on 8h closes only. An 8h bar that wicks through the stop
+    and closes above it registers as no stop at all.
+  - Docstring once promised post-only maker fills while the params charge
+    taker fees and the backtest fills at the close every bar. Post-only fills
+    only when price comes to you, which is adverse selection.
+  - Each pair is backtested at 100% capital, so averaging per-pair curves is
+    not a portfolio return.
+
+Do not re-run without a survivorship-free universe and per-pair concentration
+reporting.
 
 Parameters:
   - z_score_threshold: -2.0 (entry trigger)
@@ -18,11 +40,6 @@ Parameters:
   - stop_loss_atr_mult: 1.5
   - take_profit_atr_mult: 3.0
   - sma_filter_period: 50 (4-hour timeframe)
-
-Execution:
-  - Maker-only limit orders (post-only) to avoid taker fee drag
-  - Dynamic ATR-based stop loss and take profit
-  - Immediate exit on funding rate normalization
 """
 
 import logging
@@ -104,10 +121,11 @@ class ZScoreFundingSqueezeStrategy:
     """
     Z-Score Funding Rate Mean-Reversion Strategy.
 
-    Entry Conditions (ALL must be true):
+    Entry Conditions:
       1. Funding Rate Z-score < -2.0 (14-day rolling)
       2. Spot Price > 50-period SMA (trend filter)
-      3. Open Interest expansion > +10% (squeeze potential)
+      3. Open Interest expansion > +10% -- NOT IMPLEMENTED, hardcoded True.
+         OI is never fetched, so this filter does not exist.
       4. Spot Price >= Perp Price (spot absorption)
 
     Exit Conditions (ANY triggers exit):
@@ -154,7 +172,7 @@ class ZScoreFundingSqueezeStrategy:
 
             cond1 = zscore < self.params.z_score_threshold
             cond2 = price > sma
-            cond3 = True  # OI proxy already in data
+            cond3 = True  # TODO: Unimplemented OI feed — currently no-op
             cond4 = price >= perp_price
 
             return cond1 and cond2 and cond3 and cond4
@@ -318,8 +336,13 @@ class ZScoreFundingSqueezeStrategy:
                 "take_profit_atr_mult": self.params.take_profit_atr_mult,
                 "sma_filter_period": self.params.sma_filter_period,
             },
-            "backtested_pf": 2.93,
-            "backtested_avg_return": 6.54,
+            # Audit Study #10: headline PF 2.93 was never reproducible. The
+            # results file gives aggregate PF 1.54, and 0.91 once the NFP/SYN
+            # outliers are removed. Reporting the ex-outlier figure.
+            "validated": False,
+            "audit_pf_aggregate": 1.54,
+            "audit_pf_ex_outlier": 0.91,
+            "audit_note": "UNVALIDATED - pair-concentration risk, disabled for research reference",
         }
 
 

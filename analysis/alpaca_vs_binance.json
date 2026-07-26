@@ -1,0 +1,49 @@
+{
+  "backtested_symbols": [
+    "SYN",
+    "XLM",
+    "VANRY",
+    "ONDO",
+    "ZAMA",
+    "BANK",
+    "KAITO",
+    "POL",
+    "DASH",
+    "ASTER",
+    "PUMP",
+    "INJ",
+    "ENA",
+    "OP",
+    "XRP",
+    "ADA",
+    "SKL",
+    "BCH",
+    "VIRTUAL",
+    "PENGU"
+  ],
+  "available_on_alpaca": [
+    "XRP",
+    "BCH"
+  ],
+  "binance_only": [
+    "SYN",
+    "XLM",
+    "VANRY",
+    "ONDO",
+    "ZAMA",
+    "BANK",
+    "KAITO",
+    "POL",
+    "DASH",
+    "ASTER",
+    "PUMP",
+    "INJ",
+    "ENA",
+    "OP",
+    "ADA",
+    "SKL",
+    "VIRTUAL",
+    "PENGU"
+  ],
+  "price_note": "Alpaca uses USD, Binance uses USDT - ~0.01-0.1% difference normally"
+}

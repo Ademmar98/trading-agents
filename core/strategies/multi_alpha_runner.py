@@ -206,19 +206,30 @@ class MultiAlphaOrchestrator:
                 stop_loss = entry_price - 1.5 * atr
                 take_profit = entry_price + 3.0 * atr
 
+                # Audit Study #10: these stats were wrong in two ways. avg_win
+                # was 6.54, which is the mean *per-pair 2-month net return*,
+                # not an average win per trade -- a category error -- and it
+                # was inflated by the NFP/SYN outliers. avg_loss=2.0 had no
+                # source. That produced win_loss_ratio 3.27 and a healthy
+                # positive Kelly for a strategy whose ex-outlier PF is 0.91.
+                # Corrected to the actual per-trade figures from
+                # analysis/zscore_funding_2month.json: 24 wins totalling
+                # 429.4% and 30 losses totalling 278.1% over 54 trades.
+                # Kelly clamps negative edge to zero, so honest inputs size
+                # this to nothing -- which is the correct outcome.
                 sizing = self.kelly.size_position(
                     equity=allocation,
                     entry_price=entry_price,
                     stop_loss_price=stop_loss,
                     stats=TradeStats(
-                        total_trades=18,
-                        winning_trades=8,
-                        losing_trades=10,
-                        avg_win=6.54,
-                        avg_loss=2.0,
+                        total_trades=54,
+                        winning_trades=24,
+                        losing_trades=30,
+                        avg_win=17.89,
+                        avg_loss=9.27,
                         win_rate=0.444,
-                        win_loss_ratio=3.27,
-                        expectancy=0.93,
+                        win_loss_ratio=1.93,
+                        expectancy=(0.444 * 17.89) - (0.556 * 9.27),
                     ),
                 )
 

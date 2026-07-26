@@ -465,16 +465,26 @@ if os.getenv("BINANCE_ALL_SYMBOLS", "").lower() in ("true", "1", "yes"):
         pass
 
 # ── Multi-Alpha Strategy Stack ──
-# Three-strategy alpha stack for 10-25% monthly portfolio growth:
-#   Module 1: Z-Score Funding Rate Squeeze (high asymmetry, PF 2.93)
-#   Module 2: Structural Spot Basket Rebalancing (consistent cashflow, 3-7% monthly)
-#   Module 3: Microstructure Order Book Absorption (high win-rate swings)
+# RESEARCH ONLY -- NO MODULE IS VALIDATED. See Research Audit Study #10.
+#   Module 1: Z-Score Funding Rate Squeeze. UNVALIDATED. Headline PF 2.93 was
+#     never reproducible; results file gives 1.54, and 0.91 once the NFP/SYN
+#     outliers are dropped. Median pair return -1.04%, 9/18 pairs profitable.
+#   Module 2: Structural Spot Basket Rebalancing. FAILED (-6.15%/mo).
+#   Module 3: Microstructure Order Book Absorption. UNVALIDATED -- the
+#     backtest measures kline-derived CVD while the live engine uses tape CVD,
+#     and it applies no fees. Its PF 3.16 came from picking the best of three
+#     configs on one dataset; all three sit near 1.7 before costs.
+#
+# This flag MUST default to false. Nothing here has a demonstrated edge, and
+# the per-pair concentration means live sizing would be betting on outliers.
 MULTI_ALPHA_ENABLED = os.getenv("MULTI_ALPHA_ENABLED", "false").lower() == "true"
 
-# Capital allocation: Module 2 DISABLED (failed validation, -6.15%/mo)
-# Module 1: 70% (validated, PF 1.54)
+# Capital allocation. These weights are inherited from the pre-audit numbers
+# and are NOT justified by validated performance -- they only take effect if
+# MULTI_ALPHA_ENABLED is forced on, which is not advised.
+# Module 1: 70% (UNVALIDATED, ex-outlier PF 0.91)
 # Module 2: 0% (DISABLED -- rebalancing loses in downtrends)
-# Module 3: 30% (PF 3.16, 48% WR, profitable but WR below target)
+# Module 3: 30% (UNVALIDATED, backtest does not test the live signal)
 MULTI_ALPHA_M1_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M1_ALLOCATION_PCT", "70"))
 MULTI_ALPHA_M2_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M2_ALLOCATION_PCT", "0"))
 MULTI_ALPHA_M3_ALLOCATION_PCT = float(os.getenv("MULTI_ALPHA_M3_ALLOCATION_PCT", "30"))

@@ -3,11 +3,17 @@ Core Strategies Module
 ======================
 Modular strategy implementations for the trading-agents system.
 
-Strategies:
-  - ZScoreFundingSqueezeStrategy: Z-score funding rate mean-reversion (PF 2.93)
-  - SpotBasketRebalancer: Structural basket rebalancing (3-7% monthly)
-  - MicrostructureAbsorptionEngine: Order book absorption (3-5% swings)
-  - MultiAlphaOrchestrator: Multi-strategy capital allocator
+Strategies (NONE are validated -- see Research Audit Study #10):
+  - ZScoreFundingSqueezeStrategy: Z-score funding rate mean-reversion.
+    UNVALIDATED, ex-outlier PF 0.91.
+  - SpotBasketRebalancer: Structural basket rebalancing. FAILED validation
+    (-6.15%/mo); disabled.
+  - MicrostructureAbsorptionEngine: Order book absorption. UNVALIDATED -- its
+    backtest measures a different signal than the live engine computes.
+  - MultiAlphaOrchestrator: Multi-strategy capital allocator.
+
+Kept for research reference. MULTI_ALPHA_ENABLED defaults to false and
+execute_signals() is a non-executing stub.
 """
 
 from .zscore_funding_squeeze import (

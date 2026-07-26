@@ -5,6 +5,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from datetime import datetime, timezone
+from pathlib import Path
 
 from core.strategies.zscore_funding_squeeze import (
     ZScoreFundingSqueezeStrategy,
@@ -143,8 +144,45 @@ def test_status_returns_dict(strategy):
 
     assert "strategy" in status
     assert "params" in status
-    assert "backtested_pf" in status
-    assert status["backtested_pf"] == 2.93
+    # Audit Study #10: the old "backtested_pf == 2.93" assertion pinned a
+    # number that never reconciled with analysis/zscore_funding_2month.json.
+    # status() now reports the audited figures and the unvalidated flag.
+    assert status["validated"] is False
+    assert status["audit_pf_aggregate"] == 1.54
+    assert status["audit_pf_ex_outlier"] == 0.91
+
+
+def test_multi_alpha_disabled_by_default(monkeypatch):
+    """Audit Study #10 safety gate: no module here has a demonstrated edge."""
+    monkeypatch.delenv("MULTI_ALPHA_ENABLED", raising=False)
+    import importlib
+    import config
+    importlib.reload(config)
+    assert config.MULTI_ALPHA_ENABLED is False
+
+
+def test_execute_signals_is_non_executing_stub():
+    """
+    Audit Study #10 safety gate: the orchestrator must not reach a broker.
+    Signals may be staged as 'pending' but nothing may be placed.
+    """
+    from core.strategies.multi_alpha_runner import MultiAlphaOrchestrator, AlphaSignal
+
+    orch = MultiAlphaOrchestrator()
+    signal = AlphaSignal(
+        module="module1", symbol="BTC/USDT", action="BUY", confidence=0.9,
+        entry_price=100.0, stop_loss=95.0, take_profit=110.0,
+        risk_reward=2.0, size_usd=1000.0, kelly_pct=1.0, metadata={},
+    )
+
+    results = orch.execute_signals([signal])
+
+    assert all(r["status"] == "pending" for r in results), "signals must not be filled"
+    # No broker is even reachable from the runner module.
+    import core.strategies.multi_alpha_runner as runner
+    src = Path(runner.__file__).read_text(encoding="utf-8")
+    for banned in ("place_order", "create_order", "submit_order", "BinanceBroker"):
+        assert banned not in src, f"broker call path reintroduced: {banned}"
 
 
 if __name__ == "__main__":

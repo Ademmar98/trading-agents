@@ -2,7 +2,29 @@
 """
 Module 3: Microstructure Order Book Absorption Engine - Backtest
 ================================================================
-Validates 60% win rate and PF 1.5+ targets.
+WARNING: UNVALIDATED / EX-OUTLIER PF 0.91. High pair-concentration risk
+(NFP/SYN outliers), missing OI live feed, and intrabar execution
+discrepancies. Kept disabled for research reference.
+
+This file does NOT validate the live engine. Research Audit Study #10 found
+that its headline result is not transferable to production:
+
+  - SIGNAL MISMATCH (the decisive defect): this backtest builds CVD from a
+    cumsum of 4h kline `taker_buy_base` spanning months. The live engine in
+    core/strategies/microstructure_absorption.py builds CVD from the last ~50
+    individual tape trades, i.e. minutes of data. Different signal, different
+    timescale. Nothing measured here describes live behaviour.
+  - ZERO FEES: MAKER_FEE/TAKER_FEE are defined below and never applied to any
+    trade. At ~0.79%/trade on the Aggressive config, ~14bps round-trip removes
+    roughly a fifth of the stated edge.
+  - OPTIMISTIC EXITS: trades fill at the exact stop/TP price whenever the
+    close crosses it. 4h crypto bars routinely gap straight through levels.
+  - CONFIG SELECTION ON NOISE: the "Conservative" config was chosen as best
+    from three run over the same data, and it is the one with the fewest
+    trades (50, vs 133 and 107). Its standout PF against the others' ~1.70 is
+    the signature of selection, not of a better config. Honest read: all three
+    sit near PF 1.7 before fees, and none is validated.
+
 Uses CVD divergence + spot premium + volume profile signals on 4h data.
 """
 import json
@@ -21,6 +43,8 @@ SCAN_SYMBOLS = [
     "RENDERUSDT", "DOTUSDT", "DOGEUSDT",
 ]
 
+# NOTE: declared but never applied in backtest_symbol() -- all reported PnL
+# below is gross. Audit Study #10.
 MAKER_FEE = 0.0002
 TAKER_FEE = 0.0007
 INITIAL_CAPITAL = 10000.0
@@ -67,6 +91,10 @@ def compute_cvd(prices, volumes, taker_buy_fracs):
     """
     Approximate CVD from kline data.
     taker_buy_fracs = taker_buy_base / volume
+
+    # NOTE: Discrepancy with live tape CVD in microstructure_absorption.py --
+    # that one aggregates the last ~50 individual trades (minutes); this one
+    # cumsums 4h kline taker-buy volume (months). Results are not comparable.
     """
     buy_vol = volumes * taker_buy_fracs
     sell_vol = volumes * (1 - taker_buy_fracs)
