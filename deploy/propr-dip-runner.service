@@ -1,0 +1,34 @@
+[Unit]
+Description=Propr Dip Runner (walk-forward validated dip-buy strategy)
+Documentation=file:///root/firm/core/exchange/propr/dip_runner.py
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/firm
+
+# PROPR_API_KEY lives here. .env is gitignored, so it is NOT delivered by
+# `git reset --hard` -- it must already exist on the box or the unit fails.
+EnvironmentFile=/root/firm/.env
+
+ExecStart=/usr/bin/python3 -u -m core.exchange.propr.dip_runner --live --interval 300
+
+# Restart on crash, but not in a tight loop: five failures inside ten minutes
+# stops the unit so a persistent fault (bad key, API down) is visible in
+# `systemctl status` instead of hammering the exchange.
+Restart=on-failure
+RestartSec=30
+StartLimitBurst=5
+StartLimitIntervalSec=600
+
+# SIGTERM lets the runner's signal handler finish the cycle it is in.
+KillSignal=SIGTERM
+TimeoutStopSec=60
+
+StandardOutput=append:/var/log/propr-dip-runner.log
+StandardError=append:/var/log/propr-dip-runner.log
+
+[Install]
+WantedBy=multi-user.target
