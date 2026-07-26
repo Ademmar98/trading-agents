@@ -1,7 +1,16 @@
 """One-shot VPS deploy + full reset for the trading firm.
 
+*** THIS WIPES data/ (step 4). For a routine code deploy use
+    _deploy_code_only.py, which pulls, installs deps and restarts
+    WITHOUT touching data. ***
+
 Usage:
-    py -3 deploy_vps.py <ssh_password> [user] [host]
+    py -3 deploy_vps.py -             [user] [host]   # SSH key auth
+    py -3 deploy_vps.py <ssh_password> [user] [host]  # password fallback
+
+'-' means "authenticate with ~/.ssh/id_ed25519". Bare invocation prints this
+help and exits rather than wiping anything by accident. Install the key with:
+    ssh-copy-id -i ~/.ssh/id_ed25519.pub root@69.48.202.100
 
 What it does (all on the VPS, via SSH):
   1. Finds the app directory (git repo containing main.py)
@@ -26,7 +35,8 @@ def run(ssh, cmd, timeout=120):
 def main():
     if len(sys.argv) < 2:
         print(__doc__); sys.exit(1)
-    pw = sys.argv[1]
+    # "-" selects key auth; anything else is treated as the password.
+    pw = None if sys.argv[1] == "-" else sys.argv[1]
     user = sys.argv[2] if len(sys.argv) > 2 else USER
     host = sys.argv[3] if len(sys.argv) > 3 else HOST
 
@@ -34,7 +44,7 @@ def main():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(host, username=user, password=pw, timeout=15)
-    print(f"[1/6] Connected to {user}@{host}")
+    print(f"[1/6] Connected to {user}@{host} ({'password' if pw else 'ssh key'})")
 
     # 2. Locate app dir
     code, out, _ = run(ssh, "for d in /root/trading-agents /opt/trading-agents /app /srv/trading-agents ~/trading-agents; do [ -f $d/main.py ] && echo $d; done")
