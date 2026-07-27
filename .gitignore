@@ -36,3 +36,7 @@ data_migrated_to_vps_20260711/
 
 # local ops scripts (may contain credentials)
 /_*.py
+
+# study 18: derived from pump_catalyst_events.json, regenerate with pump_catalyst_attribute.py
+analysis/pump_catalyst_events_labelled.json
+analysis/pump_catalyst_clusters.json
