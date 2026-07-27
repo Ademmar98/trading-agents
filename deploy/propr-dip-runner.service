@@ -13,7 +13,10 @@ WorkingDirectory=/root/firm
 # `git reset --hard` -- it must already exist on the box or the unit fails.
 EnvironmentFile=/root/firm/.env
 
-ExecStart=/usr/bin/python3 -u -m core.exchange.propr.dip_runner --live --interval 300
+# The venv interpreter, NOT /usr/bin/python3: the dependencies live in
+# /root/firm/venv (same interpreter the trading-firm service uses). The system
+# python does not have them and the unit ImportErrors on start.
+ExecStart=/root/firm/venv/bin/python -u -m core.exchange.propr.dip_runner --live --interval 300
 
 # Restart on crash, but not in a tight loop: five failures inside ten minutes
 # stops the unit so a persistent fault (bad key, API down) is visible in
