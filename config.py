@@ -203,6 +203,11 @@ DAILY_PROFIT_TARGET_MAX = float(os.getenv("DAILY_PROFIT_TARGET_MAX", "3.0"))
 TOTAL_PROFIT_TARGET_MIN = float(os.getenv("TOTAL_PROFIT_TARGET_MIN", "10.0"))
 TOTAL_PROFIT_TARGET_MAX = float(os.getenv("TOTAL_PROFIT_TARGET_MAX", "50.0"))
 
+# Master kill switch for the LEGACY spot agency (the old no-edge strategy stack).
+# Default OFF: the old pipeline opens no new positions. The Propr dip-runner runs
+# as its own service and is unaffected. Flip to true only to resume old trading.
+TRADING_ENABLED = os.getenv("TRADING_ENABLED", "false").lower() == "true"
+
 BROKER_TYPE = os.getenv("BROKER_TYPE", "paper")  # paper, binance, alpaca (crypto venues only)
 
 BINANCE_API_KEY = os.getenv("BINANCE_API_KEY", "")

@@ -1,6 +1,6 @@
 import time
 
-from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET
+from config import BROKER_TYPE, BINANCE_API_KEY, BINANCE_API_SECRET, BINANCE_USE_TESTNET, TRADING_ENABLED
 from agents.base_agent import BaseAgent
 from core.broker import PaperBroker
 from core.binance_broker import BinanceBroker
@@ -26,6 +26,11 @@ class Trader(BaseAgent):
         self.pos_mgr = PositionManager()
 
     def run(self):
+        if not TRADING_ENABLED:
+            self.log("Legacy spot trading DISABLED (TRADING_ENABLED=false) — no entries placed")
+            report = {"orders": [], "status": "disabled", "timestamp": time.time()}
+            self.memory.write("orders", "trade_log", report)
+            return report
         self.log("Checking execution-approved trades")
         execution = self.memory.read("orders", "execution_plan") or {}
         analysis = self.memory.read("analyses", "market_scan") or {}
