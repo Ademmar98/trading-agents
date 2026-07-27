@@ -1,0 +1,536 @@
+{
+  "run_utc": "2026-07-27T10:09:16.627128+00:00",
+  "feed": [
+    {
+      "symbol": "BTC",
+      "bars": 5001,
+      "first": "2025-12-31 02:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.33,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "ETH",
+      "bars": 5001,
+      "first": "2025-12-31 02:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.33,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "SOL",
+      "bars": 5001,
+      "first": "2025-12-31 02:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.33,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "DOGE",
+      "bars": 5004,
+      "first": "2025-12-30 23:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.46,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "XRP",
+      "bars": 5004,
+      "first": "2025-12-30 23:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.46,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "AVAX",
+      "bars": 5001,
+      "first": "2025-12-31 02:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.33,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "LINK",
+      "bars": 5004,
+      "first": "2025-12-30 23:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.46,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "SUI",
+      "bars": 5004,
+      "first": "2025-12-30 23:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.46,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "NEAR",
+      "bars": 5002,
+      "first": "2025-12-31 01:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.38,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "AAVE",
+      "bars": 5004,
+      "first": "2025-12-30 23:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.46,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "INJ",
+      "bars": 5004,
+      "first": "2025-12-30 23:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.46,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    },
+    {
+      "symbol": "FET",
+      "bars": 5002,
+      "first": "2025-12-31 01:00:00+00:00",
+      "last": "2026-07-27 10:00:00+00:00",
+      "span_days": 208.38,
+      "dupe_timestamps": 0,
+      "gap_events": 0,
+      "missing_bars": 0,
+      "bad_ohlc": 0,
+      "nulls": 0,
+      "nonpositive_prices": 0,
+      "zero_volume_bars": 0
+    }
+  ],
+  "alignment": [
+    {
+      "window": 0,
+      "start": "2026-06-27",
+      "end": "2026-07-27",
+      "symbols": 12,
+      "ref": "BTC",
+      "ref_bars": 720,
+      "bar_counts": [
+        720
+      ],
+      "misaligned": []
+    },
+    {
+      "window": 1,
+      "start": "2026-05-28",
+      "end": "2026-06-27",
+      "symbols": 12,
+      "ref": "BTC",
+      "ref_bars": 720,
+      "bar_counts": [
+        720
+      ],
+      "misaligned": []
+    },
+    {
+      "window": 2,
+      "start": "2026-04-28",
+      "end": "2026-05-28",
+      "symbols": 12,
+      "ref": "BTC",
+      "ref_bars": 720,
+      "bar_counts": [
+        720
+      ],
+      "misaligned": []
+    },
+    {
+      "window": 3,
+      "start": "2026-03-29",
+      "end": "2026-04-28",
+      "symbols": 12,
+      "ref": "BTC",
+      "ref_bars": 720,
+      "bar_counts": [
+        720
+      ],
+      "misaligned": []
+    },
+    {
+      "window": 4,
+      "start": "2026-02-27",
+      "end": "2026-03-29",
+      "symbols": 12,
+      "ref": "BTC",
+      "ref_bars": 720,
+      "bar_counts": [
+        720
+      ],
+      "misaligned": []
+    },
+    {
+      "window": 5,
+      "start": "2026-01-28",
+      "end": "2026-02-27",
+      "symbols": 12,
+      "ref": "BTC",
+      "ref_bars": 720,
+      "bar_counts": [
+        720
+      ],
+      "misaligned": []
+    }
+  ],
+  "reproduction": [
+    {
+      "window": 0,
+      "start": "2026-06-26",
+      "end": "2026-07-26",
+      "new": {
+        "trades": 17,
+        "return_pct": 3.22,
+        "win_rate": 64.7,
+        "max_dd_pct": 1.19,
+        "challenge_failed": false
+      },
+      "old": {
+        "trades": 17,
+        "return_pct": 3.3,
+        "win_rate": 64.7,
+        "profit_factor": 2.62,
+        "max_dd_pct": 1.19,
+        "max_dd_usd": 61.7,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      }
+    },
+    {
+      "window": 1,
+      "start": "2026-05-27",
+      "end": "2026-06-26",
+      "new": {
+        "trades": 15,
+        "return_pct": 2.74,
+        "win_rate": 80.0,
+        "max_dd_pct": 3.03,
+        "challenge_failed": false
+      },
+      "old": {
+        "trades": 15,
+        "return_pct": 2.74,
+        "win_rate": 80.0,
+        "profit_factor": 1.88,
+        "max_dd_pct": 3.03,
+        "max_dd_usd": 158.83,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      }
+    },
+    {
+      "window": 2,
+      "start": "2026-04-27",
+      "end": "2026-05-27",
+      "new": {
+        "trades": 20,
+        "return_pct": 1.38,
+        "win_rate": 60.0,
+        "max_dd_pct": 4.06,
+        "challenge_failed": false
+      },
+      "old": {
+        "trades": 20,
+        "return_pct": 1.39,
+        "win_rate": 60.0,
+        "profit_factor": 1.38,
+        "max_dd_pct": 4.06,
+        "max_dd_usd": 207.38,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      }
+    },
+    {
+      "window": 3,
+      "start": "2026-03-28",
+      "end": "2026-04-27",
+      "new": {
+        "trades": 7,
+        "return_pct": 0.35,
+        "win_rate": 57.1,
+        "max_dd_pct": 1.91,
+        "challenge_failed": false
+      },
+      "old": {
+        "trades": 7,
+        "return_pct": 0.27,
+        "win_rate": 57.1,
+        "profit_factor": 1.17,
+        "max_dd_pct": 1.91,
+        "max_dd_usd": 97.38,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      }
+    },
+    {
+      "window": 4,
+      "start": "2026-02-26",
+      "end": "2026-03-28",
+      "new": {
+        "trades": 12,
+        "return_pct": -3.68,
+        "win_rate": 33.3,
+        "max_dd_pct": 3.73,
+        "challenge_failed": false
+      },
+      "old": {
+        "trades": 11,
+        "return_pct": -3.51,
+        "win_rate": 45.5,
+        "profit_factor": 0.19,
+        "max_dd_pct": 3.73,
+        "max_dd_usd": 186.64,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      }
+    },
+    {
+      "window": 5,
+      "start": "2026-01-27",
+      "end": "2026-02-26",
+      "new": {
+        "trades": 14,
+        "return_pct": 1.59,
+        "win_rate": 71.4,
+        "max_dd_pct": 2.21,
+        "challenge_failed": false
+      },
+      "old": {
+        "trades": 14,
+        "return_pct": 1.59,
+        "win_rate": 71.4,
+        "profit_factor": 1.74,
+        "max_dd_pct": 2.21,
+        "max_dd_usd": 113.49,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      }
+    }
+  ],
+  "caches": [
+    {
+      "dir": "hl_1h_cache",
+      "files": 29,
+      "checked": 29,
+      "unreadable_or_invalid": 0,
+      "gappy": 0,
+      "duplicated": 0,
+      "too_short": 0
+    },
+    {
+      "dir": "fib_1m_data",
+      "files": 133,
+      "checked": 133,
+      "unreadable_or_invalid": 0,
+      "gappy": 0,
+      "duplicated": 0,
+      "too_short": 0
+    },
+    {
+      "dir": "backtest_data",
+      "files": 45,
+      "checked": 45,
+      "unreadable_or_invalid": 0,
+      "gappy": 0,
+      "duplicated": 0,
+      "too_short": 0
+    }
+  ],
+  "equity_curve": [
+    {
+      "config": "v3_best",
+      "symbol": "ETH",
+      "max_dd_pct": 0.27,
+      "old_max_dd_pct": 23.1,
+      "old_overstated_pp": 22.83
+    },
+    {
+      "config": "v3_best",
+      "symbol": "SOL",
+      "max_dd_pct": 0.47,
+      "old_max_dd_pct": 23.32,
+      "old_overstated_pp": 22.85
+    },
+    {
+      "config": "v3_best",
+      "symbol": "DOGE",
+      "max_dd_pct": 0.59,
+      "old_max_dd_pct": 23.41,
+      "old_overstated_pp": 22.82
+    },
+    {
+      "config": "trail_1pct_act",
+      "symbol": "ETH",
+      "max_dd_pct": 0.27,
+      "old_max_dd_pct": 23.1,
+      "old_overstated_pp": 22.83
+    },
+    {
+      "config": "trail_1pct_act",
+      "symbol": "SOL",
+      "max_dd_pct": 0.47,
+      "old_max_dd_pct": 23.32,
+      "old_overstated_pp": 22.85
+    },
+    {
+      "config": "trail_1pct_act",
+      "symbol": "DOGE",
+      "max_dd_pct": 0.59,
+      "old_max_dd_pct": 23.41,
+      "old_overstated_pp": 22.82
+    },
+    {
+      "config": "combo_full",
+      "symbol": "ETH",
+      "max_dd_pct": 0.27,
+      "old_max_dd_pct": 23.1,
+      "old_overstated_pp": 22.83
+    },
+    {
+      "config": "combo_full",
+      "symbol": "SOL",
+      "max_dd_pct": 0.31,
+      "old_max_dd_pct": 23.17,
+      "old_overstated_pp": 22.86
+    },
+    {
+      "config": "agg_trail_tp3",
+      "symbol": "ETH",
+      "max_dd_pct": 0.27,
+      "old_max_dd_pct": 23.01,
+      "old_overstated_pp": 22.74
+    },
+    {
+      "config": "agg_trail_tp3",
+      "symbol": "SOL",
+      "max_dd_pct": 0.46,
+      "old_max_dd_pct": 23.17,
+      "old_overstated_pp": 22.71
+    },
+    {
+      "config": "agg_trail_tp3",
+      "symbol": "DOGE",
+      "max_dd_pct": 0.59,
+      "old_max_dd_pct": 23.25,
+      "old_overstated_pp": 22.66
+    }
+  ],
+  "coverage": [
+    {
+      "file": "fib_gold_zone_results.json",
+      "claimed_days": 90,
+      "actual_days_min": 3.47,
+      "actual_days_median": 9.17,
+      "actual_days_max": 43.06,
+      "symbols": 101
+    }
+  ],
+  "findings": [
+    {
+      "severity": "WARN",
+      "area": "feed",
+      "message": "symbols do not agree on bar count: [5001, 5002, 5004] \u2014 iloc-aligned code will mix timestamps (see section B)"
+    },
+    {
+      "severity": "WARN",
+      "area": "feed",
+      "message": "response capped at 5004 bars but 5160 were requested \u2014 the studies silently got 208d, not 215d"
+    },
+    {
+      "severity": "WARN",
+      "area": "feed",
+      "message": "last candle opened 9 min ago \u2014 it is still forming. deep_hunt_*.py keep it; dip_runner.py drops it. Backtest and live therefore evaluate different final bars."
+    },
+    {
+      "severity": "FAIL",
+      "area": "repro",
+      "message": "deep_hunt_v4_propr.SYMBOLS is now 177 coins, but the stored walk-forward ran on 12. The file on disk is NOT the file that produced the result \u2014 re-running it does not reproduce the study."
+    },
+    {
+      "severity": "WARN",
+      "area": "repro",
+      "message": "window 4: 12 trades now vs 11 in the stored study \u2014 same config, same period, different result"
+    },
+    {
+      "severity": "WARN",
+      "area": "cache",
+      "message": "fib_1m_data: files end on different dates (2026-04-28..2026-07-26) \u2014 a cross-sectional study over these compares unequal periods"
+    },
+    {
+      "severity": "FAIL",
+      "area": "coverage",
+      "message": "fib_gold_zone_results.json: labelled a 90-day study, but the median symbol holds 9.2 days (0/101 symbols reach the claimed period). The conclusion drawn from it describes 9 days of one regime, not 90."
+    }
+  ]
+}

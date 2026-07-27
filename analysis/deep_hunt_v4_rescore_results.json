@@ -1,0 +1,436 @@
+{
+  "run_utc": "2026-07-27T10:06:56.080428+00:00",
+  "symbols": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "DOGE",
+    "XRP",
+    "AVAX",
+    "LINK",
+    "SUI",
+    "NEAR",
+    "AAVE",
+    "INJ",
+    "FET"
+  ],
+  "bars": {
+    "BTC": 721,
+    "ETH": 721,
+    "SOL": 721,
+    "DOGE": 721,
+    "XRP": 721,
+    "AVAX": 721,
+    "LINK": 721,
+    "SUI": 721,
+    "NEAR": 721,
+    "AAVE": 721,
+    "INJ": 721,
+    "FET": 721
+  },
+  "fixed": [
+    {
+      "name": "tp4_trail",
+      "trades": 23,
+      "total_pnl": 262.64,
+      "win_rate": 65.2,
+      "profit_factor": 2.19,
+      "max_dd_pct": 1.66,
+      "dd_penalty": 0,
+      "score": 303.16
+    },
+    {
+      "name": "agg_trail_tp3",
+      "trades": 23,
+      "total_pnl": 165.04,
+      "win_rate": 65.2,
+      "profit_factor": 1.75,
+      "max_dd_pct": 2.24,
+      "dd_penalty": 0,
+      "score": 202.04
+    },
+    {
+      "name": "trail_2pct_act",
+      "trades": 23,
+      "total_pnl": 95.21,
+      "win_rate": 60.9,
+      "profit_factor": 1.48,
+      "max_dd_pct": 1.89,
+      "dd_penalty": 0,
+      "score": 130.05
+    },
+    {
+      "name": "agg_trail",
+      "trades": 24,
+      "total_pnl": 70.81,
+      "win_rate": 50.0,
+      "profit_factor": 1.38,
+      "max_dd_pct": 1.66,
+      "dd_penalty": 0,
+      "score": 105.85
+    },
+    {
+      "name": "tp3_trail",
+      "trades": 23,
+      "total_pnl": 66.1,
+      "win_rate": 60.9,
+      "profit_factor": 1.33,
+      "max_dd_pct": 1.74,
+      "dd_penalty": 0,
+      "score": 99.74
+    },
+    {
+      "name": "trend_sl10_tp2",
+      "trades": 9,
+      "total_pnl": 54.56,
+      "win_rate": 66.7,
+      "profit_factor": 1.76,
+      "max_dd_pct": 1.04,
+      "dd_penalty": 0,
+      "score": 77.64
+    },
+    {
+      "name": "trend_trail",
+      "trades": 9,
+      "total_pnl": 54.56,
+      "win_rate": 66.7,
+      "profit_factor": 1.76,
+      "max_dd_pct": 1.04,
+      "dd_penalty": 0,
+      "score": 77.64
+    },
+    {
+      "name": "cd5_trail",
+      "trades": 24,
+      "total_pnl": -1.23,
+      "win_rate": 45.8,
+      "profit_factor": 0.99,
+      "max_dd_pct": 1.33,
+      "dd_penalty": 0,
+      "score": 30.69
+    },
+    {
+      "name": "v3_best",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 1.33,
+      "dd_penalty": 0,
+      "score": 8.37
+    },
+    {
+      "name": "trail_1pct_act",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 1.33,
+      "dd_penalty": 0,
+      "score": 8.37
+    },
+    {
+      "name": "cd1_trail",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 1.33,
+      "dd_penalty": 0,
+      "score": 8.37
+    },
+    {
+      "name": "confirm1_trail",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 1.33,
+      "dd_penalty": 0,
+      "score": 8.37
+    },
+    {
+      "name": "confirm2_trail",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 1.33,
+      "dd_penalty": 0,
+      "score": 8.37
+    },
+    {
+      "name": "adapt_sl_trail",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 1.33,
+      "dd_penalty": 0,
+      "score": 8.37
+    },
+    {
+      "name": "combo_full",
+      "trades": 11,
+      "total_pnl": -16.47,
+      "win_rate": 54.5,
+      "profit_factor": 0.85,
+      "max_dd_pct": 1.44,
+      "dd_penalty": 0,
+      "score": 1.33
+    },
+    {
+      "name": "partial_50",
+      "trades": 31,
+      "total_pnl": -61.39,
+      "win_rate": 51.6,
+      "profit_factor": 0.75,
+      "max_dd_pct": 1.33,
+      "dd_penalty": 0,
+      "score": -24.39
+    },
+    {
+      "name": "scalp_wide_trail",
+      "trades": 25,
+      "total_pnl": -102.38,
+      "win_rate": 56.0,
+      "profit_factor": 0.62,
+      "max_dd_pct": 1.44,
+      "dd_penalty": 0,
+      "score": -72.42
+    },
+    {
+      "name": "scalp_trail",
+      "trades": 26,
+      "total_pnl": -110.5,
+      "win_rate": 50.0,
+      "profit_factor": 0.53,
+      "max_dd_pct": 1.37,
+      "dd_penalty": 0,
+      "score": -80.26
+    },
+    {
+      "name": "trail_0p5_act",
+      "trades": 26,
+      "total_pnl": -134.93,
+      "win_rate": 26.9,
+      "profit_factor": 0.29,
+      "max_dd_pct": 1.25,
+      "dd_penalty": 0,
+      "score": -106.61
+    },
+    {
+      "name": "partial_50_trail",
+      "trades": 27,
+      "total_pnl": -145.13,
+      "win_rate": 29.6,
+      "profit_factor": 0.24,
+      "max_dd_pct": 1.25,
+      "dd_penalty": 0,
+      "score": -116.21
+    }
+  ],
+  "old_buggy_equity": [
+    {
+      "name": "tp4_trail",
+      "trades": 23,
+      "total_pnl": 262.64,
+      "win_rate": 65.2,
+      "profit_factor": 2.19,
+      "max_dd_pct": 24.09,
+      "dd_penalty": 316.35,
+      "score": -13.19
+    },
+    {
+      "name": "agg_trail_tp3",
+      "trades": 23,
+      "total_pnl": 165.04,
+      "win_rate": 65.2,
+      "profit_factor": 1.75,
+      "max_dd_pct": 24.23,
+      "dd_penalty": 318.45,
+      "score": -116.41
+    },
+    {
+      "name": "trail_2pct_act",
+      "trades": 23,
+      "total_pnl": 95.21,
+      "win_rate": 60.9,
+      "profit_factor": 1.48,
+      "max_dd_pct": 24.1,
+      "dd_penalty": 316.5,
+      "score": -186.45
+    },
+    {
+      "name": "agg_trail",
+      "trades": 24,
+      "total_pnl": 70.81,
+      "win_rate": 50.0,
+      "profit_factor": 1.38,
+      "max_dd_pct": 23.89,
+      "dd_penalty": 313.35,
+      "score": -207.5
+    },
+    {
+      "name": "tp3_trail",
+      "trades": 23,
+      "total_pnl": 66.1,
+      "win_rate": 60.9,
+      "profit_factor": 1.33,
+      "max_dd_pct": 23.99,
+      "dd_penalty": 314.85,
+      "score": -215.11
+    },
+    {
+      "name": "trend_sl10_tp2",
+      "trades": 9,
+      "total_pnl": 54.56,
+      "win_rate": 66.7,
+      "profit_factor": 1.76,
+      "max_dd_pct": 23.76,
+      "dd_penalty": 311.4,
+      "score": -233.76
+    },
+    {
+      "name": "trend_trail",
+      "trades": 9,
+      "total_pnl": 54.56,
+      "win_rate": 66.7,
+      "profit_factor": 1.76,
+      "max_dd_pct": 23.76,
+      "dd_penalty": 311.4,
+      "score": -233.76
+    },
+    {
+      "name": "cd5_trail",
+      "trades": 24,
+      "total_pnl": -1.23,
+      "win_rate": 45.8,
+      "profit_factor": 0.99,
+      "max_dd_pct": 23.91,
+      "dd_penalty": 313.65,
+      "score": -282.96
+    },
+    {
+      "name": "v3_best",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 23.91,
+      "dd_penalty": 313.65,
+      "score": -305.28
+    },
+    {
+      "name": "trail_1pct_act",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 23.91,
+      "dd_penalty": 313.65,
+      "score": -305.28
+    },
+    {
+      "name": "cd1_trail",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 23.91,
+      "dd_penalty": 313.65,
+      "score": -305.28
+    },
+    {
+      "name": "confirm1_trail",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 23.91,
+      "dd_penalty": 313.65,
+      "score": -305.28
+    },
+    {
+      "name": "confirm2_trail",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 23.91,
+      "dd_penalty": 313.65,
+      "score": -305.28
+    },
+    {
+      "name": "adapt_sl_trail",
+      "trades": 24,
+      "total_pnl": -22.83,
+      "win_rate": 45.8,
+      "profit_factor": 0.9,
+      "max_dd_pct": 23.91,
+      "dd_penalty": 313.65,
+      "score": -305.28
+    },
+    {
+      "name": "combo_full",
+      "trades": 11,
+      "total_pnl": -16.47,
+      "win_rate": 54.5,
+      "profit_factor": 0.85,
+      "max_dd_pct": 23.93,
+      "dd_penalty": 313.95,
+      "score": -312.62
+    },
+    {
+      "name": "partial_50",
+      "trades": 31,
+      "total_pnl": -61.39,
+      "win_rate": 51.6,
+      "profit_factor": 0.75,
+      "max_dd_pct": 23.91,
+      "dd_penalty": 313.65,
+      "score": -338.04
+    },
+    {
+      "name": "scalp_wide_trail",
+      "trades": 25,
+      "total_pnl": -102.38,
+      "win_rate": 56.0,
+      "profit_factor": 0.62,
+      "max_dd_pct": 24.05,
+      "dd_penalty": 315.75,
+      "score": -388.17
+    },
+    {
+      "name": "scalp_trail",
+      "trades": 26,
+      "total_pnl": -110.5,
+      "win_rate": 50.0,
+      "profit_factor": 0.53,
+      "max_dd_pct": 24.01,
+      "dd_penalty": 315.15,
+      "score": -395.41
+    },
+    {
+      "name": "trail_0p5_act",
+      "trades": 26,
+      "total_pnl": -134.93,
+      "win_rate": 26.9,
+      "profit_factor": 0.29,
+      "max_dd_pct": 23.97,
+      "dd_penalty": 314.55,
+      "score": -421.16
+    },
+    {
+      "name": "partial_50_trail",
+      "trades": 27,
+      "total_pnl": -145.13,
+      "win_rate": 29.6,
+      "profit_factor": 0.24,
+      "max_dd_pct": 23.97,
+      "dd_penalty": 314.55,
+      "score": -430.76
+    }
+  ],
+  "winner_changed": false
+}
