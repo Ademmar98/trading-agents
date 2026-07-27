@@ -1,0 +1,540 @@
+{
+  "run_utc": "2026-07-27T12:10:35.858392+00:00",
+  "config": {
+    "name": "v4_agg_20_sl10_tp4_trail",
+    "sl_pct": 0.1,
+    "tp_pct": 0.04,
+    "pos_size_pct": 0.2,
+    "max_concurrent": 3,
+    "trail_activation": 0.025,
+    "trail_distance": 0.02,
+    "max_hold": 36
+  },
+  "universe": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "HYPE",
+    "XRP",
+    "ZEC",
+    "PAXG",
+    "PUMP",
+    "DOGE",
+    "FARTCOIN",
+    "SUI",
+    "ZRO",
+    "LIT",
+    "kPEPE",
+    "ASTER",
+    "BNB",
+    "AAVE",
+    "UNI",
+    "XPL",
+    "LINK",
+    "WLFI",
+    "BERA",
+    "XMR",
+    "BCH",
+    "ADA",
+    "TAO",
+    "AVAX",
+    "NEAR",
+    "INJ",
+    "FET"
+  ],
+  "added_beyond_majors": [
+    "HYPE",
+    "ZEC",
+    "PAXG",
+    "PUMP",
+    "FARTCOIN",
+    "ZRO",
+    "LIT",
+    "kPEPE",
+    "ASTER",
+    "BNB",
+    "UNI",
+    "XPL",
+    "WLFI",
+    "BERA",
+    "XMR",
+    "BCH",
+    "ADA",
+    "TAO"
+  ],
+  "majors_without_full_history": [],
+  "selection": "full history in all 6 windows; ranked by dollar volume in the OLDEST window; majors pinned; survivorship caveat applies",
+  "wide": [
+    {
+      "window": 0,
+      "month": "2026-06-27 -> 2026-07-27",
+      "symbols": 30,
+      "strat": {
+        "trades": 28,
+        "total_pnl": 26.27,
+        "return_pct": 0.53,
+        "win_rate": 53.6,
+        "profit_factor": 1.1,
+        "max_dd_pct": 2.22,
+        "max_dd_usd": 112.03,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "ZRO": -14.64,
+        "XPL": -51.94,
+        "BERA": -39.38,
+        "SOL": 5.61,
+        "PUMP": 60.49,
+        "AVAX": 7.16,
+        "HYPE": -46.51,
+        "BCH": -10.78,
+        "FARTCOIN": 3.63,
+        "LINK": 24.63,
+        "ZEC": 10.77,
+        "FET": 29.35,
+        "NEAR": 15.54,
+        "DOGE": -3.1,
+        "UNI": 25.31,
+        "ADA": 10.93,
+        "INJ": 0.46,
+        "XMR": -1.26
+      },
+      "buy_hold": {
+        "return_pct": 6.965265435385493,
+        "max_dd_pct": 8.760565843390486,
+        "failed": true
+      }
+    },
+    {
+      "window": 1,
+      "month": "2026-05-28 -> 2026-06-27",
+      "symbols": 30,
+      "strat": {
+        "trades": 25,
+        "total_pnl": 145.55,
+        "return_pct": 2.91,
+        "win_rate": 80.0,
+        "profit_factor": 1.63,
+        "max_dd_pct": 4.69,
+        "max_dd_usd": 248.7,
+        "challenge_failed": false,
+        "daily_limits_hit": 1
+      },
+      "per_symbol": {
+        "BCH": 11.51,
+        "AAVE": 37.0,
+        "XPL": 32.13,
+        "INJ": 21.46,
+        "PUMP": 7.86,
+        "FET": 37.65,
+        "ADA": 42.75,
+        "AVAX": 24.35,
+        "BTC": 16.19,
+        "ETH": 12.63,
+        "ZRO": 18.31,
+        "ZEC": -15.36,
+        "kPEPE": -55.04,
+        "DOGE": -69.95,
+        "SOL": 24.07
+      },
+      "buy_hold": {
+        "return_pct": -12.018698823978735,
+        "max_dd_pct": 26.04226849053306,
+        "failed": true
+      }
+    },
+    {
+      "window": 2,
+      "month": "2026-04-28 -> 2026-05-28",
+      "symbols": 30,
+      "strat": {
+        "trades": 28,
+        "total_pnl": 57.6,
+        "return_pct": 1.15,
+        "win_rate": 53.6,
+        "profit_factor": 1.17,
+        "max_dd_pct": 5.52,
+        "max_dd_usd": 282.83,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "XMR": 29.54,
+        "ETH": -7.07,
+        "XPL": 19.45,
+        "ZEC": 68.95,
+        "WLFI": 29.96,
+        "HYPE": 6.36,
+        "FARTCOIN": -65.05,
+        "BCH": -11.49,
+        "PUMP": -6.49,
+        "SUI": -0.65,
+        "kPEPE": 1.34,
+        "ZRO": 29.2,
+        "AAVE": -5.75,
+        "UNI": -30.7
+      },
+      "buy_hold": {
+        "return_pct": 2.6511915234782357,
+        "max_dd_pct": 16.340361427333537,
+        "failed": true
+      }
+    },
+    {
+      "window": 3,
+      "month": "2026-03-29 -> 2026-04-28",
+      "symbols": 30,
+      "strat": {
+        "trades": 12,
+        "total_pnl": -313.97,
+        "return_pct": -6.28,
+        "win_rate": 50.0,
+        "profit_factor": 0.22,
+        "max_dd_pct": 6.45,
+        "max_dd_usd": 323.63,
+        "challenge_failed": true,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "WLFI": -91.75,
+        "TAO": -69.81,
+        "ADA": 4.78,
+        "INJ": 7.63,
+        "SUI": 28.54,
+        "UNI": 26.5,
+        "XPL": -100.89,
+        "ZRO": -69.76,
+        "PUMP": -18.92,
+        "FARTCOIN": -30.3
+      },
+      "buy_hold": {
+        "return_pct": 4.27166196029114,
+        "max_dd_pct": 12.140910310448035,
+        "failed": true
+      }
+    },
+    {
+      "window": 4,
+      "month": "2026-02-27 -> 2026-03-29",
+      "symbols": 30,
+      "strat": {
+        "trades": 18,
+        "total_pnl": -165.87,
+        "return_pct": -3.32,
+        "win_rate": 50.0,
+        "profit_factor": 0.52,
+        "max_dd_pct": 4.15,
+        "max_dd_usd": 209.01,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "LIT": -11.3,
+        "DOGE": -65.94,
+        "UNI": -61.67,
+        "WLFI": -18.53,
+        "AAVE": 6.03,
+        "ZEC": 30.25,
+        "SUI": -1.06,
+        "PUMP": 25.11,
+        "ASTER": 19.86,
+        "ZRO": 18.29,
+        "ADA": -63.52,
+        "BERA": -35.85,
+        "XRP": 2.44,
+        "NEAR": -9.98
+      },
+      "buy_hold": {
+        "return_pct": -0.3844627046158178,
+        "max_dd_pct": 16.954485221665582,
+        "failed": true
+      }
+    },
+    {
+      "window": 5,
+      "month": "2026-01-28 -> 2026-02-27",
+      "symbols": 30,
+      "strat": {
+        "trades": 25,
+        "total_pnl": -30.84,
+        "return_pct": -0.62,
+        "win_rate": 56.0,
+        "profit_factor": 0.89,
+        "max_dd_pct": 3.84,
+        "max_dd_usd": 196.03,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "WLFI": 60.46,
+        "FET": -12.77,
+        "TAO": 13.57,
+        "LIT": -31.35,
+        "PUMP": 32.3,
+        "FARTCOIN": 3.5,
+        "SOL": -14.81,
+        "BCH": 23.0,
+        "XMR": 10.47,
+        "ETH": -1.43,
+        "ZRO": -100.33,
+        "SUI": 26.03,
+        "AAVE": 1.8,
+        "BERA": 37.09,
+        "ZEC": -60.66,
+        "DOGE": -23.9,
+        "kPEPE": 6.19
+      },
+      "buy_hold": {
+        "return_pct": -26.09799466423445,
+        "max_dd_pct": 33.35317935001473,
+        "failed": true
+      }
+    }
+  ],
+  "majors12": [
+    {
+      "window": 0,
+      "month": "2026-06-27 -> 2026-07-27",
+      "symbols": 12,
+      "strat": {
+        "trades": 15,
+        "total_pnl": 77.57,
+        "return_pct": 1.55,
+        "win_rate": 60.0,
+        "profit_factor": 1.77,
+        "max_dd_pct": 1.19,
+        "max_dd_usd": 60.89,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "AVAX": 38.64,
+        "FET": 29.22,
+        "SOL": 4.99,
+        "AAVE": -6.47,
+        "DOGE": 27.41,
+        "NEAR": -7.6,
+        "ETH": 7.94,
+        "SUI": -17.24,
+        "INJ": 0.68
+      },
+      "buy_hold": {
+        "return_pct": 3.850153818082025,
+        "max_dd_pct": 8.37344771391885,
+        "failed": true
+      }
+    },
+    {
+      "window": 1,
+      "month": "2026-05-28 -> 2026-06-27",
+      "symbols": 12,
+      "strat": {
+        "trades": 13,
+        "total_pnl": 69.53,
+        "return_pct": 1.39,
+        "win_rate": 76.9,
+        "profit_factor": 1.45,
+        "max_dd_pct": 3.03,
+        "max_dd_usd": 156.75,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "AAVE": 77.09,
+        "INJ": 11.88,
+        "FET": 37.36,
+        "AVAX": 37.64,
+        "BTC": 22.68,
+        "ETH": 13.8,
+        "SOL": 12.66,
+        "DOGE": -85.44,
+        "LINK": -58.14
+      },
+      "buy_hold": {
+        "return_pct": -15.131859294088812,
+        "max_dd_pct": 29.37840685972531,
+        "failed": true
+      }
+    },
+    {
+      "window": 2,
+      "month": "2026-04-28 -> 2026-05-28",
+      "symbols": 12,
+      "strat": {
+        "trades": 21,
+        "total_pnl": 25.1,
+        "return_pct": 0.5,
+        "win_rate": 57.1,
+        "profit_factor": 1.11,
+        "max_dd_pct": 4.06,
+        "max_dd_usd": 207.12,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "ETH": 22.24,
+        "AVAX": 73.94,
+        "AAVE": -8.36,
+        "SUI": -9.38,
+        "FET": -52.47,
+        "SOL": 13.79,
+        "LINK": 6.97,
+        "DOGE": -21.64,
+        "BTC": 0.0
+      },
+      "buy_hold": {
+        "return_pct": 7.322738453365241,
+        "max_dd_pct": 14.826560397274188,
+        "failed": true
+      }
+    },
+    {
+      "window": 3,
+      "month": "2026-03-29 -> 2026-04-28",
+      "symbols": 12,
+      "strat": {
+        "trades": 7,
+        "total_pnl": -47.69,
+        "return_pct": -0.95,
+        "win_rate": 28.6,
+        "profit_factor": 0.44,
+        "max_dd_pct": 1.91,
+        "max_dd_usd": 96.38,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "INJ": 7.9,
+        "SUI": 29.54,
+        "FET": -62.12,
+        "NEAR": -7.56,
+        "SOL": -13.5,
+        "ETH": -1.95
+      },
+      "buy_hold": {
+        "return_pct": 8.320791465682298,
+        "max_dd_pct": 11.41167837304336,
+        "failed": true
+      }
+    },
+    {
+      "window": 4,
+      "month": "2026-02-27 -> 2026-03-29",
+      "symbols": 12,
+      "strat": {
+        "trades": 12,
+        "total_pnl": -197.16,
+        "return_pct": -3.94,
+        "win_rate": 33.3,
+        "profit_factor": 0.16,
+        "max_dd_pct": 3.84,
+        "max_dd_usd": 191.98,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "DOGE": -71.81,
+        "AVAX": -44.5,
+        "ETH": -67.99,
+        "AAVE": 7.55,
+        "SUI": 0.05,
+        "NEAR": -4.09,
+        "INJ": 16.25,
+        "LINK": -32.62
+      },
+      "buy_hold": {
+        "return_pct": 0.5844757775643972,
+        "max_dd_pct": 17.845308764246802,
+        "failed": true
+      }
+    },
+    {
+      "window": 5,
+      "month": "2026-01-28 -> 2026-02-27",
+      "symbols": 12,
+      "strat": {
+        "trades": 14,
+        "total_pnl": 79.71,
+        "return_pct": 1.59,
+        "win_rate": 71.4,
+        "profit_factor": 1.74,
+        "max_dd_pct": 2.21,
+        "max_dd_usd": 113.49,
+        "challenge_failed": false,
+        "daily_limits_hit": 0
+      },
+      "per_symbol": {
+        "FET": -16.42,
+        "AAVE": 31.24,
+        "DOGE": -0.37,
+        "ETH": 19.62,
+        "SOL": -17.07,
+        "INJ": 23.82,
+        "SUI": 14.7,
+        "XRP": 24.19
+      },
+      "buy_hold": {
+        "return_pct": -29.417499915533707,
+        "max_dd_pct": 35.45988525986956,
+        "failed": true
+      }
+    }
+  ],
+  "summary_wide": {
+    "months": 6,
+    "trades": 136,
+    "mean_return_pct": -0.94,
+    "median_return_pct": -0.04,
+    "compounded_pct": -5.77,
+    "positive_months": 3,
+    "worst_month_pct": -6.28,
+    "best_month_pct": 2.91,
+    "worst_dd_pct": 6.45,
+    "challenge_failures": 1
+  },
+  "summary_majors12": {
+    "months": 6,
+    "trades": 82,
+    "mean_return_pct": 0.02,
+    "median_return_pct": 0.94,
+    "compounded_pct": 0.02,
+    "positive_months": 4,
+    "worst_month_pct": -3.94,
+    "best_month_pct": 1.59,
+    "worst_dd_pct": 4.06,
+    "challenge_failures": 0
+  },
+  "per_symbol_totals": {
+    "BTC": 16.19,
+    "ETH": 4.13,
+    "SOL": 14.87,
+    "HYPE": -40.15,
+    "XRP": 2.44,
+    "ZEC": 33.95,
+    "PAXG": 0.0,
+    "PUMP": 100.35,
+    "DOGE": -162.89,
+    "FARTCOIN": -88.22,
+    "SUI": 52.86,
+    "ZRO": -118.93,
+    "LIT": -42.65,
+    "kPEPE": -47.51,
+    "ASTER": 19.86,
+    "BNB": 0.0,
+    "AAVE": 39.08,
+    "UNI": -40.56,
+    "XPL": -101.25,
+    "LINK": 24.63,
+    "WLFI": -19.86,
+    "BERA": -38.14,
+    "XMR": 38.75,
+    "BCH": 12.24,
+    "ADA": -5.06,
+    "TAO": -56.24,
+    "AVAX": 31.51,
+    "NEAR": 5.56,
+    "INJ": 29.55,
+    "FET": 54.23
+  }
+}
