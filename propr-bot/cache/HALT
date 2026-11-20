@@ -1,0 +1,4 @@
+dd halt: equity $929.17 <= $930.00 (start $1,000, -7.08% vs 7.0% limit)
+Trading stopped by decision: funding and reversal arms are indistinguishable from random-5 (t +0.34 / +0.10 on 194d).
+See analysis/STUDY_21_funding_arm_verdict.md. Resume: delete this file or run --resume-halt.
+2026-11-11T15:14:25+00:00

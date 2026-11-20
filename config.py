@@ -129,7 +129,11 @@ LIMIT_ENTRY_ATR_MULT = float(os.getenv("LIMIT_ENTRY_ATR_MULT", "0"))
 # VWAP were broken when the negative-expectancy verdict was measured). The
 # week's forward record + a fresh harness re-run decide what stays; the
 # per-strategy auto-cull (get_unprofitable_strategies) removes live losers.
-CLASSIC_STRATEGIES_ENABLED = os.getenv("CLASSIC_STRATEGIES_ENABLED", "true").lower() == "true"
+# ── KILLED 2026-08-05: strategy desk is dead. The firm's live record
+# (studies #13-#18) plus the hyperliquid wallet research that replaced it
+# retired every signal source — classic battery, scalp, swing, multi-alpha.
+# The SMA200 cash dial is the ONLY deployment mechanism left.
+CLASSIC_STRATEGIES_ENABLED = os.getenv("CLASSIC_STRATEGIES_ENABLED", "false").lower() == "true"
 
 # ── Deployment dial: the ONE mechanism this firm has evidence for ──
 # Rule: deploy while the bellwether (BTC) closes above its SMA200; sit in cash
@@ -184,7 +188,10 @@ SCALP_MIN_WIN_PROB = float(os.getenv("SCALP_MIN_WIN_PROB", "0.60"))
 # 4h close above its EMA50. Exits are swing-scale by firm policy:
 # SL = SWING_ATR_SL_MULT x daily ATR clamped to 1-25% below entry;
 # TP = SL x SWING_RR clamped to 3-100% above entry.
-SWING_ENABLED = os.getenv("SWING_ENABLED", "true").lower() == "true"
+# ── KILLED 2026-08-05 with the rest of the strategy desk (see
+# CLASSIC_STRATEGIES_ENABLED). Studies #13-#18 showed no strategy module beats
+# buy & hold; the SMA200 cash dial is the only deployment mechanism left.
+SWING_ENABLED = os.getenv("SWING_ENABLED", "false").lower() == "true"
 SWING_SCAN_INTERVAL_MIN = int(os.getenv("SWING_SCAN_INTERVAL_MIN", "30"))
 SWING_RISK_PER_TRADE_PCT = float(os.getenv("SWING_RISK_PER_TRADE_PCT", "0.5"))
 SWING_ATR_SL_MULT = float(os.getenv("SWING_ATR_SL_MULT", "2.0"))

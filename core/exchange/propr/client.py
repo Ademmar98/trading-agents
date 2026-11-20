@@ -27,12 +27,27 @@ class ProprRiskClient:
         self._trades_today: int = 0
         self._closed_positions: list[dict] = []
 
-    def setup(self) -> str:
-        self.account_id = self.sdk.setup()
+    def setup(self, account_id: str | None = None,
+              starting_balance: float | None = None) -> str:
+        # With two active attempts the SDK's default picks attempts[0], which
+        # is whichever the API lists first -- not necessarily the one you meant
+        # to trade. Naming it explicitly is the difference between funding the
+        # right account and quietly trading the wrong one.
+        self.account_id = self.sdk.setup(account_id)
         account = self.sdk.get_account()
-        self._starting_balance = float(account["balance"])
+        # Defaulting the challenge's starting balance to the CURRENT balance is
+        # only right on a fresh account. Restart mid-challenge and the target
+        # moves with the balance: booting at $4,948 puts "+10%" at $5,443, so
+        # the bot would stop $57 short of the real $5,500 and report a pass it
+        # did not earn. Pass the real starting balance whenever it is known.
+        self._starting_balance = (float(starting_balance)
+                                  if starting_balance is not None
+                                  else float(account["balance"]))
         self._high_water_mark = self._starting_balance
-        self._day_start_balance = self._starting_balance
+        # Today's loss wall is measured from TODAY's balance, not from the
+        # challenge's starting balance. Seeding it from the start on a
+        # mid-challenge restart invents a phantom daily breach.
+        self._day_start_balance = float(account["balance"])
         self._day_start_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         logger.info(f"Propr client ready. Account: {self.account_id}, Balance: ${self._starting_balance:.2f}")
         return self.account_id
@@ -187,8 +202,10 @@ class ProprRiskClient:
         current_equity = self.equity
         starting = self._starting_balance
 
-        daily_loss_limit = self.rules.max_daily_loss_usd
+        # Same floor the breaker enforces: a percentage of TODAY's balance,
+        # not a fixed dollar amount from the challenge start.
         day_start = self._day_start_balance or starting
+        daily_loss_limit = day_start * self.config.max_daily_loss_pct
         daily_floor = day_start - daily_loss_limit
         daily_used = max(0, day_start - current_equity)
         daily_pct = daily_used / daily_loss_limit if daily_loss_limit > 0 else 0
@@ -318,7 +335,7 @@ class ProprRiskClient:
             "exchange": "hyperliquid",
             "type": order_type,
             "side": "sell",
-            "positionSide": "short",
+            "positionSide": "long",  # reduce-only sell that closes a LONG
             "productType": "perp",
             "timeInForce": "GTC",
             "asset": asset,
@@ -356,6 +373,47 @@ class ProprRiskClient:
             self._last_trade_time = time.time()
             logger.info(f"CLOSED position {asset}")
         return orders
+
+    def update_stop_loss(self, asset: str, new_sl_price: float) -> list[dict]:
+        positions = self.sdk.get_open_positions(base=asset)
+        if not positions:
+            return []
+        pos = positions[0]
+        qty = float(pos.get("quantity", 0))
+        if qty <= 0:
+            return []
+
+        trigger_str = str(round(new_sl_price, 2))
+        logger.info(f"Updating SL for {asset} to {trigger_str}")
+
+        import requests as _req
+        try:
+            payload = {
+                "type": "execute",
+                "req": {
+                    "asset": asset,
+                    "isBuy": False,
+                    "limitPx": None,
+                    "sz": abs(qty),
+                    "reduceOnly": True,
+                    "orderType": {
+                        "trigger": {
+                            "triggerPx": new_sl_price,
+                            "orderPx": {"limit": {"tif": "Gtc"}, "px": None},
+                            "sz": abs(qty),
+                            "triggerPxType": "mark",
+                        }
+                    },
+                    "tpsl": None,
+                },
+            }
+            resp = _req.post(self.sdk.api_url, json=payload, timeout=10)
+            resp.raise_for_status()
+            logger.info(f"Updated SL for {asset} to {trigger_str}")
+            return resp.json()
+        except Exception as e:
+            logger.warning(f"Failed to update SL for {asset}: {e}")
+            return []
 
     def _place_sl_tp(self, asset: str, order_type: str, side: str, trigger_price: str,
                      quantity: str) -> list[dict]:

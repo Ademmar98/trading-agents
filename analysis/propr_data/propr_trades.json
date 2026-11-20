@@ -1,40 +1,38 @@
 [
   {
-    "symbol": "AVAX",
-    "entry_price": 6.6899,
-    "quantity": 298.25,
-    "stop_loss": 6.6287964285714285,
-    "take_profit": 6.812107142857143,
+    "symbol": "BTC",
+    "entry_price": 65172.0,
+    "quantity": 0.03065,
+    "stop_loss": 64757.892857142855,
+    "take_profit": 66000.21428571429,
     "features": {
-      "cvd_zscore": -0.15978143947181142,
-      "rv_annualized": 0.05640444589912855,
-      "current_price": 6.6899,
-      "dip_pct": 0.02161545548941898,
-      "price_range": 0.10253447796773774,
-      "volume_ratio": 0.15086285628840324
+      "cvd_zscore": -1.3178563715540266,
+      "rv_annualized": 0.048646025827174304,
+      "current_price": 65172.0,
+      "dip_pct": 0.008262953663547136,
+      "volume_ratio": 0.4146043785605299
     },
-    "timestamp": "2026-07-26T17:17:08.201594+00:00",
+    "timestamp": "2026-07-27T11:36:32.581654+00:00",
     "order_ids": [
-      "urn:prp-order:eyyScWCcGsg9"
+      "urn:prp-order:t7hjc3CK5AeX"
     ]
   },
   {
-    "symbol": "SUI",
-    "entry_price": 0.7154,
-    "quantity": 2788.6,
-    "stop_loss": 0.7092167857142857,
-    "take_profit": 0.7277664285714286,
+    "symbol": "XRP",
+    "entry_price": 1.1056,
+    "quantity": 1806.0,
+    "stop_loss": 1.0980142857142856,
+    "take_profit": 1.1207714285714285,
     "features": {
-      "cvd_zscore": -0.6125795549184221,
-      "rv_annualized": 0.052118020926265385,
-      "current_price": 0.7154,
-      "dip_pct": 0.044119611982576544,
-      "price_range": 0.06173004462734831,
-      "volume_ratio": 0.5840917018632962
+      "cvd_zscore": -0.4730189122720214,
+      "rv_annualized": 0.04810626371497171,
+      "current_price": 1.1056,
+      "dip_pct": 0.009318996415770777,
+      "volume_ratio": 0.7337389810623969
     },
-    "timestamp": "2026-07-26T17:17:16.792134+00:00",
+    "timestamp": "2026-07-27T11:36:50.432178+00:00",
     "order_ids": [
-      "urn:prp-order:2DdmMaMH4JgJ"
+      "urn:prp-order:8CTECpRaRLoc"
     ]
   }
 ]

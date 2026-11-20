@@ -1,25 +1,19 @@
-from dotenv import load_dotenv; import os, requests, json
-load_dotenv(r'C:\Users\DELL\OneDrive\1m\.env')
-key = os.getenv('PROPR_API_KEY')
-headers = {'X-API-Key': key}
-acc = 'urn:prp-account:mYa6seVsUtDY'
-
-resp = requests.get(f'https://api.propr.xyz/v1/accounts/{acc}/positions?status=open', headers=headers, timeout=10)
-positions = resp.json().get('data', [])
-print('=== OPEN POSITIONS ===')
-found = False
+import sys, os
+sys.path.insert(0, "C:\\Users\\DELL\\OneDrive\\1m")
+from dotenv import load_dotenv
+load_dotenv()
+from core.exchange.propr.config import ProprConfig
+from core.exchange.propr.client import ProprRiskClient
+cfg = ProprConfig(api_key=os.getenv("PROPR_API_KEY",""))
+client = ProprRiskClient(cfg)
+start = os.getenv("CHALLENGE_START")
+client.setup(os.getenv("PROPR_ACCOUNT_ID") or None,
+             float(start) if start else None)
+summary = client.get_account_summary()
+print(f"Equity: ${summary['equity']:,.2f}")
+print(f"Balance: ${summary['balance']:,.2f}")
+print(f"PnL: ${summary['profit']:,.2f} ({summary['profit_pct']:.1%})")
+positions = client.get_open_positions()
+print(f"Open positions: {len(positions)}")
 for p in positions:
-    qty = float(p.get('quantity', 0))
-    if qty > 0:
-        found = True
-        print(json.dumps(p, indent=2))
-if not found:
-    print('No open positions')
-
-resp2 = requests.get(f'https://api.propr.xyz/v1/accounts/{acc}', headers=headers, timeout=10)
-acct = resp2.json()
-print()
-print('=== ACCOUNT ===')
-print('Balance:', acct['balance'])
-print('Unrealized PnL:', acct['totalUnrealizedPnl'])
-print('Available:', acct['availableBalance'])
+    print(f"  {p['base']}: {p['quantity']} @ {p['entryPrice']} | mark={p['markPrice']} pnl={p['unrealizedPnl']}")

@@ -1,0 +1,8 @@
+__pycache__
+*.pyc
+*.md
+cache/
+.env
+*.pkl
+*.log
+*.err

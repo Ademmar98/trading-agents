@@ -1,0 +1,367 @@
+{
+  "config": {
+    "dip_threshold": 0.04,
+    "rsi_oversold": 25,
+    "volume_spike_mult": 1.8,
+    "cvd_threshold": -0.8,
+    "sl_pct": 0.025,
+    "tp_pct": 0.05,
+    "max_hold_bars": 24,
+    "position_size_pct": 0.3,
+    "initial_capital": 5000.0,
+    "period_days": 30,
+    "symbols": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "DOGE",
+      "XRP",
+      "AVAX",
+      "LINK",
+      "SUI",
+      "NEAR",
+      "AAVE",
+      "INJ",
+      "FET"
+    ]
+  },
+  "aggregate": {
+    "total_trades": 18,
+    "total_pnl": -20.12,
+    "return_pct": -0.4,
+    "avg_win_rate": 56.2,
+    "avg_profit_factor": 1462.71,
+    "avg_sharpe": 473.69,
+    "max_drawdown_pct": 24.14
+  },
+  "per_symbol": [
+    {
+      "symbol": "BTC",
+      "trades": 0,
+      "total_pnl": 0,
+      "win_rate": 0,
+      "avg_pnl_pct": 0,
+      "max_dd_pct": 0,
+      "profit_factor": 0,
+      "sharpe": 0
+    },
+    {
+      "symbol": "ETH",
+      "trades": 1,
+      "total_pnl": 14.15,
+      "win_rate": 100.0,
+      "avg_pnl_pct": 0.94,
+      "max_dd_pct": 23.07,
+      "profit_factor": 1415.0,
+      "sharpe": 0,
+      "avg_bars_held": 24.0
+    },
+    {
+      "symbol": "SOL",
+      "trades": 3,
+      "total_pnl": 29.4,
+      "win_rate": 66.7,
+      "avg_pnl_pct": 0.65,
+      "max_dd_pct": 23.22,
+      "profit_factor": 4.63,
+      "sharpe": 68.1,
+      "avg_bars_held": 24.0
+    },
+    {
+      "symbol": "DOGE",
+      "trades": 3,
+      "total_pnl": -22.92,
+      "win_rate": 33.3,
+      "avg_pnl_pct": -0.51,
+      "max_dd_pct": 24.14,
+      "profit_factor": 0.6,
+      "sharpe": -22.94,
+      "avg_bars_held": 16.7
+    },
+    {
+      "symbol": "XRP",
+      "trades": 2,
+      "total_pnl": 36.41,
+      "win_rate": 100.0,
+      "avg_pnl_pct": 1.21,
+      "max_dd_pct": 23.13,
+      "profit_factor": 3641.0,
+      "sharpe": 3744.82,
+      "avg_bars_held": 24.0
+    },
+    {
+      "symbol": "AVAX",
+      "trades": 4,
+      "total_pnl": -45.29,
+      "win_rate": 50.0,
+      "avg_pnl_pct": -0.75,
+      "max_dd_pct": 24.0,
+      "profit_factor": 0.44,
+      "sharpe": -34.78,
+      "avg_bars_held": 18.8
+    },
+    {
+      "symbol": "LINK",
+      "trades": 0,
+      "total_pnl": 0,
+      "win_rate": 0,
+      "avg_pnl_pct": 0,
+      "max_dd_pct": 0,
+      "profit_factor": 0,
+      "sharpe": 0
+    },
+    {
+      "symbol": "SUI",
+      "trades": 1,
+      "total_pnl": -40.45,
+      "win_rate": 0.0,
+      "avg_pnl_pct": -2.7,
+      "max_dd_pct": 23.69,
+      "profit_factor": 0.0,
+      "sharpe": 0,
+      "avg_bars_held": 6.0
+    },
+    {
+      "symbol": "NEAR",
+      "trades": 0,
+      "total_pnl": 0,
+      "win_rate": 0,
+      "avg_pnl_pct": 0,
+      "max_dd_pct": 0,
+      "profit_factor": 0,
+      "sharpe": 0
+    },
+    {
+      "symbol": "AAVE",
+      "trades": 2,
+      "total_pnl": -57.82,
+      "win_rate": 0.0,
+      "avg_pnl_pct": -1.94,
+      "max_dd_pct": 23.96,
+      "profit_factor": 0.0,
+      "sharpe": -234.47,
+      "avg_bars_held": 17.0
+    },
+    {
+      "symbol": "INJ",
+      "trades": 0,
+      "total_pnl": 0,
+      "win_rate": 0,
+      "avg_pnl_pct": 0,
+      "max_dd_pct": 0,
+      "profit_factor": 0,
+      "sharpe": 0
+    },
+    {
+      "symbol": "FET",
+      "trades": 2,
+      "total_pnl": 66.4,
+      "win_rate": 100.0,
+      "avg_pnl_pct": 2.2,
+      "max_dd_pct": 23.18,
+      "profit_factor": 6640.0,
+      "sharpe": 268.8,
+      "avg_bars_held": 24.0
+    }
+  ],
+  "trades": [
+    {
+      "entry_price": 1825.1121,
+      "exit_price": 1845.077,
+      "qty": 0.8218673253001829,
+      "pnl": 14.15,
+      "pnl_pct": 0.94,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-17 05:00:00+00:00",
+      "exit_time": "2026-07-18 05:00:00+00:00"
+    },
+    {
+      "entry_price": 77.2796205,
+      "exit_price": 78.07294399999999,
+      "qty": 19.41003320532611,
+      "pnl": 13.14,
+      "pnl_pct": 0.88,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-08 08:00:00+00:00",
+      "exit_time": "2026-07-09 08:00:00+00:00"
+    },
+    {
+      "entry_price": 76.10903549999999,
+      "exit_price": 77.457252,
+      "qty": 19.760348506785206,
+      "pnl": 24.37,
+      "pnl_pct": 1.62,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-12 00:00:00+00:00",
+      "exit_time": "2026-07-13 00:00:00+00:00"
+    },
+    {
+      "entry_price": 74.19507899999999,
+      "exit_price": 73.9080275,
+      "qty": 20.36861051944012,
+      "pnl": -8.11,
+      "pnl_pct": -0.54,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-24 13:00:00+00:00",
+      "exit_time": "2026-07-25 13:00:00+00:00"
+    },
+    {
+      "entry_price": 0.0696738195,
+      "exit_price": 0.0713643,
+      "qty": 21528.8900589123,
+      "pnl": 34.12,
+      "pnl_pct": 2.27,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-06-30 12:00:00+00:00",
+      "exit_time": "2026-07-01 12:00:00+00:00"
+    },
+    {
+      "entry_price": 0.07034415449999999,
+      "exit_price": 0.06855125786218125,
+      "qty": 21469.23326744063,
+      "pnl": -40.73,
+      "pnl_pct": -2.7,
+      "reason": "stop_loss",
+      "bars_held": 2,
+      "entry_time": "2026-07-23 13:00:00+00:00",
+      "exit_time": "2026-07-23 15:00:00+00:00"
+    },
+    {
+      "entry_price": 0.06977286899999999,
+      "exit_price": 0.06911742400000001,
+      "qty": 21469.899454286606,
+      "pnl": -16.31,
+      "pnl_pct": -1.09,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-23 15:00:00+00:00",
+      "exit_time": "2026-07-24 15:00:00+00:00"
+    },
+    {
+      "entry_price": 1.0801397999999998,
+      "exit_price": 1.0945524500000001,
+      "qty": 1388.7091282072934,
+      "pnl": 17.75,
+      "pnl_pct": 1.18,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-08 08:00:00+00:00",
+      "exit_time": "2026-07-09 08:00:00+00:00"
+    },
+    {
+      "entry_price": 1.0863429,
+      "exit_price": 1.1014490000000001,
+      "qty": 1385.681252406407,
+      "pnl": 18.66,
+      "pnl_pct": 1.24,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-24 16:00:00+00:00",
+      "exit_time": "2026-07-25 16:00:00+00:00"
+    },
+    {
+      "entry_price": 6.40470075,
+      "exit_price": 6.43628025,
+      "qty": 234.20297974109096,
+      "pnl": 5.14,
+      "pnl_pct": 0.34,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-08 02:00:00+00:00",
+      "exit_time": "2026-07-09 02:00:00+00:00"
+    },
+    {
+      "entry_price": 6.557577149999999,
+      "exit_price": 6.390440902389375,
+      "qty": 228.97818896369304,
+      "pnl": -40.49,
+      "pnl_pct": -2.7,
+      "reason": "stop_loss",
+      "bars_held": 7,
+      "entry_time": "2026-07-11 23:00:00+00:00",
+      "exit_time": "2026-07-12 06:00:00+00:00"
+    },
+    {
+      "entry_price": 6.3433701,
+      "exit_price": 6.482757,
+      "qty": 234.79536376449266,
+      "pnl": 30.47,
+      "pnl_pct": 2.05,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-12 06:00:00+00:00",
+      "exit_time": "2026-07-13 06:00:00+00:00"
+    },
+    {
+      "entry_price": 6.3239604,
+      "exit_price": 6.162778459305001,
+      "qty": 236.9614013671049,
+      "pnl": -40.41,
+      "pnl_pct": -2.7,
+      "reason": "stop_loss",
+      "bars_held": 20,
+      "entry_time": "2026-07-23 17:00:00+00:00",
+      "exit_time": "2026-07-24 13:00:00+00:00"
+    },
+    {
+      "entry_price": 0.72702333,
+      "exit_price": 0.708493322876625,
+      "qty": 2063.2075177009797,
+      "pnl": -40.45,
+      "pnl_pct": -2.7,
+      "reason": "stop_loss",
+      "bars_held": 6,
+      "entry_time": "2026-07-24 12:00:00+00:00",
+      "exit_time": "2026-07-24 18:00:00+00:00"
+    },
+    {
+      "entry_price": 92.556255,
+      "exit_price": 90.19722745068749,
+      "qty": 16.206360121204128,
+      "pnl": -40.45,
+      "pnl_pct": -2.7,
+      "reason": "stop_loss",
+      "bars_held": 10,
+      "entry_time": "2026-07-16 15:00:00+00:00",
+      "exit_time": "2026-07-17 01:00:00+00:00"
+    },
+    {
+      "entry_price": 90.53224349999999,
+      "exit_price": 89.6101725,
+      "qty": 16.434633336257154,
+      "pnl": -17.37,
+      "pnl_pct": -1.17,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-17 01:00:00+00:00",
+      "exit_time": "2026-07-18 01:00:00+00:00"
+    },
+    {
+      "entry_price": 0.15812902499999998,
+      "exit_price": 0.160649635,
+      "qty": 9485.924548007553,
+      "pnl": 21.64,
+      "pnl_pct": 1.44,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-08 08:00:00+00:00",
+      "exit_time": "2026-07-09 08:00:00+00:00"
+    },
+    {
+      "entry_price": 0.151325625,
+      "exit_price": 0.156051935,
+      "qty": 9955.304761247966,
+      "pnl": 44.76,
+      "pnl_pct": 2.97,
+      "reason": "time_exit",
+      "bars_held": 24,
+      "entry_time": "2026-07-20 03:00:00+00:00",
+      "exit_time": "2026-07-21 03:00:00+00:00"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "strategy": "fibonacci_pullback_1m",
+  "params": {
+    "swing_lookback": 5,
+    "trend_bars": 30,
+    "fib_min": 0.5,
+    "fib_max": 0.618,
+    "min_swing_pct": 0.003,
+    "max_hold_bars": 120,
+    "interval": "1m",
+    "data_days": "~3.5"
+  },
+  "config": {
+    "capital": 5000.0,
+    "size_pct": 0.1,
+    "buy_only": true,
+    "leverage": 1
+  },
+  "aggregate": {
+    "trades": 5,
+    "pnl": -13.34,
+    "return_pct": -0.27,
+    "win_rate": 0.0,
+    "max_dd": 10.05
+  },
+  "per_symbol": [
+    {
+      "symbol": "DOGE",
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "total_pnl": -2.89,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "avg_win_usd": 0,
+      "avg_loss_usd": 2.89,
+      "expectancy": -2.89,
+      "max_dd_pct": 10.0,
+      "avg_bars_held": 12.0
+    },
+    {
+      "symbol": "AVAX",
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "total_pnl": -2.59,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "avg_win_usd": 0,
+      "avg_loss_usd": 2.59,
+      "expectancy": -2.59,
+      "max_dd_pct": 10.0,
+      "avg_bars_held": 5.0
+    },
+    {
+      "symbol": "LINK",
+      "trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "total_pnl": -5.16,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "avg_win_usd": 0,
+      "avg_loss_usd": 2.58,
+      "expectancy": -2.58,
+      "max_dd_pct": 10.05,
+      "avg_bars_held": 4.5
+    },
+    {
+      "symbol": "SUI",
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "total_pnl": -2.7,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "avg_win_usd": 0,
+      "avg_loss_usd": 2.7,
+      "expectancy": -2.7,
+      "max_dd_pct": 10.0,
+      "avg_bars_held": 15.0
+    }
+  ]
+}

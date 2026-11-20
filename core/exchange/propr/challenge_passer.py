@@ -154,7 +154,6 @@ class MicrostructureAbsorptionM3:
         high = df["high"].values
         low = df["low"].values
 
-        # CVD approximation (buy vs sell volume)
         buy_vol = np.where(close[1:] > close[:-1], volume[1:], 0)
         sell_vol = np.where(close[1:] < close[:-1], volume[1:], 0)
         buy_vol = np.append([0], buy_vol)
@@ -166,15 +165,11 @@ class MicrostructureAbsorptionM3:
             np.std(cvd_cumsum[-self.cvd_lookback:]) + 1e-10
         )
 
-        # Realized volatility
         returns = np.diff(np.log(close + 1e-10))
         rv = np.std(returns[-self.rv_lookback:]) * np.sqrt(365)
 
-        # Price action
         current_price = close[-1]
         recent_high = np.max(high[-self.lookback:])
-        recent_low = np.min(low[-self.lookback:])
-        price_range = (recent_high - recent_low) / recent_high if recent_high > 0 else 0
         dip_pct = (recent_high - current_price) / recent_high if recent_high > 0 else 0
 
         return {
@@ -182,27 +177,81 @@ class MicrostructureAbsorptionM3:
             "rv_annualized": rv,
             "current_price": current_price,
             "dip_pct": dip_pct,
-            "price_range": price_range,
             "volume_ratio": volume[-1] / np.mean(volume[-20:]) if np.mean(volume[-20:]) > 0 else 1,
         }
 
     def generate_signal(self, features: dict) -> tuple[bool, str]:
         cfg = self.config
-
         if features["cvd_zscore"] > cfg.m3_cvd_thresh:
             return False, f"CVD z={features['cvd_zscore']:.2f} > thresh"
-
         if features["rv_annualized"] < cfg.m3_rv_thresh:
             return False, f"RV={features['rv_annualized']:.2f} < thresh"
-
         if features["dip_pct"] < cfg.m3_dip_pct:
             return False, f"Dip={features['dip_pct']:.3f} < thresh"
-
-        return True, f"BUY: CVD={features['cvd_zscore']:.2f}, RV={features['rv_annualized']:.2f}, Dip={features['dip_pct']:.3f}"
+        return True, f"BUY M3: CVD={features['cvd_zscore']:.2f}, RV={features['rv_annualized']:.2f}, Dip={features['dip_pct']:.3f}"
 
     def calculate_stops(self, entry_price: float, atr: float) -> tuple[float, float]:
         sl = entry_price - (atr * self.config.m3_sl_multiplier)
         tp = entry_price + (atr * self.config.m3_tp_multiplier)
+        return sl, tp
+
+
+class DeepHunting:
+    def __init__(self, config: ProprConfig):
+        self.config = config
+
+    def compute_features(self, df: pd.DataFrame) -> dict | None:
+        c = self.config
+        if len(df) < c.dh_lookback + 10:
+            return None
+
+        close = df["close"].values
+        volume = df["volume"].values
+        high = df["high"].values
+
+        current_price = close[-1]
+        recent_high = np.max(high[-c.dh_lookback:])
+        dip_pct = (recent_high - current_price) / recent_high if recent_high > 0 else 0
+
+        vol_ma = np.mean(volume[-20:])
+        vol_spike = volume[-1] / vol_ma if vol_ma > 0 else 0
+
+        delta = np.diff(close)
+        gain = np.where(delta > 0, delta, 0.0)
+        loss = np.where(delta < 0, -delta, 0.0)
+        avg_gain = np.mean(gain[-14:])
+        avg_loss = np.mean(loss[-14:])
+        rsi = 100 - 100 / (1 + avg_gain / (avg_loss + 1e-10))
+
+        direction = np.sign(np.append([0], delta))
+        cvd = np.cumsum(volume * direction)
+        cvd_z = (cvd[-1] - np.mean(cvd[-20:])) / (np.std(cvd[-20:]) + 1e-10)
+
+        return {
+            "current_price": current_price,
+            "dip_pct": dip_pct,
+            "rsi": rsi,
+            "vol_spike": vol_spike,
+            "cvd_zscore": cvd_z,
+        }
+
+    def generate_signal(self, features: dict) -> tuple[bool, str]:
+        c = self.config
+        if features["dip_pct"] < c.dh_dip_thresh:
+            return False, f"Dip={features['dip_pct']:.3f} < {c.dh_dip_thresh}"
+        if features["rsi"] > c.dh_rsi_thresh:
+            return False, f"RSI={features['rsi']:.1f} > {c.dh_rsi_thresh}"
+        if features["vol_spike"] < c.dh_vol_mult:
+            return False, f"Vol={features['vol_spike']:.2f}x < {c.dh_vol_mult}x"
+        if features["cvd_zscore"] > c.dh_cvd_thresh:
+            return False, f"CVD={features['cvd_zscore']:.2f} > {c.dh_cvd_thresh}"
+        return True, (f"BUY DH: Dip={features['dip_pct']:.1%}, RSI={features['rsi']:.0f}, "
+                      f"Vol={features['vol_spike']:.1f}x, CVD={features['cvd_zscore']:.2f}")
+
+    def calculate_stops(self, entry_price: float) -> tuple[float, float]:
+        c = self.config
+        sl = entry_price * (1 - c.dh_sl_pct)
+        tp = entry_price * (1 + c.dh_tp_pct)
         return sl, tp
 
 
@@ -211,12 +260,21 @@ class ChallengePasser:
         self.config = config
         self.client = ProprRiskClient(config)
         self.feed = HyperliquidFeed(config)
-        self.strategy = MicrostructureAbsorptionM3(config)
+        self.strategy_m3 = MicrostructureAbsorptionM3(config)
+        self.strategy_dh = DeepHunting(config)
         self._trade_log: list[dict] = []
         self._cycle_count = 0
+        self._last_entry_bar: dict[str, int] = {}
 
     def setup(self):
-        self.client.setup()
+        # With two active attempts the SDK default picks attempts[0], which is
+        # not necessarily the challenge we intend to trade. Name the account
+        # and its true starting balance explicitly so a mid-challenge restart
+        # cannot reset the target to current equity.
+        start = os.getenv("CHALLENGE_START")
+        self.client.setup(
+            os.getenv("PROPR_ACCOUNT_ID") or None,
+            float(start) if start else None)
         logger.info(f"Challenge Passer initialized")
         logger.info(f"Type: {self.config.challenge_type.value}")
         logger.info(f"Account: ${self.config.account_size.value:,}")
@@ -227,7 +285,14 @@ class ChallengePasser:
     def _fetch_hyperliquid_candles(self, symbol: str) -> pd.DataFrame:
         for attempt in range(3):
             try:
-                return self.feed.get_candles(symbol, interval="1h", limit=200)
+                df = self.feed.get_candles(symbol, interval="1h", limit=200)
+                # The last 1h candle is still forming. Signals, dip %, RSI, CVD,
+                # ATR and the entry price must all come from a CLOSED bar; the
+                # deployed momentum and dip runners already do this. Trading the
+                # forming bar is a look-ahead the backtest never had.
+                if df is not None and len(df) > 1:
+                    return df.iloc[:-1]
+                return df if df is not None else pd.DataFrame()
             except Exception:
                 time.sleep(1 + attempt)
         return pd.DataFrame()
@@ -247,17 +312,19 @@ class ChallengePasser:
         )
         return float(np.mean(tr[-period:]))
 
-    def _execute_trade(self, symbol: str, features: dict):
+    def _execute_trade(self, symbol: str, features: dict, strategy: str):
         price = features["current_price"]
         if price <= 0:
             return
 
-        df = self.feed.get_candles(symbol, "1h", 100)
-        if df.empty:
-            return
-
-        atr = self._calculate_atr(df)
-        sl, tp = self.strategy.calculate_stops(price, atr)
+        if strategy == "dh":
+            sl, tp = self.strategy_dh.calculate_stops(price)
+        else:
+            df = self.feed.get_candles(symbol, "1h", 100)
+            if df.empty:
+                return
+            atr = self._calculate_atr(df)
+            sl, tp = self.strategy_m3.calculate_stops(price, atr)
 
         quantity = self.client.calculate_position_size(symbol, price, sl)
         if quantity <= 0:
@@ -271,7 +338,7 @@ class ChallengePasser:
             return
 
         stop_distance_pct = abs(price - sl) / price
-        if stop_distance_pct > 0.05:
+        if stop_distance_pct > 0.12:
             logger.warning(f"Stop too wide for {symbol}: {stop_distance_pct:.1%}")
             return
 
@@ -280,7 +347,7 @@ class ChallengePasser:
             quantity=quantity,
             stop_price=sl,
             take_profit_price=tp,
-            entry_price=price,  # lets can_trade() price this trade's own stop risk
+            entry_price=price,
         )
 
         if orders:
@@ -301,6 +368,7 @@ class ChallengePasser:
         open_positions = self.client.get_open_positions()
         held_assets = {p["base"] for p in open_positions}
 
+        c = self.config
         for symbol in self.config.symbols:
             if not RUNNING:
                 break
@@ -318,14 +386,30 @@ class ChallengePasser:
                 if df.empty or len(df) < 30:
                     continue
 
-                features = self.strategy.compute_features(df)
-                if not features:
-                    continue
+                signal_ok = False
+                reason = ""
 
-                signal_ok, reason = self.strategy.generate_signal(features)
-                if signal_ok:
-                    logger.info(f"SIGNAL: {symbol} — {reason}")
-                    self._execute_trade(symbol, features)
+                if c.dh_enabled:
+                    features = self.strategy_dh.compute_features(df)
+                    if features:
+                        signal_ok, reason = self.strategy_dh.generate_signal(features)
+                        if signal_ok:
+                            strategy = "dh"
+                        else:
+                            features = None
+
+                if not signal_ok and c.m3_enabled:
+                    features = self.strategy_m3.compute_features(df)
+                    if features:
+                        signal_ok, reason = self.strategy_m3.generate_signal(features)
+                        if signal_ok:
+                            strategy = "m3"
+                        else:
+                            features = None
+
+                if signal_ok and features:
+                    logger.info(f"SIGNAL {symbol}: {reason}")
+                    self._execute_trade(symbol, features, strategy)
 
                 time.sleep(0.3)
 
@@ -335,25 +419,41 @@ class ChallengePasser:
 
     def _manage_positions(self):
         open_positions = self.client.get_open_positions()
+        c = self.config
 
         for pos in open_positions:
             asset = pos["base"]
             entry = float(pos["entryPrice"])
             mark = float(pos["markPrice"])
             qty = float(pos["quantity"])
-            pnl = float(pos["unrealizedPnl"])
-            side = pos["positionSide"]
 
             pnl_pct = (mark - entry) / entry if entry > 0 else 0
 
-            # Trailing stop: if up 2%, move stop to breakeven
-            if pnl_pct > 0.02:
-                logger.info(f"{asset} up {pnl_pct:.1%} — consider trailing stop")
+            if c.dh_enabled:
+                if pnl_pct >= c.dh_trail_activation:
+                    logger.info(f"{asset} up {pnl_pct:.1%} — trail activated, moving stop to breakeven")
+                    trail_sl = entry * 1.001
+                    try:
+                        self.client.update_stop_loss(asset, trail_sl)
+                    except Exception:
+                        pass
 
-            # Hard stop: close if down 4%
-            if pnl_pct < -0.04:
-                logger.warning(f"{asset} down {pnl_pct:.1%} — closing to protect equity")
-                self.client.close_position(asset)
+                if pnl_pct < -c.dh_sl_pct:
+                    logger.warning(f"{asset} down {pnl_pct:.1%} — closing (beyond SL)")
+                    self.client.close_position(asset)
+                    continue
+
+                if pnl_pct > c.dh_tp_pct:
+                    logger.info(f"{asset} up {pnl_pct:.1%} — closing (beyond TP)")
+                    self.client.close_position(asset)
+                    continue
+
+            else:
+                if pnl_pct > 0.02:
+                    logger.info(f"{asset} up {pnl_pct:.1%} — consider trailing stop")
+                if pnl_pct < -0.04:
+                    logger.warning(f"{asset} down {pnl_pct:.1%} — closing to protect equity")
+                    self.client.close_position(asset)
 
     def _print_status(self):
         summary = self.client.get_account_summary()

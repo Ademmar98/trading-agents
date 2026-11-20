@@ -100,11 +100,27 @@ class ProprConfig:
 
     # Strategy — Microstructure Absorption (validated M3)
     m3_enabled: bool = True
-    m3_cvd_thresh: float = -0.05   # CVD below this = selling pressure
-    m3_rv_thresh: float = 0.03     # RV above this = enough volatility
-    m3_dip_pct: float = 0.008      # At least 0.8% from recent high
+    m3_cvd_thresh: float = -0.05
+    m3_rv_thresh: float = 0.03
+    m3_dip_pct: float = 0.008
     m3_sl_multiplier: float = 1.5
     m3_tp_multiplier: float = 3.0
+
+    # Strategy — Deep Hunting v5 (backtested on 177 pairs)
+    dh_enabled: bool = False
+    dh_dip_thresh: float = 0.05
+    dh_rsi_thresh: float = 25
+    dh_vol_mult: float = 2.0
+    dh_cvd_thresh: float = -0.8
+    dh_lookback: int = 50
+    dh_sl_pct: float = 0.10
+    dh_tp_pct: float = 0.04
+    dh_pos_size_pct: float = 0.10
+    dh_max_concurrent: int = 1
+    dh_cooldown_bars: int = 3
+    dh_max_hold_bars: int = 36
+    dh_trail_activation: float = 0.025
+    dh_trail_distance: float = 0.02
 
     # Strategy — Z-Score Funding (M1)
     m1_enabled: bool = False
